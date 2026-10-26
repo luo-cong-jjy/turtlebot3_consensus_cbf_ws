@@ -1,0 +1,46 @@
+<launch>
+
+  <!-- 是否启用 robot_localization 的 EKF 位姿融合；dynamic.launch 中仿真默认关闭。 -->
+  <arg name="enable_ekf" default="$(optenv ENABLE_EKF false)"/>
+
+  <!-- 加载 Jackal 控制器和关节状态发布器参数。 -->
+  <rosparam command="load" file="$(find jackal_control)/config/control.yaml" />
+
+  <!-- controller_manager spawner：启动关节状态发布器和速度控制器。 -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner"
+        args="jackal_joint_publisher jackal_velocity_controller" />
+
+  <!-- 可选 EKF 节点：融合里程计/IMU，得到滤波后的机器人位姿估计。 -->
+  <group if="$(arg enable_ekf)" >
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
+      <rosparam command="load" file="$(find jackal_control)/config/robot_localization.yaml" />
+    </node>
+
+    <group if="$(optenv JACKAL_IMU_MICROSTRAIN 0)">
+      <!-- Optionally load the configuration for the Microstrain-family IMU -->
+      <rosparam>
+        ekf_localization:
+          imu1: microstrain/imu/data
+          imu1_config: [false, false, false,
+                      true, true, true,
+                      false, false, false,
+                      true, true, true,
+                      false, false, false]
+          imu1_differential: false
+      </rosparam>
+      <param name="ekf_localization/imu1" value="$(optenv JACKAL_IMU_MICROSTRAIN_NAME microstrain)/imu/data"/>
+    </group>
+  </group>
+
+  <!-- twist_mux：仲裁多路速度指令，并把最终 cmd_vel 转发到 jackal_velocity_controller/cmd_vel。 -->
+  <node pkg="twist_mux" type="twist_mux" name="twist_mux">
+    <rosparam command="load" file="$(find jackal_control)/config/twist_mux.yaml" />
+    <remap from="cmd_vel_out" to="jackal_velocity_controller/cmd_vel"/>
+  </node>
+
+  <!-- 可选扩展控制参数：从 JACKAL_CONTROL_EXTRAS_PATH 指定的文件加载。 -->
+  <group if="$(optenv JACKAL_CONTROL_EXTRAS 0)" >
+    <rosparam command="load" file="$(env JACKAL_CONTROL_EXTRAS_PATH)" subst_value="true" />
+  </group>
+
+</launch>

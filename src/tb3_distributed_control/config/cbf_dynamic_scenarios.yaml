@@ -1,0 +1,14 @@
+# Speeds are scaled to TurtleBot3 burger (v_max = 0.22 m/s).
+# Time is relative to the common leader start, never wall time.
+crossing:
+  - {name: cbf_dynamic_0, start: [2.1, -1.8], velocity: [0.0, 0.16], radius: 0.18}
+head_on:
+  - {name: cbf_dynamic_0, start: [3.2, 0.0], velocity: [-0.08, 0.0], radius: 0.18}
+overtaking:
+  - {name: cbf_dynamic_0, start: [1.6, 0.0], velocity: [0.06, 0.0], radius: 0.18}
+maneuver:
+  - {name: cbf_dynamic_0, start: [2.1, -1.65], velocity: [0.0, 0.15], radius: 0.18,
+     sine_x: 0.30, frequency: 0.25, phase: -2.75}
+mixed:
+  - {name: cbf_dynamic_0, start: [2.1, -1.8], velocity: [0.0, 0.16], radius: 0.18}
+  - {name: cbf_dynamic_1, start: [3.7, 3.3], velocity: [0.0, -0.15], radius: 0.18}

@@ -1,0 +1,96 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="map_file" default="$(find turtlebot3_navigation)/maps/karto_map.yaml"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="global_frame_id" default="map"/>
+ 
+  <arg name="first_tb3"  value="tb3_0"/>
+  <arg name="second_tb3" value="tb3_1"/>
+  <arg name="third_tb3"  value="tb3_2"/>
+
+  <arg name="first_tb3_x_pos" default=" -3.0"/>
+  <arg name="first_tb3_y_pos" default=" 4.0"/>
+  <arg name="first_tb3_z_pos" default=" 0.0"/>
+
+  <arg name="second_tb3_x_pos" default=" -4.0"/>
+  <arg name="second_tb3_y_pos" default=" 5.0"/>
+  <arg name="second_tb3_z_pos" default=" 0.0"/>
+
+  <arg name="third_tb3_x_pos" default=" -4.0"/>
+  <arg name="third_tb3_y_pos" default=" 3.0"/>
+  <arg name="third_tb3_z_pos" default=" 0.0"/>
+ 
+ 
+  <!-- Map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" >
+    <param name="frame_id" value="$(arg global_frame_id)" />
+  </node>
+ 
+  <group ns="$(arg first_tb3)">
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg first_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg first_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg first_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg first_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg first_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg first_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg first_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg first_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+ 
+  <group ns="$(arg second_tb3)">
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg second_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg second_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg second_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg second_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg second_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg second_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg second_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg second_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+ 
+  <group ns="$(arg third_tb3)">
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg third_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg third_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg third_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg third_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg third_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg third_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg third_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg third_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+ 
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find turtlebot3_navigation)/rviz/multi_turtlebot3_navigation.rviz"/>
+  </group>
+ 
+</launch>

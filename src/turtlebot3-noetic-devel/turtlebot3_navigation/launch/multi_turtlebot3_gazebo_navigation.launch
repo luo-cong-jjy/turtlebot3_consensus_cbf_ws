@@ -1,0 +1,210 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="map_file" default="$(find turtlebot3_navigation)/maps/consensus_map.yaml"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="global_frame_id" default="map"/>
+    
+  <arg name="first_tb3"  default="tb3_0"/>
+  <arg name="second_tb3" default="tb3_1"/>
+  <arg name="third_tb3"  default="tb3_2"/>
+  <arg name="forth_tb3"  default="tb3_3"/>
+  <arg name="fifth_tb3"  default="tb3_4"/>
+
+  <arg name="first_tb3_x_pos" default="0.5000"/>
+  <arg name="first_tb3_y_pos" default="0.0000"/>
+  <arg name="first_tb3_z_pos" default="0.0000"/>
+  <arg name="first_tb3_yaw"   default="0.0000"/>
+
+  <arg name="second_tb3_x_pos" default=" 0.5000"/>
+  <arg name="second_tb3_y_pos" default=" 1.0000"/>
+  <arg name="second_tb3_z_pos" default=" 0.0000"/>
+  <arg name="second_tb3_yaw"   default=" 0.0000"/>
+
+  <arg name="third_tb3_x_pos" default=" 0.0000"/>
+  <arg name="third_tb3_y_pos" default=" 0.5000"/>
+  <arg name="third_tb3_z_pos" default=" 0.0000"/>
+  <arg name="third_tb3_yaw"   default=" 0.0000"/>
+
+  <arg name="forth_tb3_x_pos" default=" 0.0000"/>
+  <arg name="forth_tb3_y_pos" default=" -0.5000"/>
+  <arg name="forth_tb3_z_pos" default=" 0.0000"/>
+  <arg name="forth_tb3_yaw"   default=" 0.0000"/>
+
+  <arg name="fifth_tb3_x_pos" default=" 0.0000"/>
+  <arg name="fifth_tb3_y_pos" default=" -1.0000"/>
+  <arg name="fifth_tb3_z_pos" default=" 0.0000"/>
+  <arg name="fifth_tb3_yaw"   default=" 0.0000"/>
+
+ 
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <!-- <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_house.world"/> -->
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/consensus_1.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include> 
+
+  <!-- Map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" >
+    <param name="frame_id" value="$(arg global_frame_id)" />
+  </node>
+ 
+  <group ns="$(arg first_tb3)">
+     <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+ 
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg first_tb3)" />
+    </node>
+    <param name="tf_prefix" value="$(arg first_tb3)" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg first_tb3) -x $(arg first_tb3_x_pos) -y $(arg first_tb3_y_pos) -z $(arg first_tb3_z_pos) -Y $(arg first_tb3_yaw) -param robot_description" />
+     <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 $(arg global_frame_id) $(arg first_tb3)/odom"/> -->
+    
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg first_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg first_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg first_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg first_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg first_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg first_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg first_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg first_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+  
+  <group ns="$(arg second_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+ 
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg second_tb3)" />
+    </node>
+    <param name="tf_prefix" value="$(arg second_tb3)" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg second_tb3) -x $(arg second_tb3_x_pos) -y $(arg second_tb3_y_pos) -z $(arg second_tb3_z_pos) -Y $(arg second_tb3_yaw) -param robot_description" />
+    
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg second_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg second_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg second_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg second_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg second_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg second_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg second_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg second_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+ 
+  <group ns="$(arg third_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+ 
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg third_tb3)" />
+    </node>
+    <param name="tf_prefix" value="$(arg third_tb3)" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg third_tb3) -x $(arg third_tb3_x_pos) -y $(arg third_tb3_y_pos) -z $(arg third_tb3_z_pos) -Y $(arg third_tb3_yaw) -param robot_description" />
+
+    
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg third_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg third_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg third_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg third_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg third_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg third_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg third_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg third_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+
+  <group ns="$(arg forth_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+ 
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg forth_tb3)" />
+    </node>
+    <param name="tf_prefix" value="$(arg forth_tb3)" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg forth_tb3) -x $(arg forth_tb3_x_pos) -y $(arg forth_tb3_y_pos) -z $(arg forth_tb3_z_pos) -Y $(arg forth_tb3_yaw) -param robot_description" />
+
+    
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg forth_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg forth_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg forth_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg forth_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg forth_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg forth_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg forth_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg forth_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+
+  <group ns="$(arg fifth_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+ 
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg fifth_tb3)" />
+    </node>
+    <param name="tf_prefix" value="$(arg fifth_tb3)" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg fifth_tb3) -x $(arg fifth_tb3_x_pos) -y $(arg fifth_tb3_y_pos) -z $(arg fifth_tb3_z_pos) -Y $(arg fifth_tb3_yaw) -param robot_description" />
+
+    
+    <!-- AMCL -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_amcl.launch" >
+      <arg name="initial_pose_x" default="$(arg fifth_tb3_x_pos)"/>
+      <arg name="initial_pose_y" default="$(arg fifth_tb3_y_pos)"/>
+      <arg name="initial_pose_a" default="$(arg fifth_tb3_z_pos)"/>
+      <arg name="odom_frame_id"   value="$(arg fifth_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg fifth_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+    </include>   
+    <!-- move_base -->
+    <include file="$(find turtlebot3_navigation)/launch/multi_move_base.launch" >
+      <arg name="odom_frame_id"   value="$(arg fifth_tb3)/odom"/>
+      <arg name="base_frame_id"   value="$(arg fifth_tb3)/base_footprint"/>
+      <arg name="global_frame_id" value="$(arg global_frame_id)"/>
+      <arg name="scan_frame_id" value="$(arg fifth_tb3)/base_scan" />
+      <arg name="model" value="$(arg model)" />
+    </include>
+  </group>
+ 
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find turtlebot3_navigation)/rviz/multi_turtlebot3_navigation.rviz"/>
+  </group>
+ 
+</launch>

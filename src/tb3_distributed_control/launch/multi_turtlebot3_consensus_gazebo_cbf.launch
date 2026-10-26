@@ -1,0 +1,160 @@
+<launch>
+  <arg name="model" default="$(optenv TURTLEBOT3_MODEL burger)" />
+  <arg name="total_time" default="180" />
+  <arg name="trajectory_type" default="eight_slow_slow" />
+  <arg name="gui" default="true" />
+  <arg name="open_rviz" default="true" />
+  <arg name="paused" default="false" />
+  <arg name="dynamic_scenario" default="none" />
+  <arg name="world_name" default="$(eval find('tb3_distributed_control') + '/worlds/' + ('consensus_obstacle_1.world' if arg('dynamic_scenario') == 'none' else 'consensus_dynamic_obstacles.world'))" />
+  <!-- Empty output_dir creates a unique timestamped experiment in data_collect. -->
+  <arg name="output_dir" default="" />
+  <arg name="run_id" default="$(anon cbf_run)" />
+  <arg name="geometry_observer" default="0" />
+  <arg name="geometry_debug" default="false" />
+  <arg name="formation_radius" default="0.5" />
+  <arg name="robot_count" default="5" />
+  <arg name="rviz_config" default="$(eval find('tb3_distributed_control') + '/rviz/' + ('tb3_cbf_single.rviz' if arg('robot_count') == '1' else 'tb3_cbf.rviz'))" />
+  <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
+  <arg name="prediction_mode" default="cv" />
+  <arg name="dynamic_reaction_time" default="0.35" />
+  <arg name="dynamic_extra_margin" default="0.02" />
+  <arg name="peer_safety" default="true" />
+  <!-- Minimum peer envelope size; laser contours cannot shrink this prior. -->
+  <arg name="peer_radius" default="0.20" />
+  <arg name="stall_recovery" default="true" />
+  <arg name="realtime_solver" default="true" />
+  <arg name="control_budget_ms" default="100" />
+  <arg name="nlp_budget_ms" default="65" />
+  <arg name="dual_warm_start" default="true" />
+  <arg name="stagger_callbacks" default="true" />
+  <arg name="static_accumulation" default="$(eval arg('dynamic_scenario') == 'none')" />
+  <arg name="recovery_gamma" default="0.03" />
+  <param name="/cbf/recovery_gamma" value="$(arg recovery_gamma)" />
+  <arg name="leader_init_x" default="0.0" />
+  <arg name="leader_init_y" default="0.3" />
+  <param name="/use_sim_time" value="true" />
+  <rosparam param="/cbf/robot_names" subst_value="true">$(eval ['tb3_0','tb3_1','tb3_2','tb3_3','tb3_4'][:int(arg('robot_count'))])</rosparam>
+  <rosparam param="/cbf/adjacency" subst_value="true">$(eval [[0, 0, 0, 0, 0][:int(arg('robot_count'))], [1, 0, 0, 0, 0][:int(arg('robot_count'))], [0, 1, 0, 0, 0][:int(arg('robot_count'))], [0, 0, 1, 0, 0][:int(arg('robot_count'))], [0, 0, 0, 1, 0][:int(arg('robot_count'))]][:int(arg('robot_count'))])</rosparam>
+  <rosparam param="/cbf/pinning" subst_value="true">$(eval [1,0,0,0,0][:int(arg('robot_count'))])</rosparam>
+  <param name="/cbf/dynamic_prediction" value="$(arg dynamic_prediction)" type="bool" />
+  <param name="/cbf/dynamic/prediction_mode" value="$(arg prediction_mode)" />
+  <param name="/cbf/dynamic/reaction_time" value="$(arg dynamic_reaction_time)" />
+  <param name="/cbf/dynamic/extra_margin" value="$(arg dynamic_extra_margin)" />
+  <param name="/cbf/dynamic_scenario" value="$(arg dynamic_scenario)" />
+  <param name="/cbf/trajectory_type" value="$(arg trajectory_type)" />
+  <param name="/cbf/scenario/ready" value="false" />
+  <rosparam command="load" file="$(find tb3_distributed_control)/config/cbf_dynamic_scenarios.yaml" ns="/cbf/scenarios" />
+  <node pkg="tb3_distributed_control" type="cbf_dynamic_scenario.py" name="cbf_dynamic_scenario" output="screen" if="$(eval arg('dynamic_scenario') != 'none')" />
+  <param name="/cbf/output_dir" value="$(arg output_dir)" type="str" />
+  <param name="/cbf/run_id" value="$(arg run_id)" />
+  <param name="/cbf/world_file" value="$(arg world_name)" />
+  <param name="/cbf/visualization/observer" value="$(arg geometry_observer)" type="int" />
+  <param name="/cbf/visualization/debug" value="$(arg geometry_debug)" type="bool" />
+  <node pkg="tb3_distributed_control" type="cbf_experiment_results.py" name="cbf_experiment_results" output="screen" />
+  <param name="/cbf/formation_radius" value="$(arg formation_radius)" />
+  <param name="/cbf/peer_safety" value="$(arg peer_safety)" />
+  <param name="/cbf/peer_radius" value="$(arg peer_radius)" />
+  <param name="/cbf/stall_recovery" value="$(arg stall_recovery)" />
+  <param name="/cbf/realtime_solver" value="$(arg realtime_solver)" type="bool" />
+  <param name="/cbf/control_budget_ms" value="$(arg control_budget_ms)" />
+  <param name="/cbf/nlp_budget_ms" value="$(arg nlp_budget_ms)" />
+  <param name="/cbf/dual_warm_start" value="$(arg dual_warm_start)" type="bool" />
+  <param name="/cbf/stagger_callbacks" value="$(arg stagger_callbacks)" type="bool" />
+  <param name="/cbf/leader_namespace" value="tb3_virtual_leader" />
+  <param name="/cbf/obstacle_slots" value="12" />
+  <param name="/cbf/data_timeout" value="0.6" />
+  <env name="OPENBLAS_NUM_THREADS" value="1" />
+  <env name="OMP_NUM_THREADS" value="1" />
+  <env name="MKL_NUM_THREADS" value="1" />
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)" />
+    <arg name="paused" value="$(arg paused)" />
+    <arg name="use_sim_time" value="true" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="headless" value="false" />
+    <arg name="debug" value="false" />
+  </include>
+  <group ns="tb3_0">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find tb3_distributed_control)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="tb3_0" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="tf_prefix" value="tb3_0" />
+      <param name="publish_frequency" value="30" />
+    </node>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_0/odom" />
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_0 -x 0.4 -y 0 -z 0.01 -Y 0 -param robot_description" />
+  </group>
+  <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_0" output="screen">
+    <param name="robot_id" value="0" />
+    <param name="static_accumulation" value="$(arg static_accumulation)" />
+  </node>
+  <group ns="tb3_1" if="$(eval int(arg('robot_count')) > 1)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find tb3_distributed_control)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="tb3_1" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="tf_prefix" value="tb3_1" />
+      <param name="publish_frequency" value="30" />
+    </node>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_1/odom" />
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_1 -x 0.2 -y 0.4 -z 0.01 -Y 0 -param robot_description" />
+  </group>
+  <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_1" output="screen" if="$(eval int(arg('robot_count')) > 1)">
+    <param name="robot_id" value="1" />
+    <param name="static_accumulation" value="$(arg static_accumulation)" />
+  </node>
+  <group ns="tb3_2" if="$(eval int(arg('robot_count')) > 2)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find tb3_distributed_control)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="tb3_2" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="tf_prefix" value="tb3_2" />
+      <param name="publish_frequency" value="30" />
+    </node>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_2/odom" />
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_2 -x -0.2 -y 0.2 -z 0.01 -Y 0 -param robot_description" />
+  </group>
+  <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_2" output="screen" if="$(eval int(arg('robot_count')) > 2)">
+    <param name="robot_id" value="2" />
+    <param name="static_accumulation" value="$(arg static_accumulation)" />
+  </node>
+  <group ns="tb3_3" if="$(eval int(arg('robot_count')) > 3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find tb3_distributed_control)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="tb3_3" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="tf_prefix" value="tb3_3" />
+      <param name="publish_frequency" value="30" />
+    </node>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_3/odom" />
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_3 -x -0.3 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
+  </group>
+  <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_3" output="screen" if="$(eval int(arg('robot_count')) > 3)">
+    <param name="robot_id" value="3" />
+    <param name="static_accumulation" value="$(arg static_accumulation)" />
+  </node>
+  <group ns="tb3_4" if="$(eval int(arg('robot_count')) > 4)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find tb3_distributed_control)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="tb3_4" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="tf_prefix" value="tb3_4" />
+      <param name="publish_frequency" value="30" />
+    </node>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_4/odom" />
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_4 -x 0.2 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
+  </group>
+  <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_4" output="screen" if="$(eval int(arg('robot_count')) > 4)">
+    <param name="robot_id" value="4" />
+    <param name="static_accumulation" value="$(arg static_accumulation)" />
+  </node>
+  <node pkg="tb3_distributed_control" type="leader_node_cbf.py" name="leader_node" ns="tb3_virtual_leader" output="screen">
+    <param name="total_time" value="$(arg total_time)" />
+    <param name="trajectory_type" value="$(arg trajectory_type)" />
+    <param name="leader_init_x" value="$(arg leader_init_x)" />
+    <param name="leader_init_y" value="$(arg leader_init_y)" />
+    <param name="leader_init_yaw" value="0" />
+    <param name="virtual_leader_ns" value="tb3_virtual_leader" />
+  </node>
+  <node pkg="tb3_distributed_control" type="distributed_control_visualizer.py" name="distributed_control_visualizer" output="screen" if="$(eval int(arg('robot_count')) == 5)" />
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config)" output="screen" if="$(arg open_rviz)" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom_global" args="0 0 0 0 0 0 world odom" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_virtual_leader_odom" args="0 0 0 0 0 0 world tb3_virtual_leader/odom" />
+</launch>

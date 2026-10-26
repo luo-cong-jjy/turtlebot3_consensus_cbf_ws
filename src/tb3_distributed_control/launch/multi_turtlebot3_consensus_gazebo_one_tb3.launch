@@ -1,0 +1,53 @@
+<launch>
+  <!-- Standalone LaserScan geometry test: one robot, perception and RViz. -->
+  <arg name="model" default="$(optenv TURTLEBOT3_MODEL burger)"/>
+  <arg name="first_tb3" default="tb3_0"/>
+  <arg name="first_tb3_x_pos" default="0.5"/>
+  <arg name="first_tb3_y_pos" default="0.0"/>
+  <arg name="first_tb3_z_pos" default="0.0"/>
+  <arg name="first_tb3_yaw" default="0.0"/>
+  <arg name="world_name" default="$(find tb3_distributed_control)/worlds/consensus_obstacle_2.world"/>
+  <arg name="gui" default="true"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="paused" default="false"/>
+  <arg name="target_frame" default="world"/>
+  <arg name="scan_topic" default="scan"/>
+  <arg name="geometry_config" default="$(find tb3_distributed_control)/laser/mpc_dcbf_geometry/config.yaml"/>
+
+  <param name="/use_sim_time" value="true"/>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <group ns="$(arg first_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find tb3_distributed_control)/urdf/turtlebot3_$(arg model).urdf.xacro"/>
+    <param name="tf_prefix" value="$(arg first_tb3)"/>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" value="50.0"/>
+      <param name="tf_prefix" value="$(arg first_tb3)"/>
+    </node>
+    <!-- Gazebo odometrySource=world: do not add the spawn offset twice. -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom"
+          args="0 0 0 0 0 0 $(arg target_frame) $(arg first_tb3)/odom"/>
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" output="screen"
+          args="-urdf -model $(arg first_tb3) -x $(arg first_tb3_x_pos) -y $(arg first_tb3_y_pos) -z $(arg first_tb3_z_pos) -Y $(arg first_tb3_yaw) -param robot_description"/>
+
+    <node pkg="tb3_distributed_control" type="laser_geometry_node.py" name="laser_geometry"
+          output="screen" required="true">
+      <rosparam command="load" file="$(arg geometry_config)"/>
+      <param name="target_frame" value="$(arg target_frame)"/>
+      <param name="robot_frame_prefix" value="$(arg first_tb3)"/>
+      <param name="scan_topic" value="$(arg scan_topic)"/>
+    </node>
+    <node if="$(arg open_rviz)" pkg="tb3_distributed_control" type="geometry_rviz.py" name="geometry_rviz" output="screen">
+      <param name="config_file" value="$(find tb3_distributed_control)/laser/mpc_dcbf_geometry/geometry.rviz"/>
+      <param name="robot_namespace" value="$(arg first_tb3)"/>
+      <param name="target_frame" value="$(arg target_frame)"/>
+    </node>
+  </group>
+</launch>

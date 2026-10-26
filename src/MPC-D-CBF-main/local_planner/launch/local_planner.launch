@@ -1,0 +1,6 @@
+<launch>
+    <!-- local_planner.py：CasADi MPC-CBF 局部规划器；订阅 /curr_state、/obs_predict_pub、/global_path，发布 /local_plan、/local_path、/cmd_move。 -->
+    <node name="local_planner" pkg="local_planner" type="local_planner.py" output="screen"/>
+    <!-- controller.py：基于 TF 的底层控制器；发布 /curr_state，并将 /local_plan 的首个控制量发送到 /cmd_vel。 -->
+    <node name="controller" pkg="local_planner" type="controller.py"/>
+</launch>
