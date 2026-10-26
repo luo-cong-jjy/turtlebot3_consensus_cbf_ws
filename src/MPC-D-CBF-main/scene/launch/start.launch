@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<launch>
+  <!-- Gazebo 世界文件与图形界面开关。 -->
+  <arg name="world" default="$(find scene)/worlds/map.world"/>
+  <arg name="gui" default="true"/>
+  <arg name="args" default=""/>
+  
+  <!-- 让所有 ROS 节点使用 Gazebo 仿真时间。 -->
+  <param name="/use_sim_time" value="true" />
+
+  <!-- gzserver：加载指定世界，并运行物理仿真和传感器。 -->
+  <node name="gazebo" pkg="gazebo_ros" type="gzserver" args="$(arg world) $(arg args)" respawn="false" output="screen"/>
+  
+  <!-- start gui -->
+  <group if="$(arg gui)">
+    <!-- gzclient：可选 Gazebo 图形界面。 -->
+    <node name="gazebo_gui" pkg="gazebo_ros" type="gzclient" respawn="false" output="screen"/>
+  </group>
+
+  <!-- getrobot_pose.cpp：把 /base_pose_ground_truth 里程计转换为 TF，供 world -> base_link 查询使用。 -->
+  <node pkg="scene" type="getrobot_pose" name="getrobot_pose" output="screen" required="true" />
+
+</launch>

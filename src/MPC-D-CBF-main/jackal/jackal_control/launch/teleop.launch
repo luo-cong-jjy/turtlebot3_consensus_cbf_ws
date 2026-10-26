@@ -1,0 +1,32 @@
+<launch>
+  <!-- 手柄设备路径，以及是否启用手柄遥控。 -->
+  <arg name="joy_dev" default="$(optenv JACKAL_JOY_DEVICE /dev/input/ps4)" />
+  <arg name="joystick" default="true" />
+
+  <!-- 手动速度指令链路；dynamic.launch 中关闭手柄输入，只保留 RViz 交互标记服务。 -->
+  <group ns="bluetooth_teleop" if="$(arg joystick)">
+
+    <!-- 默认 PS4 手柄映射参数，供 teleop_twist_joy 使用。 -->
+    <group unless="$(optenv JACKAL_PS3 0)" >
+      <rosparam command="load" file="$(find jackal_control)/config/teleop_ps4.yaml" />
+      <param name="joy_node/dev" value="$(arg joy_dev)" />
+    </group>
+
+    <!-- 可选 PS3 手柄映射，通过 JACKAL_PS3 环境变量选择。 -->
+    <group if="$(optenv JACKAL_PS3 0)" >
+      <rosparam command="load" file="$(find jackal_control)/config/teleop_ps3.yaml" />
+      <param name="joy_node/dev" value="$(arg joy_dev)" />
+    </group>
+
+    <!-- joy_node：从指定输入设备读取原始手柄数据。 -->
+    <node pkg="joy" type="joy_node" name="joy_node" />
+
+    <!-- teleop_twist_joy：把手柄按键/摇杆转换为 geometry_msgs/Twist 速度指令。 -->
+    <node pkg="teleop_twist_joy" type="teleop_node" name="teleop_twist_joy"/>
+  </group>
+
+  <!-- RViz 交互标记服务：允许通过 base_link 上的交互标记发布手动 Twist 指令。 -->
+  <node pkg="interactive_marker_twist_server" type="marker_server" name="twist_marker_server">
+    <param name="link_name" value="base_link" />
+  </node>
+</launch>

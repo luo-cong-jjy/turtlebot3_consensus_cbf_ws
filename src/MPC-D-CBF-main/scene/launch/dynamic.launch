@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- 启动 Gazebo，并加载 MPC-D-CBF 示例世界。 -->
+    <include file="$(find scene)/launch/start.launch">
+        <arg name="world" value="$(find scene)/worlds/world.world" />
+    </include>
+
+    <!-- 加载 Jackal URDF 到 robot_description，并发布机器人连杆 TF 树。 -->
+    <include file="$(find jackal_description)/launch/description.launch" />
+    <!-- 启动 Jackal 速度控制器栈；此处使用 Gazebo 真值 TF，因此关闭 EKF。 -->
+    <include file="$(find jackal_control)/launch/control.launch">
+        <arg name="enable_ekf" value="false" />
+    </include>
+    <!-- 启动遥控支持但关闭手柄输入；保留 RViz 交互标记服务。 -->
+    <include file="$(find jackal_control)/launch/teleop.launch">
+        <arg name="joystick" value="false" />
+    </include>
+
+    <!-- <node pkg="tf" type="static_transform_publisher" name="world_odom_broadcaster" args="0 0 0 0 0 0 1 world odom 100" /> -->
+
+    <!-- gazebo_ros spawn_model：读取 robot_description，在全局路径起点附近生成 Jackal 模型。 -->
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+        args="-urdf -model jackal -param robot_description -x -10 -y 0 -z 1.0" />
+
+    <!-- 仿真局部地图模块：消费 /velodyne_points，发布栅格地图和椭圆障碍物观测。 -->
+    <include file="$(find local_map)/launch/for_simulation.launch" />
+
+    <!-- movetest_node：当 /cmd_move 为 true 后，驱动 8 个 Gazebo 圆柱障碍物运动。 -->
+    <include file="$(find scene)/launch/movetest_node.launch" />
+
+    <!-- obs_kf.cpp：卡尔曼障碍物跟踪器，把 local_map 观测转换为 /obs_predict_pub 供 MPC-CBF 规划器使用。 -->
+    <node pkg="obs_param" type="obs_kf" output="screen" name="obs_kf" />
+
+    <!-- 发布直线全局参考路径，供 local_planner.py 订阅。 -->
+    <include file="$(find global_path_publisher)/launch/pub_global_path.launch" />
+
+    <!-- RViz 可视化：显示仿真话题、路径、地图、椭圆障碍物和障碍物预测结果。 -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scene)/rviz_config/simulation.rviz" required="true" />
+
+</launch>

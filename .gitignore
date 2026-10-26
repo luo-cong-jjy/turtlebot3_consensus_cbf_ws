@@ -1,0 +1,13 @@
+# Catkin generated directories (rebuild separately in this workspace).
+build/
+devel/
+install/
+log/
+logs/
+__pycache__/
+*.py[cod]
+# Experimental outputs stay outside source version history and are archived separately.
+**/data_collect/
+**/output/
+四脚本对比证据/
+阶段成果归档/

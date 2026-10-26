@@ -1,0 +1,72 @@
+{
+  "synthetic": {
+    "mode": "synthetic",
+    "log_directory": "/tmp/tb3_geometry_synthetic_g3z4_ago",
+    "master": "http://127.0.0.1:60257",
+    "checks": [
+      "real ROS scan subscription",
+      "timestamped full TF including offset",
+      "DBSCAN and ellipse output",
+      "stable Hungarian ID",
+      "native and 7-field messages",
+      "RViz marker publication/deletion",
+      "empty and stale scan cleanup",
+      "missing TF does not fabricate estimates"
+    ],
+    "obstacles": 1,
+    "point_count": 21,
+    "status": "passed"
+  },
+  "gazebo": {
+    "mode": "gazebo",
+    "log_directory": "/tmp/tb3_geometry_gazebo_8k1j_l1t",
+    "master": "http://127.0.0.1:47417",
+    "checks": [
+      "headless single-robot launch",
+      "Gazebo LaserScan and TF",
+      "multiple finite obstacle estimates",
+      "unique IDs",
+      "no controller/leader/EgoPlanner nodes"
+    ],
+    "obstacle_count": 17,
+    "laser_frame": "tb3_0/base_scan",
+    "sample": [
+      {
+        "id": 1,
+        "x": -2.712510202012765,
+        "y": -1.0676592053792908,
+        "a": 0.09898663156354202,
+        "b": 0.055000000025
+      },
+      {
+        "id": 2,
+        "x": -2.579131801324244,
+        "y": -0.32184294254251655,
+        "a": 0.17019724350552928,
+        "b": 0.055000000025
+      },
+      {
+        "id": 3,
+        "x": -2.388864450972,
+        "y": 1.779805038589551,
+        "a": 0.17501777965096676,
+        "b": 0.07710005466123465
+      },
+      {
+        "id": 4,
+        "x": -1.3849338729666254,
+        "y": 0.7559994128935821,
+        "a": 0.17477441320077805,
+        "b": 0.07457467142718482
+      },
+      {
+        "id": 5,
+        "x": -1.1773922394567917,
+        "y": -2.7065903954590502,
+        "a": 0.20578933675623198,
+        "b": 0.07787419882610798
+      }
+    ],
+    "status": "passed"
+  }
+}

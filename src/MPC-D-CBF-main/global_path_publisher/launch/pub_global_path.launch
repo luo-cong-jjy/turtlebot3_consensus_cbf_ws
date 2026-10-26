@@ -1,0 +1,12 @@
+<launch>
+    <!-- global_path_publisher.cpp：向 /global_path 发布直线全局参考路径，供局部 MPC-CBF 规划器使用。 -->
+    <node pkg="global_path_publisher" type="global_path_pub" output="screen" name="global_path_pub">  
+        <!-- world 坐标系下的全局路径起点。 -->
+        <param name="start_x" value="-10.0"/> 
+        <param name="start_y" value="0.0"/>  
+        <!-- world 坐标系下的全局路径终点。 -->
+        <param name="end_x" value="9.0"/>  
+        <param name="end_y" value="0.0"/>   
+    </node>
+
+</launch>

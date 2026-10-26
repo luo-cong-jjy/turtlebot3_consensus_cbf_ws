@@ -1,0 +1,81 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Background Color: 35; 35; 35
+    Fixed Frame: world
+    Frame Rate: 30
+  Displays:
+    - Class: rviz/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 0.5
+      Plane Cell Count: 30
+      Color: 120; 120; 120
+      Reference Frame: <Fixed Frame>
+    - Class: rviz/RobotModel
+      Name: TurtleBot3
+      Enabled: true
+      Robot Description: robot_description
+      TF Prefix: ""
+      Visual Enabled: true
+      Collision Enabled: false
+      Alpha: 1
+    - Class: rviz/LaserScan
+      Name: Raw LaserScan
+      Enabled: true
+      Topic: scan
+      Queue Size: 10
+      Size (m): 0.025
+      Style: Points
+      Color Transformer: FlatColor
+      Color: 180; 180; 180
+      Position Transformer: XYZ
+      Decay Time: 0
+      Use Fixed Frame: true
+    - Class: rviz/PointCloud2
+      Name: Transformed Scan
+      Enabled: false
+      Topic: laser_geometry/points
+      Queue Size: 3
+      Size (m): 0.03
+      Style: Points
+      Color Transformer: FlatColor
+      Color: 255; 255; 255
+      Position Transformer: XYZ
+    - Class: rviz/MarkerArray
+      Name: DBSCAN Clusters
+      Enabled: true
+      Marker Topic: laser_geometry/clusters
+      Queue Size: 3
+    - Class: rviz/MarkerArray
+      Name: Enclosing Ellipses and IDs
+      Enabled: true
+      Marker Topic: laser_geometry/ellipses
+      Queue Size: 3
+    - Class: rviz/TF
+      Name: TF
+      Enabled: false
+      Show Names: true
+      Show Axes: true
+      Show Arrows: false
+  Tools:
+    - Class: rviz/Interact
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Views:
+    Current:
+      Class: rviz/TopDownOrtho
+      Name: Current View
+      Target Frame: <Fixed Frame>
+      Scale: 80
+      Angle: 0
+      X: 0
+      Y: 0
+Window Geometry:
+  Width: 1400
+  Height: 900

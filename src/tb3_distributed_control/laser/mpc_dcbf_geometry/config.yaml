@@ -1,0 +1,23 @@
+# Distances in metres; eps differs from the upstream grid-cell radius.
+scan_topic: scan
+target_frame: world
+robot_frame_prefix: tb3_0
+scan_frame_override: ""
+processing_rate: 10.0
+min_range: 0.12
+max_range: 3.5
+voxel_size: 0.02
+cluster_eps: 0.18
+cluster_min_points: 3
+max_cluster_extent: 3.0
+min_semi_axis: 0.025
+ellipse_padding: 0.03
+fit_tolerance: 0.01
+fit_max_iterations: 300
+association_distance: 0.6
+track_timeout: 1.0
+shape_history_size: 10
+scan_timeout: 0.5
+tf_timeout: 0.05
+# Visualization only; not a collision-free footprint certificate.
+display_margin: 0.10

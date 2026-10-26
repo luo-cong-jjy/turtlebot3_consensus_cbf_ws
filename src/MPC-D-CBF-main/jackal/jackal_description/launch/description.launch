@@ -1,0 +1,18 @@
+<launch>
+  <!-- Jackal 的 URDF 配置名称，对应 urdf/configs 下的配置文件。 -->
+  <arg name="config" default="base" />
+  <!-- fix for oneweek project -->
+  <!-- xacro 展开前使用的平台相关环境包装脚本。 -->
+  <arg name="env_runner" value="$(eval 'env_run' if not optenv('OS', 'unknown').lower().startswith('windows') else 'env_run.bat')" />
+  <!-- the following seems to work too when in devel space, but not in install_isolated -->
+  <!-- <arg name="env_runner" value="env_run" /> -->
+
+  <!-- 由 jackal.urdf.xacro 生成 robot_description，后续 spawn_model 会读取该参数生成 Gazebo 模型。 -->
+  <param name="robot_description"
+         command="$(find jackal_description)/scripts/$(arg env_runner)
+                    $(find jackal_description)/urdf/configs/$(arg config)
+                    $(find xacro)/xacro $(find jackal_description)/urdf/jackal.urdf.xacro
+                    --inorder" />
+  <!-- robot_state_publisher：根据 robot_description 发布机器人各连杆 TF。 -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+</launch>
