@@ -376,7 +376,7 @@ class TurtleBot3CBFController:
         self.max_static=self.slots-4
         self.peer_safety=bool(rospy.get_param("/cbf/peer_safety",True))
         self.stale=float(rospy.get_param("/cbf/data_timeout",.6))
-        self.radius=float(rospy.get_param("/cbf/formation_radius",.4))
+        self.radius=float(rospy.get_param("/cbf/formation_radius",.5))
         self.peer_radius=float(rospy.get_param("/cbf/peer_radius",.20))
         if not np.isfinite(self.peer_radius) or self.peer_radius <= 0:
             raise ValueError('Expected a positive finite peer envelope radius')

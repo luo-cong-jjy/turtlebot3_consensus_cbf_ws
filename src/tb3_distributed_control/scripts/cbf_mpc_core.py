@@ -16,7 +16,7 @@ def default_config():
 
 
 class TimedReference:
-    def __init__(self, robot_id, dt=.1, horizon=10, radius=.4):
+    def __init__(self, robot_id, dt=.1, horizon=10, radius=.5):
         self.dt, self.n, self.radius, self.robot_id = dt, horizon, radius, robot_id
         self.history = deque(maxlen=11)
 
