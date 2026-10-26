@@ -19,34 +19,6 @@ ORIGINAL_CHARTS=(
     ('clustering_analysis','Clustering analysis'),('avoidance_forces','Avoidance forces'),
     ('observer_estimation','Observer estimation'),('tracking_error_xy','XY tracking error'))
 
-# Match visualize_results.py: dense timing traces intentionally remain thinner.
-PLOT_STYLE=dict(curve_width=2.,secondary_width=1.5,timing_width=.8,
-    leader_width=2.5,snapshot_width=1.5,dpi=300,grid_alpha=.3)
-ROBOT_COLORS=('#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd')
-
-
-def _save_plot(fig,path,name,stamp):
-    import matplotlib.pyplot as plt
-    for extension in ('png','pdf'):
-        fig.savefig(Path(path)/(name+'_'+stamp+'.'+extension),
-            dpi=PLOT_STYLE['dpi'],bbox_inches='tight')
-    plt.close(fig)
-
-
-def _time_axis(ax,end,ylabel,title):
-    from matplotlib.ticker import MaxNLocator
-    end=max(float(end),1.)
-    ticks=MaxNLocator(nbins=10).tick_values(0,end)
-    ticks=ticks[(ticks>=0)&(ticks<=end)]
-    # Include the actual end without nearly overlapping the preceding tick.
-    if len(ticks) and not np.isclose(ticks[-1],end):
-        if len(ticks)>1 and end-ticks[-1]<.35*(ticks[-1]-ticks[-2]):ticks=ticks[:-1]
-        ticks=np.append(ticks,end)
-    ax.set_xticks(ticks);ax.set_xlim(0,end)
-    ax.set_xlabel('Trajectory Time (s)',fontsize=12)
-    ax.set_ylabel(ylabel,fontsize=12);ax.set_title(title,fontsize=14)
-    ax.set_axisbelow(True);ax.grid(True,alpha=PLOT_STYLE['grid_alpha'])
-
 
 def aligned_centroid(robots):
     valid=[r for r in robots.values() if r is not None and r['t']]
@@ -137,7 +109,7 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
         robot={k:[] for k in ('t','xc','yc','thetac','vc','wc','xe','ye','thetae','xr','yr',
             'zxeo_x','zxeo_y','computation_time','full_cycle_time','raw_min_distance',
             'obstacle_distance','total_clusters_count','avoidance_force_magnitude',
-            'static_clusters_count','dynamic_clusters_count','peer_clusters_count')}
+            'static_clusters_count','peer_clusters_count')}
         for r in data:
             values=dict(t=r['time'],xc=r['x'],yc=r['y'],thetac=r['theta'],vc=r['v'],wc=r['omega'],
                 xe=r['consensus_error_x'],ye=r['consensus_error_y'],thetae=r.get('heading_error',np.nan),
@@ -148,8 +120,7 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
                 raw_min_distance=r.get('raw_min_range',np.nan),
                 obstacle_distance=r.get('closest_obstacle_distance',np.nan),
                 total_clusters_count=r.get('total_clusters_count',r['detected_ellipses']),
-                static_clusters_count=r.get('detected_static_ellipses',r['detected_ellipses']),
-                dynamic_clusters_count=r.get('detected_dynamic_ellipses',np.nan),
+                static_clusters_count=r['detected_ellipses'],
                 peer_clusters_count=r.get('detected_peer_ellipses',np.nan),avoidance_force_magnitude=np.nan)
             for k,value in values.items():robot[k].append(value)
         robots[i]=robot
@@ -194,282 +165,114 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
     return dataset
 
 
-def formation_snapshots(robots, times=None, max_gap=.6):
-    """Interpolate measured positions at common times; never bridge stale gaps.
-
-    Robot IDs fix the edge order, preserving actual formation deformations.
-    Missing robots/times are skipped rather than replaced by ideal vertices.
-    """
-    samples=[]
-    for i in range(5):
-        robot=robots.get(i)
-        if robot is None:return []
-        data=np.column_stack([robot[k] for k in ('t','xc','yc')])
-        data=data[np.isfinite(data).all(axis=1)]
-        if not len(data):return []
-        data=data[np.argsort(data[:,0],kind='stable')]
-        _,indices=np.unique(data[:,0],return_index=True)
-        samples.append(data[indices])
-    start=max(data[0,0] for data in samples)
-    end=min(data[-1,0] for data in samples)
-    if start>end:return []
-    if times is None:
-        # Match the original six snapshots from 30 s to the common final time.
-        first=max(start,30.) if end>30. else start
-        times=np.unique(np.linspace(first,end,6 if end>30. else 3))
-    result=[]
-    for stamp in times:
-        if not np.isfinite(stamp) or not start<=stamp<=end:continue
-        positions=[]
-        for data in samples:
-            index=int(np.searchsorted(data[:,0],stamp))
-            if index<len(data) and abs(data[index,0]-stamp)<1e-9:
-                positions.append(data[index,1:].tolist())
-            elif index==0 or index==len(data) or data[index,0]-data[index-1,0]>max_gap:
-                break
-            else:
-                positions.append([float(np.interp(stamp,data[:,0],data[:,axis])) for axis in (1,2)])
-        if len(positions)==5:result.append(dict(time=float(stamp),positions=positions))
-    return result
-
-
-def plot_trajectory(path,stamp,robots,leader,metadata):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    from matplotlib.patches import Circle,Rectangle
-    from matplotlib.lines import Line2D
-    from matplotlib.transforms import Affine2D
-    import xml.etree.ElementTree as ET
-    valid={i:r for i,r in robots.items() if r is not None}
-    if not valid:return
-    path=Path(path)
-    fig,ax=plt.subplots(figsize=(8,6))
-    for i,r in sorted(valid.items()):
-        line,=ax.plot(r['xc'],r['yc'],label='Robot '+str(i)+' actual',
-            color=ROBOT_COLORS[i%5],lw=PLOT_STYLE['curve_width'],zorder=3)
-        ax.plot(r['xr'],r['yr'],'--',color=line.get_color(),lw=PLOT_STYLE['curve_width'],alpha=.7,zorder=2)
-    centroid=aligned_centroid(robots)
-    if centroid:ax.plot(centroid['xc'],centroid['yc'],color='deepskyblue',lw=PLOT_STYLE['curve_width'],label='Actual formation center',zorder=4)
-    if leader:ax.plot(leader['x0'],leader['y0'],color='purple',ls='--',lw=PLOT_STYLE['curve_width'],alpha=.7,label='Leader reference',zorder=3)
-    dynamic_file=path/'dynamic_truth.csv'
-    if dynamic_file.exists():
-        records=list(csv.DictReader(dynamic_file.open()))
-        for name in sorted({r['name'] for r in records}):
-            rows=[r for r in records if r['name']==name]
-            if not rows:continue
-            ax.plot([float(r['x']) for r in rows],[float(r['y']) for r in rows],
-                ls='-.',lw=1.5,label=name+' prescribed path')
-            for t in np.linspace(0,max(float(r['time']) for r in rows),4):
-                r=min(rows,key=lambda r:abs(float(r['time'])-t))
-                ax.add_patch(Circle((float(r['x']),float(r['y'])),float(r['radius']),
-                    fill=False,edgecolor='darkorange',alpha=.5,lw=1.))
-    snapshots=formation_snapshots(robots)
-    snapshot_colors=('#3454a1','#3079ad','#007f79','#977300','#b65b20','#ad303d')
-    for index,snapshot in enumerate(snapshots):
-        positions=np.asarray(snapshot['positions'])
-        closed=np.vstack((positions,positions[0]))
-        color=snapshot_colors[index%len(snapshot_colors)]
-        ax.plot(closed[:,0],closed[:,1],color=color,lw=PLOT_STYLE['snapshot_width'],alpha=.85,zorder=5)
-        ax.scatter(positions[:,0],positions[:,1],s=25,color=color,edgecolors='white',linewidths=.4,zorder=6)
-        ax.annotate('%.1f s'%snapshot['time'],positions.mean(axis=0),xytext=(4,5),
-            textcoords='offset points',fontsize=8,color=color,zorder=7,
-            bbox=dict(facecolor='white',edgecolor='none',alpha=.75,pad=1.5))
-    world=Path(metadata.get('world_file',''))
-    if world.is_file():
-        for link in ET.parse(world).findall('.//model[@name="obstacles"]/link'):
-            pose=[float(v) for v in link.findtext('pose').split()];g=link.find('collision/geometry')
-            if g.find('cylinder') is not None:patch=Circle(pose[:2],float(g.findtext('cylinder/radius')),color='gray',alpha=.7)
-            elif g.find('box') is not None:
-                a,b,_=[float(v) for v in g.findtext('box/size').split()]
-                patch=Rectangle((-a/2,-b/2),a,b,color='gray',alpha=.7)
-                patch.set_transform(Affine2D().rotate(pose[5]).translate(*pose[:2])+ax.transData)
-            else:continue
-            ax.add_patch(patch)
-    ax.autoscale_view();ax.set_aspect('equal');ax.set_axisbelow(True);ax.grid(alpha=PLOT_STYLE['grid_alpha'])
-    handles,labels=ax.get_legend_handles_labels()
-    handles.append(Line2D([],[],color='gray',ls='--',lw=PLOT_STYLE['curve_width']));labels.append('Nominal reference (robot colors)')
-    if snapshots:
-        handles.append(Line2D([],[],color='slategray',marker='o',lw=PLOT_STYLE['snapshot_width'],markersize=4))
-        labels.append('Measured formation snapshots')
-    ax.legend(handles,labels,fontsize=8,ncol=3,loc='upper center',bbox_to_anchor=(.5,-.1))
-    radius=metadata.get('formation_radius')
-    title='MPC-D-CBF formation trajectory'
-    if radius is not None:title+=' (nominal radius %.2f m)'%float(radius)
-    ax.set_title(title,fontsize=12)
-    ax.set_xlabel('x (m)');ax.set_ylabel('y (m)');fig.tight_layout()
-    _save_plot(fig,path,'trajectory',stamp)
-    (path/('trajectory_snapshots_'+stamp+'.json')).write_text(json.dumps(
-        dict(source='Time-aligned recorded positions, connected in robot ID order 0-1-2-3-4-0',
-             formation_radius=radius,snapshots=snapshots),indent=2))
-
-
 def plot_results(path,stamp,robots,leader,geometry_stats,metadata):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    valid={i:r for i,r in sorted(robots.items()) if r is not None and len(r['t'])}
+    from matplotlib.patches import Circle,Rectangle
+    from matplotlib.transforms import Affine2D
+    import xml.etree.ElementTree as ET
+    valid={i:r for i,r in robots.items() if r is not None}
     if not valid:return
-    path=Path(path);path.mkdir(parents=True,exist_ok=True)
-    end=float(np.ceil(max(leader['t'] if leader and len(leader['t']) else
-        [max(r['t']) for r in valid.values()])))
-    width=PLOT_STYLE['curve_width'];secondary=PLOT_STYLE['secondary_width']
-    color=lambda i:ROBOT_COLORS[i%5]
-    plot_trajectory(path,stamp,robots,leader,metadata)
-    # Original figures 2--6: same sizes, line widths, color IDs and speed limits.
-    specs=(('linear_velocity','vc','Linear Velocity (m/s)','Linear Velocities','v',(-.3,.3),'v0'),
-        ('angular_velocity','wc','Angular Velocity (rad/s)','Angular Velocities','omega',(-3.,3.),'w0'),
-        ('x_error','xe','X Direction Error (m)','X Position Error','xe',None,None),
-        ('y_error','ye','Y Direction Error (m)','Y Position Error','ye',None,None),
-        ('heading_error','thetae','Heading Angle Error (rad)','Heading Error','thetae',(-4.,4.),None))
-    for name,key,ylabel,title,prefix,limits,leader_key in specs:
-        fig,ax=plt.subplots(figsize=(8,4))
+    fig,ax=plt.subplots(figsize=(8,7))
+    for i,r in valid.items():
+        line,=ax.plot(r['xc'],r['yc'],label='Robot '+str(i),lw=1.2)
+        ax.plot(r['xr'],r['yr'],'--',color=line.get_color(),lw=.7,alpha=.5)
+    centroid=aligned_centroid(robots)
+    if centroid:ax.plot(centroid['xc'],centroid['yc'],'k:',lw=1.,label='Formation center (time aligned)')
+    if leader:ax.plot(leader['x0'],leader['y0'],'k--',lw=1.,label='Leader history')
+    world=Path(metadata.get('world_file',''))
+    if world.is_file():
+        for link in ET.parse(world).findall('.//model[@name="obstacles"]/link'):
+            pose=[float(v) for v in link.findtext('pose').split()];g=link.find('collision/geometry')
+            if g.find('cylinder') is not None:patch=Circle(pose[:2],float(g.findtext('cylinder/radius')),color='gray',alpha=.4)
+            elif g.find('box') is not None:
+                a,b,_=[float(v) for v in g.findtext('box/size').split()]
+                patch=Rectangle((-a/2,-b/2),a,b,color='gray',alpha=.4)
+                patch.set_transform(Affine2D().rotate(pose[5]).translate(*pose[:2])+ax.transData)
+            else:continue
+            ax.add_patch(patch)
+    ax.set_aspect('equal');ax.grid(alpha=.25);ax.legend(fontsize=8)
+    ax.set_xlabel('x (m)');ax.set_ylabel('y (m)');fig.tight_layout()
+    fig.savefig(path/('trajectory_'+stamp+'.png'),dpi=150);plt.close(fig)
+    plots=[('x_error','xe','x consensus error (m)'),('y_error','ye','y consensus error (m)'),
+           ('heading_error','thetae','heading error (rad)'),('linear_velocity','vc','v (m/s)'),
+           ('angular_velocity','wc','omega (rad/s)'),('time_analysis','computation_time','control computation (ms)')]
+    for name,key,ylabel in plots:
+        fig,ax=plt.subplots(figsize=(9,3.6))
         for i,r in valid.items():
-            ax.plot(r['t'],r[key],label=prefix+'_'+str(i),color=color(i),lw=width)
-        if leader_key and leader and len(leader.get(leader_key,[])):
-            ax.plot(leader['t'],leader[leader_key],'--',color='#8c564b',lw=width,label=prefix+'_Leader')
-        if limits:ax.set_ylim(*limits)
+            values=np.asarray(r[key])*(1000. if key=='computation_time' else 1.)
+            ax.plot(r['t'],values,label='Robot '+str(i),lw=.9)
+        if key=='thetae':ax.set_ylim(-4,4)
+        if key=='computation_time':
+            period=1000.*metadata.get('control_dt',.1)
+            ax.axhline(period,color='red',ls='--',lw=1.,label='Control period (%.0f ms)'%period)
+            upper=max(period*2,max(max(r[key])*1000. for r in valid.values())*1.1)
+            ax.axhspan(period,upper,color='red',alpha=.07);ax.set_ylim(0,upper)
         if not any(np.isfinite(r[key]).any() for r in valid.values()):
             ax.text(.5,.5,'Historical data unavailable',ha='center',transform=ax.transAxes)
-        _time_axis(ax,end,ylabel,title+' - '+stamp)
-        ax.legend();fig.tight_layout();_save_plot(fig,path,name,stamp)
-    # Figure 7: wall duration, not a fabricated separate pure-optimizer duration.
-    fig,ax=plt.subplots(figsize=(16,10));stats=[];all_times=[]
-    period=1000.*metadata.get('control_dt',.1);maximum=period*2
-    for i,r in valid.items():
-        values=np.asarray(r['computation_time'])*1000.
-        mask=np.isfinite(values)&np.isfinite(r['t'])
-        t=np.asarray(r['t'])[mask];values=values[mask]
-        if not len(values):continue
-        all_times.extend(values.tolist());maximum=max(maximum,float(values.max())*1.12)
-        timing_color=('blue','orange','green','red','purple')[i%5]
-        ax.plot(t,values,lw=PLOT_STYLE['timing_width'],color=timing_color,alpha=.7,
-            label='Robot %d - Controller Wall Time'%i)
-        peak=int(np.argmax(values))
-        if values[peak]>80:
-            ax.scatter(t[peak],values[peak],s=50,color=timing_color,edgecolors='black',linewidths=1,zorder=10)
-            ax.annotate('R%d: %.1f ms'%(i,values[peak]),(t[peak],values[peak]),xytext=(0,7),
-                textcoords='offset points',fontsize=8,ha='center',color=timing_color,weight='bold')
-        stats.append('Robot %d: mean %.1f, median %.1f, P95 %.1f, max %.1f ms; overrun %d/%d'%
-            (i,values.mean(),np.median(values),np.percentile(values,95),values.max(),
-             np.sum(values>period),len(values)))
-    ax.axhline(period,color='red',ls='-.',lw=3,alpha=.95,label='Control Period (%.0f ms)'%period,zorder=10)
-    ax.axhspan(period,maximum,color='red',alpha=.1,label='Overrun Zone');ax.set_ylim(0,maximum)
-    if all_times:
-        values=np.asarray(all_times)
-        stats.append('Overall: mean %.1f, P99 %.1f, max %.1f ms; control period %.0f ms'%
-            (values.mean(),np.percentile(values,99),values.max(),period))
-    stats.append('Recorded controller duration includes solving/validation; it is not the interval between commands.')
-    _time_axis(ax,end,'Time (ms)','Time Analysis: Controller Wall Time - '+stamp)
-    ax.legend(bbox_to_anchor=(1.02,1),loc='upper left',fontsize=9)
-    fig.text(.02,.02,'\n'.join(stats),fontsize=9,family='monospace',va='bottom',
-        bbox=dict(boxstyle='round,pad=0.5',facecolor='lightgray',alpha=.95))
-    fig.subplots_adjust(bottom=.25,right=.75)
-    _save_plot(fig,path,'time_analysis',stamp)
-    # Figure 8: restore the single-axis main chart; raw laser range is separate.
-    # Neither the CAPA .30/.35 m thresholds nor a distance smoothing filter is
-    # carried into this figure: neither represents the D-CBF safety boundary.
-    for name,key,ylabel,title in (
-            ('obstacle_distance','obstacle_distance','Distance to Closest Obstacle Point (m)',
-             'Nominal Reference to Measured Obstacle Point'),
-            ('laser_min_range','raw_min_distance','Minimum Range from Laser Origin (m)',
-             'Measured Laser Minimum Range (supplement)')):
-        fig,ax=plt.subplots(figsize=(10,6))
-        for i,r in valid.items():
-            values=np.asarray(r[key],float).copy();values[~np.isfinite(values)]=np.nan
-            ax.plot(r['t'],values,color=color(i),lw=secondary,alpha=.8,label='Robot '+str(i))
+        ax.set_xlabel('trajectory time (s)');ax.set_ylabel(ylabel);ax.grid(alpha=.25);ax.legend(ncol=5,fontsize=8)
+        fig.tight_layout();fig.savefig(path/(name+'_'+stamp+'.png'),dpi=150);plt.close(fig)
+    # Keep the original result categories, with honest handling of quantities
+    # that do not exist in MPC-D-CBF or were absent from historical recordings.
+    fig,axes=plt.subplots(2,1,figsize=(10,6),sharex=True)
+    for ax,key,label in zip(axes,('obstacle_distance','raw_min_distance'),
+            ('Nominal reference to measured obstacle point (m)','Laser-origin minimum range (m)')):
+        for i,r in valid.items():ax.plot(r['t'],r[key],label='Robot '+str(i),lw=.9)
         if not any(np.isfinite(r[key]).any() for r in valid.values()):
             ax.text(.5,.5,'Not recorded in this historical run',ha='center',transform=ax.transAxes)
-        ax.set_ylim(bottom=0);_time_axis(ax,end,ylabel,title)
-        ax.legend(bbox_to_anchor=(1.02,1),loc='upper left',fontsize=8,framealpha=.9)
-        fig.tight_layout();_save_plot(fig,path,name,stamp)
-    # Figure 9: total counts in the original single panel; breakdown is an extra.
-    fig,ax=plt.subplots(figsize=(12,6));largest=0.
+        ax.set_ylabel(label,fontsize=9);ax.grid(alpha=.25);ax.legend(ncol=5,fontsize=7)
+    axes[-1].set_xlabel('trajectory time (s)');fig.tight_layout()
+    fig.savefig(path/('obstacle_distance_'+stamp+'.png'),dpi=150);plt.close(fig)
+    fig,axes=plt.subplots(2,1,figsize=(10,6),sharex=True)
     for i,r in valid.items():
-        counts=np.asarray(r['total_clusters_count'],float)
-        ax.step(r['t'],counts,where='post',color=color(i),lw=secondary,alpha=.8,
-            label='Robot %d - Total Groups'%i)
-        finite=counts[np.isfinite(counts)]
-        if len(finite):largest=max(largest,float(finite.max()))
-    ax.set_ylim(0,max(8,largest+1))
-    _time_axis(ax,end,'Number of Groups','Clustering Analysis - Total Observed/Tracked Groups')
-    ax.legend(loc='upper right',fontsize=10,framealpha=.9)
-    fig.tight_layout();_save_plot(fig,path,'clustering_analysis',stamp)
-    breakdown=[('static_clusters_count','Static / Non-moving Groups')]
-    if metadata.get('dynamic_prediction',False):breakdown.append(('dynamic_clusters_count','Dynamic Groups'))
-    breakdown.append(('peer_clusters_count','Fresh Peer Groups'))
-    fig,axes=plt.subplots(len(breakdown),1,figsize=(12,3*len(breakdown)),sharex=True)
-    for i,r in valid.items():
-        for ax,(key,_) in zip(axes,breakdown):
-            ax.step(r['t'],r.get(key,[np.nan]*len(r['t'])),where='post',color=color(i),lw=secondary,alpha=.8,label='Robot '+str(i))
-    for ax,(_,title) in zip(axes,breakdown):
-        _time_axis(ax,end,'Number of Groups',title+' (supplement)')
-        ax.set_ylim(bottom=0);ax.legend(ncol=5,fontsize=8)
+        axes[0].step(r['t'],r['total_clusters_count'],where='post',label='Robot '+str(i),lw=1.)
+        line,=axes[1].step(r['t'],r['static_clusters_count'],where='post',label='Static '+str(i),lw=.8)
+        axes[1].step(r['t'],r['peer_clusters_count'],where='post',color=line.get_color(),ls='--',
+                     label='Fresh peer '+str(i),lw=.8)
+    axes[0].set_ylabel('Total observed/tracked groups');axes[1].set_ylabel('Static / fresh peer groups')
     if not any(np.isfinite(r['peer_clusters_count']).any() for r in valid.values()):
-        axes[-1].text(.5,.5,'Not recorded in this historical run',ha='center',transform=axes[-1].transAxes)
-    fig.tight_layout();_save_plot(fig,path,'clustering_breakdown',stamp)
-    # Figure 10 remains explicitly N/A; this method has no CAPA force variable.
-    fig,ax=plt.subplots(figsize=(12,6));ax.set_axis_off()
-    ax.set_title('Avoidance Forces: Not Applicable to MPC-D-CBF',fontsize=14)
+        axes[0].set_title('Historical counts contain static clusters only; peer counts unavailable',fontsize=10)
+    for ax in axes:ax.grid(alpha=.25);ax.legend(ncol=5,fontsize=7);ax.set_ylim(bottom=0)
+    axes[-1].set_xlabel('trajectory time (s)');fig.tight_layout()
+    fig.savefig(path/('clustering_analysis_'+stamp+'.png'),dpi=150);plt.close(fig)
+    fig,ax=plt.subplots(figsize=(9,4));ax.set_axis_off()
+    ax.set_title('Avoidance forces: not applicable to MPC-D-CBF')
     ax.text(.5,.55,'This controller does not compute a CAPA avoidance force.\n'
             'Avoidance is enforced through MPC-D-CBF constraints.\n'
-            'The original result category is retained for comparison.',
-            ha='center',va='center',transform=ax.transAxes,fontsize=12)
-    fig.tight_layout();_save_plot(fig,path,'avoidance_forces',stamp)
-    # Figure 11: reference 2.5 pt; estimates 1.5 pt; solid x / dash-dot y.
-    fig,ax=plt.subplots(figsize=(14,8))
+            'No zero-force curve is substituted.',ha='center',va='center',transform=ax.transAxes,fontsize=12)
+    fig.tight_layout();fig.savefig(path/('avoidance_forces_'+stamp+'.png'),dpi=150);plt.close(fig)
+    fig,ax=plt.subplots(figsize=(11,6))
     if leader:
-        for key,reference_color,label in (('x0','darkblue','x_Leader'),('y0','darkred','y_Leader')):
-            ax.plot(leader['t'],leader[key],ls='--',color=reference_color,lw=PLOT_STYLE['leader_width'],
-                label=label,alpha=.9,zorder=10)
+        ax.plot(leader['t'],leader['x0'],'k--',lw=2.,label='Leader x (reported)')
+        ax.plot(leader['t'],leader['y0'],color='darkred',ls='--',lw=2.,label='Leader y (reported)')
     else:ax.text(.5,.96,'Leader history unavailable; recorded observer estimates shown',ha='center',transform=ax.transAxes)
     for i,r in valid.items():
-        ax.plot(r['t'],r['zxeo_x'],color=color(i),label='x_est_'+str(i),lw=secondary,alpha=.8)
-        ax.plot(r['t'],r['zxeo_y'],color=color(i),ls='-.',label='y_est_'+str(i),lw=secondary,alpha=.8)
-    _time_axis(ax,end,'Position (m)','Observer Estimation Performance - '+stamp)
-    ax.legend(loc='upper right',ncol=3,fontsize=7,framealpha=.9)
-    fig.tight_layout();_save_plot(fig,path,'observer_estimation',stamp)
-    # Figure 12 retains the original xr-xc / yr-yc definition and red/blue colors.
-    fig,ax=plt.subplots(figsize=(8,6))
+        line,=ax.plot(r['t'],r['zxeo_x'],label='x_est_'+str(i),lw=1.)
+        ax.plot(r['t'],r['zxeo_y'],color=line.get_color(),ls='-.',label='y_est_'+str(i),lw=1.)
+    ax.set_xlabel('trajectory time (s)');ax.set_ylabel('position (m)');ax.grid(alpha=.25)
+    ax.set_title('Observer estimation');ax.legend(ncol=3,fontsize=7);fig.tight_layout()
+    fig.savefig(path/('observer_estimation_'+stamp+'.png'),dpi=150);plt.close(fig)
+    fig,ax=plt.subplots(figsize=(10,5))
     for i,r in valid.items():
-        ax.plot(r['t'],np.asarray(r['xr'])-r['xc'],color='red',lw=secondary,alpha=.8,label='x_error_'+str(i))
-        ax.plot(r['t'],np.asarray(r['yr'])-r['yc'],color='blue',lw=secondary,alpha=.8,label='y_error_'+str(i))
-    ax.axhline(0,color='black',ls=':',lw=secondary,alpha=.5,label='Zero Error')
-    _time_axis(ax,end,'Tracking Error (m)','X & Y Tracking Error (xr-xc, yr-yc) - '+stamp)
-    ax.legend(loc='upper right',ncol=2,fontsize=8,framealpha=.9)
-    fig.tight_layout();_save_plot(fig,path,'tracking_error_xy',stamp)
+        ax.plot(r['t'],np.asarray(r['xr'])-r['xc'],color='red',lw=.9,alpha=.65,label='x_error_'+str(i))
+        ax.plot(r['t'],np.asarray(r['yr'])-r['yc'],color='blue',lw=.9,alpha=.65,label='y_error_'+str(i))
+    ax.axhline(0,color='black',ls=':',lw=.8);ax.set_xlabel('trajectory time (s)')
+    ax.set_ylabel('tracking error (m)');ax.set_title('XY tracking error (xr-xc, yr-yc)')
+    ax.legend(ncol=2,fontsize=7);ax.grid(alpha=.25);fig.tight_layout()
+    fig.savefig(path/('tracking_error_xy_'+stamp+'.png'),dpi=150);plt.close(fig)
     if geometry_stats:
         keys=sorted(geometry_stats)
-        fig,axes=plt.subplots(2,1,figsize=(14,8),sharex=True)
+        fig,axes=plt.subplots(2,1,figsize=(11,6),sharex=True)
         for j,field in enumerate(('a','b')):
-            for offset,prefix,range_color,label in [(-.12,'raw_','#b27a00','Measured'),(.12,'effective_','#009966','Effective')]:
+            for offset,prefix,color,label in [(-.12,'raw_','#dfa500','Measured'),(.12,'effective_','#009966','Effective')]:
                 lo=np.array([geometry_stats[k].get(prefix+field+'_min',np.nan) for k in keys])
                 hi=np.array([geometry_stats[k].get(prefix+field+'_max',np.nan) for k in keys])
-                axes[j].vlines(np.arange(len(keys))+offset,lo,hi,color=range_color,label=label,lw=secondary)
-                axes[j].scatter(np.arange(len(keys))+offset,lo,s=16,color=range_color)
-            axes[j].set_ylabel('Semi-axis '+field+' Range (m)',fontsize=12)
-            axes[j].grid(alpha=PLOT_STYLE['grid_alpha']);axes[j].legend(fontsize=8)
-        axes[0].set_title('Measured / Effective Ellipse Semi-axis Ranges',fontsize=14)
-        short_labels=[]
-        previous_observer=None
-        for index,key in enumerate(keys):
-            observer,kind,identity=key.split('/',2)
-            if previous_observer is not None and observer!=previous_observer:
-                for ax in axes:ax.axvline(index-.5,color='gray',lw=.6,alpha=.5)
-            previous_observer=observer
-            short_labels.append(observer.replace('tb3_','R')+':'+dict(static='S',peer='P',dynamic='D').get(kind,'?')+identity)
-        axes[-1].set_xticks(range(len(keys)));axes[-1].set_xticklabels(short_labels,rotation=90,fontsize=7)
-        axes[-1].set_xlabel('Observer R / static S, dynamic D or peer P / object ID',fontsize=10)
-        fig.tight_layout();_save_plot(fig,path,'ellipse_axes',stamp)
-    (path/'plot_style_manifest.json').write_text(json.dumps(dict(
-        reference='scripts/visualize_results.py',style=PLOT_STYLE,
-        robot_colors=ROBOT_COLORS,time_end=end,
-        supplements=['laser_min_range','clustering_breakdown','ellipse_axes'],
-        notes=['Original 12 category filenames retained; CAPA force is N/A.',
-               'X/Y error axes remain automatic as in the active original plotting code.',
-               'Heading error retains the requested [-4, 4] rad range.',
-               'Distances are unsmoothed measured series; CAPA thresholds are not D-CBF thresholds.',
-               'Total groups include tracked static envelopes and freshly detected peers.']),indent=2))
+                axes[j].vlines(np.arange(len(keys))+offset,lo,hi,color=color,label=label)
+                axes[j].scatter(np.arange(len(keys))+offset,lo,s=10,color=color)
+            axes[j].set_ylabel('semi-axis '+field+' range (m)');axes[j].grid(alpha=.2);axes[j].legend(fontsize=8)
+        axes[-1].set_xticks(range(len(keys)));axes[-1].set_xticklabels(keys,rotation=90,fontsize=6)
+        fig.tight_layout();fig.savefig(path/('ellipse_axes_'+stamp+'.png'),dpi=150);plt.close(fig)
 
 
 class ExperimentRecorder:
@@ -490,19 +293,13 @@ class ExperimentRecorder:
         self.meta=dict(timestamp=stamp,run_id=self.run_id,output_dir=str(self.path),
             timezone='Asia/Shanghai',method='MPC-D-CBF',
             world_file=rospy.get_param('/cbf/world_file',''),
-            formation_radius=rospy.get_param('/cbf/formation_radius',.5),
+            formation_radius=rospy.get_param('/cbf/formation_radius',.4),
             control_dt=rospy.get_param('/cbf/mpc/dt',.1),
             realtime_solver=rospy.get_param('/cbf/realtime_solver',True),
             control_budget_ms=rospy.get_param('/cbf/control_budget_ms',100.),
             nlp_budget_ms=rospy.get_param('/cbf/nlp_budget_ms',65.),
             dual_warm_start=rospy.get_param('/cbf/dual_warm_start',True),
             stagger_callbacks=rospy.get_param('/cbf/stagger_callbacks',True),
-            dynamic_prediction=rospy.get_param('/cbf/dynamic_prediction',False),
-            prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
-            dynamic_reaction_time=rospy.get_param('/cbf/dynamic/reaction_time',.35),
-            dynamic_extra_margin=rospy.get_param('/cbf/dynamic/extra_margin',.02),
-            dynamic_scenario=rospy.get_param('/cbf/dynamic_scenario','none'),
-            robot_names=rospy.get_param('/cbf/robot_names',['tb3_'+str(i) for i in range(5)]),
             trajectory_type=rospy.get_param('/tb3_virtual_leader/leader_node/trajectory_type','unknown'))
         (self.path/'run_metadata.json').write_text(json.dumps(self.meta,indent=2,ensure_ascii=False))
         self.leader_stream=(self.path/'leader.csv').open('w',newline='')
@@ -512,14 +309,12 @@ class ExperimentRecorder:
         self.geometry_stream=(self.path/'geometry_estimates.csv').open('w',newline='')
         self.geometry_writer=csv.DictWriter(self.geometry_stream,fieldnames=self.GEOMETRY_FIELDS)
         self.geometry_writer.writeheader();self.last_flush=time.monotonic()
-        self.prediction_stream=(self.path/'obstacle_predictions.jsonl').open('w')
         self.subscribers=[rospy.Subscriber('/leader/history',LeaderHistoryData,self.on_leader,queue_size=100),
             rospy.Subscriber('/system/shutdown',Bool,lambda m:self.requested.set() if m.data else None)]
-        for i,name in enumerate(self.meta['robot_names']):
+        for i in range(5):
             rospy.set_param('/cbf/ready/tb3_'+str(i),False)
             self.subscribers.append(rospy.Subscriber('/tb3_%d/cbf_diagnostics'%i,String,self.on_robot,callback_args=i,queue_size=100))
             self.subscribers.append(rospy.Subscriber('/tb3_%d/cbf_geometry/estimates'%i,String,self.on_geometry,queue_size=100))
-            self.subscribers.append(rospy.Subscriber('/'+name+'/cbf_geometry/predictions',String,self.on_prediction,queue_size=20))
         rospy.on_shutdown(self.finish)
         # Publish only after files and subscriptions exist. A unique launch token
         # prevents the next experiment reusing stale readiness/output parameters.
@@ -545,12 +340,6 @@ class ExperimentRecorder:
             if time.monotonic()-self.last_flush>1.:
                 self.leader_stream.flush();self.geometry_stream.flush();self.last_flush=time.monotonic()
 
-    def on_prediction(self,msg):
-        with self.lock:
-            if not self.finished:
-                self.prediction_stream.write(msg.data+'\n')
-                self.prediction_stream.flush()
-
     def finish(self):
         with self.finish_lock:
             if self.finished:return
@@ -558,7 +347,6 @@ class ExperimentRecorder:
                 self.finished=True
                 self.leader_stream.flush();self.leader_stream.close()
                 self.geometry_stream.flush();self.geometry_stream.close()
-                self.prediction_stream.flush();self.prediction_stream.close()
                 robots={i:list(rows) for i,rows in self.robots.items()};leader=list(self.leader)
             try:
                 export_results(self.path,robots,leader,self.geometry_stats)

@@ -16,13 +16,12 @@ def default_config():
 
 
 class TimedReference:
-    def __init__(self, robot_id, dt=.1, horizon=10, radius=.5, robot_count=5):
+    def __init__(self, robot_id, dt=.1, horizon=10, radius=.4):
         self.dt, self.n, self.radius, self.robot_id = dt, horizon, radius, robot_id
-        self.robot_count=robot_count
         self.history = deque(maxlen=11)
 
     def offset(self):
-        angle = self.robot_id*2*np.pi/self.robot_count
+        angle = self.robot_id*2*np.pi/5
         return self.radius*np.array([np.cos(angle),np.sin(angle)])
 
     def observe(self, logical_time, position, velocity):

@@ -39,7 +39,6 @@ if (PACKAGE / "纯仿真代码").is_dir():
 from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes,
                           peer_obstacle, padded_obstacles)
 from mpc_dcbf_cached_solver import MPCSolverManager, CachedMPCProblem, barrier_values
-from mpc_dcbf_static_obstacles import reference_covariance_matrices, reference_axis_inflation
 
 
 # Inlined 2-D geometry: DBSCAN -> enclosing ellipse -> ID association.
@@ -341,122 +340,6 @@ def predicted_peer_envelope(peer_id, stamp, state, velocity, now, dt, horizon,
     return obstacle
 
 
-class DynamicEllipseTracker:
-    """Local measured ellipses -> predictive association -> upstream 9-state KF.
-
-    State order and Q/R/P follow MPC-D-CBF obs_param/obs_kf.cpp. Unlike its
-    fixed-rate callback, actual scan stamps determine elapsed time. Predictions
-    include node zero and are re-aligned to the control stamp without updating
-    the filter twice. No simulation or peer truth enters this estimator.
-    """
-    def __init__(self, dt=.1, horizon=10, association_distance=.65, timeout=.65,
-                 history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02):
-        if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen'):
-            raise ValueError('Invalid dynamic tracker configuration')
-        self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
-        self.history_size,self.speed_threshold,self.mode=history_size,speed_threshold,mode
-        if reaction_time<0 or extra_margin<0:raise ValueError('Negative execution margin')
-        self.reaction_time,self.extra_margin=reaction_time,extra_margin
-        self.A,self.Q,self.R,self.H,self.P0=reference_covariance_matrices(dt)
-        self.tracks={};self.next_id=1;self.last_stamp=None
-
-    def reset(self):
-        self.tracks.clear();self.last_stamp=None;self.next_id=1
-
-    def propagate(self,state,covariance,elapsed):
-        a=np.eye(9);a[0,5]=a[1,6]=elapsed
-        return a@state,a@covariance@a.T+self.Q*(max(0.,elapsed)/self.dt)
-
-    def update(self,ellipses,stamp):
-        if not np.isfinite(stamp):raise ValueError('Non-finite scan time')
-        if self.last_stamp is not None and stamp<self.last_stamp:self.reset()
-        if self.last_stamp is not None and stamp<=self.last_stamp:return ellipses
-        self.last_stamp=stamp
-        self.tracks={i:t for i,t in self.tracks.items() if stamp-t['seen']<=self.timeout}
-        ids=sorted(self.tracks)
-        for track in self.tracks.values():
-            track['x'],track['P']=self.propagate(track['x'],track['P'],stamp-track['stamp'])
-            track['stamp']=stamp;track['missed']+=1
-        assigned={}
-        if ellipses and ids:
-            centers=np.array([[e.cx,e.cy] for e in ellipses])
-            predicted=np.array([self.tracks[i]['x'][:2] for i in ids])
-            distances=np.linalg.norm(centers[:,None,:]-predicted[None,:,:],axis=2)
-            # Dummy columns permit unmatched measurements; gated pairs cannot
-            # steal the only valid association of another detection.
-            cost=np.full((len(ellipses),len(ids)+len(ellipses)),self.max_distance*2)
-            cost[:,:len(ids)]=np.where(distances<=self.max_distance,distances,self.max_distance*100)
-            rows,cols=linear_sum_assignment(cost)
-            assigned={r:ids[c] for r,c in zip(rows,cols) if c<len(ids) and distances[r,c]<=self.max_distance}
-        for index,ellipse in enumerate(ellipses):
-            key=assigned.get(index)
-            z=np.array([ellipse.cx,ellipse.cy,ellipse.a,ellipse.b,ellipse.theta])
-            if key is None:
-                key=self.next_id;self.next_id+=1
-                x=np.zeros(9);x[:5]=z
-                self.tracks[key]=dict(x=x,P=self.P0.copy(),stamp=stamp,seen=stamp,
-                    history=deque(maxlen=self.history_size),count=0,moving_votes=0,dynamic=False,missed=0)
-            track=self.tracks[key];track['history'].append([ellipse.a,ellipse.b])
-            variance=float(np.var(np.asarray(track['history']),axis=0).sum())**1.3
-            variance+=max(0,3-len(track['history']))*.0005
-            r=self.R.copy();r[0,0]*=3000.**np.log10(np.clip(variance,.005,.05)/.005);r[1,1]=r[0,0]
-            # Major-axis direction is modulo pi, not modulo 2*pi.
-            delta=z[4]-track['x'][4]
-            z[4]=track['x'][4]+.5*np.arctan2(np.sin(2*delta),np.cos(2*delta))
-            p=track['P'];gain=np.linalg.solve(self.H@p@self.H.T+r,self.H@p).T
-            track['x']+=gain@(z-self.H@track['x'])
-            residual=np.eye(9)-gain@self.H
-            track['P']=residual@p@residual.T+gain@r@gain.T  # Joseph form
-            track['P']=(track['P']+track['P'].T)/2
-            track['x'][2:4]=np.maximum(track['x'][2:4],.025)
-            track.update(seen=stamp,missed=0,variance=variance,count=track['count']+1,
-                         raw_a=ellipse.a,raw_b=ellipse.b,raw_center=z[:2].copy(),raw_theta=z[4],point_count=ellipse.point_count)
-            speed=float(np.linalg.norm(track['x'][5:7]))
-            track['moving_votes']=max(-3,min(3,track['moving_votes']+(1 if speed>self.speed_threshold else -1)))
-            if track['moving_votes']>=2:track['dynamic']=True
-            elif track['moving_votes']<=-2:track['dynamic']=False
-            ellipse.track_id=key;ellipse.variance=variance
-        return ellipses
-
-    def snapshot(self,now):
-        return [dict(t,id=i,x=t['x'].copy(),P=t['P'].copy()) for i,t in sorted(self.tracks.items())
-                if -1e-9<=now-t['seen']<=self.timeout]
-
-    def forecast(self,track,now):
-        if not -1e-9<=now-track['seen']<=self.timeout:return None
-        x,p=self.propagate(track['x'],track['P'],max(0.,now-track['stamp']))
-        if self.mode=='frozen':x[5:7]=0.
-        centers=[];axes=[]
-        # Enclose the most recent measured ellipse even if the mean lags it.
-        c,s=np.cos(x[4]-track['raw_theta']),np.sin(x[4]-track['raw_theta'])
-        rotation=np.array([[c,-s],[s,c]])
-        base=np.maximum(x[2:4],[track['raw_a'],track['raw_b']])
-        c,s=np.cos(x[4]),np.sin(x[4]);local=(track['raw_center']-x[:2])@np.array([[c,-s],[s,c]])
-        shape=np.diag(1./base)@rotation@np.diag([track['raw_a'],track['raw_b']])
-        scale=max(1.,np.linalg.norm(local/base)+np.linalg.norm(shape,2))
-        shape_guard=base*scale
-        # Separate from upstream stochastic inflation: a deterministic execution
-        # buffer for model/command tracking lag. Uniform radial scaling adds
-        # exactly this margin to the existing b*(rho-1) barrier, not an
-        # unverified a+=d,b+=d approximation of an ellipse Minkowski sum.
-        execution_margin=self.extra_margin+self.reaction_time*np.linalg.norm(track['x'][5:7])
-        for j in range(self.horizon+1):
-            if j:x,p=self.propagate(x,p,self.dt)
-            centers.append(x[:2].copy())
-            inflated=shape_guard+reference_axis_inflation(p)
-            axes.append(inflated*(1.+execution_margin/inflated[1]))
-        return dict(id=track['id'],name='tracked_'+str(track['id']),center=np.asarray(centers[0]),
-            a=float(axes[0][0]),b=float(axes[0][1]),theta=float(x[4]),
-            prediction_centers=np.asarray(centers),prediction_axes=np.asarray(axes),
-            velocity=track['x'][5:7].copy(),dynamic=track['dynamic'],
-            execution_margin=float(execution_margin),
-            guidance=not track['dynamic'],seen=track['seen'],measurement_age=now-track['seen'],
-            raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'])
-
-    def obstacles(self,snapshot,now):
-        return [obs for obs in (self.forecast(t,now) for t in snapshot) if obs is not None]
-
-
 class TurtleBot3CBFController:
     COLORS = ((0.1, 0.8, 1.0), (1.0, 0.35, 0.2), (0.3, 1.0, 0.3),
               (1.0, 0.3, 0.85), (0.8, 0.7, 0.2), (0.6, 0.4, 1.0))
@@ -471,9 +354,7 @@ class TurtleBot3CBFController:
         "cycle_id","input_ms","manager_ms","command_wall_ms","record_ms",
         "ipopt_status","ipopt_iterations","ipopt_wall_ms","ipopt_cpu_ms","fallback_ms",
         "validated_steps","dual_warm","budget_hit","solver_seed","geometry_sequence",
-        "geometry_sample_stamp","geometry_cpu_ms","geometry_peer_cpu_ms",
-        "dynamic_tracks","missed_tracks","max_obstacle_speed","motion_prediction_enabled",
-        "detected_static_ellipses","detected_dynamic_ellipses"]
+        "geometry_sample_stamp","geometry_cpu_ms","geometry_peer_cpu_ms"]
 
     def __init__(self):
         self.robot_id=int(rospy.get_param("~robot_id"))
@@ -492,10 +373,10 @@ class TurtleBot3CBFController:
             raise ValueError('Expected 5ms < NLP budget < control budget <= 200ms')
         self.dt=self.cfg["dt"];self.n=self.cfg["horizon"]
         self.slots=int(rospy.get_param("/cbf/obstacle_slots",12))
-        self.max_static=self.slots-(len(self.names)-1)
+        self.max_static=self.slots-4
         self.peer_safety=bool(rospy.get_param("/cbf/peer_safety",True))
         self.stale=float(rospy.get_param("/cbf/data_timeout",.6))
-        self.radius=float(rospy.get_param("/cbf/formation_radius",.5))
+        self.radius=float(rospy.get_param("/cbf/formation_radius",.4))
         self.peer_radius=float(rospy.get_param("/cbf/peer_radius",.20))
         if not np.isfinite(self.peer_radius) or self.peer_radius <= 0:
             raise ValueError('Expected a positive finite peer envelope radius')
@@ -516,7 +397,7 @@ class TurtleBot3CBFController:
         self.B=np.asarray(rospy.get_param("/cbf/pinning",[1,0,0,0,0]),float)
         self.eta=float(rospy.get_param("/cbf/observer_eta",.7));self.alpha=.8
         self.neighbor_ids=list(np.flatnonzero(self.A[self.robot_id]))
-        self.reference=TimedReference(self.robot_id,self.dt,self.n,self.radius,robot_count=len(self.names))
+        self.reference=TimedReference(self.robot_id,self.dt,self.n,self.radius)
         self.envelopes=ObservedEnvelopes(self.dt,self.n)
         self.observed=[];self.geometry_stamp=None;self.geometry_sequence=None
         self.latest_leader=None;self.clock_sources={};self.last_solution=None
@@ -604,19 +485,6 @@ class TurtleBot3CBFController:
         self.geometry_rate = float(get('~processing_rate', 10.0))
         self.robot_exclusion_radius = float(get('~robot_exclusion_radius', 0.16))
         self.static_accumulation = bool(get('~static_accumulation', True))
-        self.dynamic_prediction = bool(get('/cbf/dynamic_prediction',False))
-        if self.dynamic_prediction:
-            # External targets are associated frame by frame; never accumulate
-            # their old locations into the static world representation.
-            self.static_accumulation=False
-        self.dynamic_tracker=DynamicEllipseTracker(self.dt,self.n,
-            float(get('/cbf/dynamic/association_distance',.65)),
-            float(get('/cbf/dynamic/track_timeout',.65)),
-            speed_threshold=float(get('/cbf/dynamic/speed_threshold',.05)),
-            mode=get('/cbf/dynamic/prediction_mode','cv'),
-            reaction_time=float(get('/cbf/dynamic/reaction_time',.35)),
-            extra_margin=float(get('/cbf/dynamic/extra_margin',.02)))
-        self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
         if (self.max_range <= self.min_range or self.min_range < 0
                 or self.voxel_size < 0 or self.eps <= 0 or self.min_samples < 1
@@ -641,7 +509,6 @@ class TurtleBot3CBFController:
         self.ellipse_pub = rospy.Publisher(geometry_ns+'/ellipses', MarkerArray, queue_size=1)
         self.peer_pub = rospy.Publisher(geometry_ns+'/peers', MarkerArray, queue_size=1)
         self.estimates_pub = rospy.Publisher(geometry_ns+'/estimates',String,queue_size=5)
-        self.predictions_pub = rospy.Publisher(geometry_ns+'/predictions',String,queue_size=2)
         self.geometry_debug = bool(get('/cbf/visualization/debug',False))
         selected = int(get('/cbf/visualization/observer',0)) == self.robot_id
         self.display_ellipse_pub = (rospy.Publisher('/cbf/geometry/ellipses',MarkerArray,queue_size=1)
@@ -696,8 +563,6 @@ class TurtleBot3CBFController:
             return
         if scan is self.processed_scan:
             return
-        if self.geometry_stamp is not None and abs(stamp.to_sec()-self.geometry_stamp)<1e-9:
-            return  # A replayed stamp must not update the KF or create ID=-1 fits.
         source_frame = self.frame_override or scan.header.frame_id.lstrip('/')
         if not source_frame:
             rospy.logwarn_throttle(5.0, 'LaserScan has no frame_id')
@@ -753,9 +618,7 @@ class TurtleBot3CBFController:
                                              self.fit_tolerance, self.fit_iterations)
                 fits.append(ellipse)
                 clusters.append(cluster)
-            moving=getattr(self,'dynamic_prediction',False)
-            if moving:self.dynamic_tracker.update(fits,stamp.to_sec())
-            else:self.tracker.update(fits, stamp.to_sec())
+            self.tracker.update(fits, stamp.to_sec())
             raw = [dict(id=e.track_id, center=np.array([e.cx, e.cy]), theta=e.theta,
                         a=e.a, b=e.b, variance=e.variance) for e in fits]
             with self.lock:
@@ -763,23 +626,12 @@ class TurtleBot3CBFController:
                     return
                 if self.geometry_stamp is not None and stamp.to_sec() < self.geometry_stamp:
                     self.envelopes.tracks.clear()
-                if moving:
-                    self.dynamic_snapshot=self.dynamic_tracker.snapshot(stamp.to_sec())
-                    self.observed=self.dynamic_tracker.obstacles(self.dynamic_snapshot,stamp.to_sec())
-                else:self.observed = self.envelopes.update(raw, stamp.to_sec())
+                self.observed = self.envelopes.update(raw, stamp.to_sec())
                 self.geometry_stamp = stamp.to_sec()
                 self.obstacle_points = live_obstacle_points
                 self.obstacle_points_stamp = stamp.to_sec()
                 observed = list(self.observed)
             self.publish_geometry_estimates(stamp.to_sec(),fits,observed)
-            if moving:
-                rows=[dict(id=o['id'],dynamic=o['dynamic'],velocity=o['velocity'].tolist(),
-                    measurement_age=o['measurement_age'],missed=o['missed'],
-                    execution_margin=o['execution_margin'],
-                    centers=o['prediction_centers'].tolist(),axes=o['prediction_axes'].tolist(),
-                    theta=o['theta']) for o in observed]
-                self.predictions_pub.publish(String(data=json.dumps(dict(stamp=stamp.to_sec(),
-                    observer=self.name,dt=self.dt,mode=self.dynamic_tracker.mode,tracks=rows))))
             self.publish_geometry(stamp, world_points, fits, clusters)
             self.processed_scan = scan
             self.last_success = now
@@ -828,7 +680,7 @@ class TurtleBot3CBFController:
         rows=[];by_id={o['id']:o for o in observed}
         for fit in fits:
             effective=by_id[fit.track_id]
-            rows.append(dict(ros_time=stamp,observer=self.name,kind='dynamic' if effective.get('dynamic',False) else 'static',id=fit.track_id,
+            rows.append(dict(ros_time=stamp,observer=self.name,kind='static',id=fit.track_id,
                 source='laser',raw_a=fit.a,raw_b=fit.b,effective_a=effective['a'],
                 effective_b=effective['b'],point_count=fit.point_count,measurement_age=0.,size_floor_dominates=False))
         with self.lock:shapes=dict(self.peer_shapes)
@@ -935,8 +787,7 @@ class TurtleBot3CBFController:
         cluster_markers, ellipse_markers = MarkerArray(), MarkerArray()
         with self.lock:by_id={o['id']:o for o in self.observed}
         for ellipse, cluster in zip(ellipses, clusters):
-            effective=by_id.get(ellipse.track_id)
-            color = (1.,.45,.1) if effective is not None and effective.get('dynamic',False) else (.15,.65,1.)
+            color = (.15,.65,1.)
             marker = self.geometry_marker(stamp, ellipse.track_id, 'clusters', Marker.POINTS)
             marker.scale.x = marker.scale.y = 0.045
             marker.color.r, marker.color.g, marker.color.b = color
@@ -944,6 +795,7 @@ class TurtleBot3CBFController:
             marker.points = [Point(x=float(p[0]), y=float(p[1]), z=0.07) for p in cluster]
             cluster_markers.markers.append(marker)
             layers=[('ellipse',ellipse.a,ellipse.b,1.)]
+            effective=by_id.get(ellipse.track_id)
             if self.geometry_debug and effective is not None:
                 scale=1.+self.cfg['margin']/effective['b']
                 layers.append(('display_margin',effective['a']*scale,effective['b']*scale,.35))
@@ -972,20 +824,6 @@ class TurtleBot3CBFController:
                 marker.action = Marker.DELETE
                 output.markers.append(marker)
         self.visible_ids = current_ids
-        for obs in by_id.values():
-            if not obs.get('dynamic',False):continue
-            marker=self.geometry_marker(stamp,obs['id'],'dynamic_prediction',Marker.LINE_STRIP)
-            marker.scale.x=.025;marker.color.r=1.;marker.color.g=.45;marker.color.a=.9
-            marker.points=[Point(x=float(p[0]),y=float(p[1]),z=.12) for p in obs['prediction_centers']]
-            ellipse_markers.markers.append(marker)
-            if self.geometry_debug:
-                for j in (0,self.n):
-                    a,b=obs['prediction_axes'][j];center=obs['prediction_centers'][j]
-                    marker=self.geometry_marker(stamp,obs['id'],'dynamic_envelope_'+str(j),Marker.LINE_STRIP)
-                    marker.scale.x=.015;marker.color.r=1.;marker.color.g=.45;marker.color.a=.5
-                    marker.points=[Point(x=float(p[0]),y=float(p[1]),z=.12) for p in
-                        Ellipse(center[0],center[1],a,b,obs['theta'],0).contour()]
-                    ellipse_markers.markers.append(marker)
         self.cluster_pub.publish(cluster_markers)
         self.ellipse_pub.publish(ellipse_markers)
         if self.display_ellipse_pub is not None:self.display_ellipse_pub.publish(ellipse_markers)
@@ -1078,8 +916,6 @@ class TurtleBot3CBFController:
         with self.lock:
             poses={k:(s,x.copy(),v.copy()) for k,(s,x,v) in self.poses.items()}
             observed=list(self.observed);stamp=self.geometry_stamp
-            if self.dynamic_prediction:
-                observed=self.dynamic_tracker.obstacles(self.dynamic_snapshot,now)
             peer_shapes=dict(self.peer_shapes)
             self.record_geometry_timing=dict(self.geometry_timing)
             self.record_points=(self.obstacle_points,self.obstacle_points_stamp)
@@ -1090,7 +926,7 @@ class TurtleBot3CBFController:
             self.snapshot_stamps=(odom_stamp,stamp)
             if now-odom_stamp>self.stale or now-stamp>self.stale:
                 self.stop_motion();self.record(now,state,None,observed,0.,'stale_data',begin);return
-            if len(poses)<len(self.names):
+            if len(poses)<5:
                 self.stop_motion();return
             if not self.warmed:
                 dummy=padded_obstacles([],self.slots)
@@ -1204,7 +1040,7 @@ class TurtleBot3CBFController:
         closest=float('nan')
         if point_stamp is not None and 0 <= now-point_stamp <= self.stale:
             closest=float(np.linalg.norm(points-nominal,axis=1).min()) if len(points) else float('inf')
-        h=barrier_values(np.tile(state,(self.n+1,1)),[o for o in obstacles if o['name']!='inactive'],self.cfg['margin'])
+        h=barrier_values(np.tile(state,(self.n+1,1)),obstacles,self.cfg['margin'])
         detail=self.manager.last_records.get(self.name,{})
         if detail.get('cycle_token')!=self.cycle_id:detail={}
         attempts=detail.get('attempt_trace',[])
@@ -1216,7 +1052,7 @@ class TurtleBot3CBFController:
             consensus_error_x=state[0]-nominal[0],consensus_error_y=state[1]-nominal[1],
             observer_step=self.last_step,leader_step=step,observer_age=age,
             odom_age=now-self.snapshot_stamps[0],geometry_age=now-self.snapshot_stamps[1],
-            detected_ellipses=len(self.observed),static_constraints=sum(o['name']!='inactive' and not o.get('peer',False) and not o.get('dynamic',False) for o in obstacles),
+            detected_ellipses=len(self.observed),static_constraints=sum(not o.get('peer',False) for o in obstacles),
             peer_constraints=sum(o.get('peer',False) for o in obstacles),
             min_h=float(h[:,0].min()) if h.size else np.nan,
             solve_ms=1000*(time.perf_counter()-begin),solver_success=int(solution is not None and solution['success']),
@@ -1240,13 +1076,7 @@ class TurtleBot3CBFController:
             budget_hit=int(detail.get('budget_expired',False) or any(t.get('deadline_stop',False) or
                 'WallTime' in t.get('status','') for t in attempts)),solver_seed=detail.get('seed',''),
             geometry_sequence=geometry.get('sequence',0),geometry_sample_stamp=geometry.get('stamp',0.),
-            geometry_cpu_ms=geometry.get('cpu_ms',0.),geometry_peer_cpu_ms=geometry.get('peer_cpu_ms',0.),
-            dynamic_tracks=sum(o.get('dynamic',False) for o in obstacles),
-            missed_tracks=sum(o.get('missed',0)>0 for o in obstacles),
-            max_obstacle_speed=max([float(np.linalg.norm(o.get('velocity',[0.,0.]))) for o in obstacles]+[0.]),
-            motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='cv'),
-            detected_static_ellipses=sum(not o.get('dynamic',False) for o in self.observed),
-            detected_dynamic_ellipses=sum(o.get('dynamic',False) for o in self.observed))
+            geometry_cpu_ms=geometry.get('cpu_ms',0.),geometry_peer_cpu_ms=geometry.get('peer_cpu_ms',0.))
         self.writer.writerow(row);self.rows+=1;self.counts[status]+=1
         if self.rows%10==0:self.stream.flush()
         self.diagnostics_pub.publish(String(data=json.dumps(row)))

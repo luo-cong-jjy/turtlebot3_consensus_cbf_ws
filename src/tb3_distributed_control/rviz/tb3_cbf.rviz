@@ -1014,7 +1014,7 @@ Visualization Manager:
     Name: Robot_LaserScan_consensus
   - Class: rviz/MarkerArray
     Enabled: true
-    Name: CBF obstacle envelopes and motion predictions (selected observer)
+    Name: CBF static envelopes (selected observer)
     Marker Topic: /cbf/geometry/ellipses
     Queue Size: 1
     Namespaces: {}

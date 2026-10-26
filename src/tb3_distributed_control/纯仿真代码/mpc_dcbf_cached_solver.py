@@ -49,7 +49,7 @@ def barrier_values(states, obstacles, margin):
         local = np.column_stack((c*delta[:, 0]+s*delta[:, 1],
                                  -s*delta[:, 0]+c*delta[:, 1]))
         values.append(axes[:, 1]*(np.sqrt(np.sum((local/axes)**2, axis=1)+1e-12)-1)-margin)
-    return np.asarray(values).reshape(len(obstacles),len(states))
+    return np.asarray(values)
 
 
 def first_step_mask(state, commands, obstacles, bounds, previous, config):
@@ -80,7 +80,7 @@ def first_step_mask(state, commands, obstacles, bounds, previous, config):
     return valid,positions,angle
 
 
-def _stationary_guidance(state, goals, obstacles, config, memory):
+def continuous_guidance(state, goals, obstacles, config, memory):
     """Smooth, side-persistent field used only as a soft MPC objective.
 
     A short geometric lookahead detects an obstructed approach before the
@@ -260,41 +260,6 @@ def _stationary_guidance(state, goals, obstacles, config, memory):
         point += dt*desired
     memory['guide_vector'] = guide[0].copy()
     return guide, float(level)
-
-
-def continuous_guidance(state,goals,obstacles,config,memory):
-    """Use the existing soft bypass field in a moving obstacle's CV frame.
-
-    Predicted obstacle displacement is removed from nominal goal positions,
-    then added back to the desired velocity. The NLP still uses the original
-    world-frame dynamics, future ellipses, speed bounds and D-CBF constraints.
-    This breaks symmetric following/retreat equilibria; it is not a safety
-    certificate or a substitute for nonlinear validation.
-    """
-    stationary,level=_stationary_guidance(state,goals,obstacles,config,memory)
-    if not config.get('continuous_guidance',False):return stationary,level
-    candidates=[]
-    for obs in obstacles:
-        if not obs.get('dynamic',False) or obs.get('peer',False):continue
-        a,b=obstacle_axes(obs,0);c,s=np.cos(obs['theta']),np.sin(obs['theta'])
-        local=(state[:2]-obs['center'])@np.array([[c,-s],[s,c]])
-        h=b*(np.linalg.norm(local/[a,b])-1)-config['margin']
-        if h<.5:candidates.append((h,obs['name'],obs))
-    if not candidates:return stationary,level
-    _,name,obs=min(candidates,key=lambda item:item[:2])
-    if memory.get('moving_guide_name')!=name:
-        memory['moving_guide_name']=name;memory['moving_guide_memory']={}
-    relative_goals=np.array(goals,copy=True)
-    centers=np.asarray(obs['prediction_centers'])
-    relative_goals[:,:2]-=centers[:len(goals)]-centers[0]
-    virtual=dict(obs,guidance=True,dynamic=False)
-    guide,moving_level=_stationary_guidance(state,relative_goals,[virtual],config,memory['moving_guide_memory'])
-    if moving_level<=level:return stationary,level
-    velocity=(centers[1]-centers[0])/config['dt']
-    guide+=velocity
-    speed=np.linalg.norm(guide,axis=1)
-    guide*=np.minimum(1.,.22/np.maximum(speed,1e-12))[:,None]
-    return guide,moving_level
 
 
 class IterationDeadline(ca.Callback):

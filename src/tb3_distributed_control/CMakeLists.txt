@@ -185,7 +185,6 @@ catkin_install_python(PROGRAMS
   scripts/tb3_controller_node_cbf.py
   scripts/leader_node_cbf.py
   scripts/cbf_experiment_results.py
-  scripts/cbf_dynamic_scenario.py
   scripts/distributed_control_visualizer.py
   laser/mpc_dcbf_geometry/laser_geometry_node.py
   laser/mpc_dcbf_geometry/geometry_rviz.py
@@ -229,11 +228,6 @@ install(DIRECTORY laser/mpc_dcbf_geometry/
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   FILES_MATCHING PATTERN "*.launch"
-)
-
-install(DIRECTORY config/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
-  FILES_MATCHING PATTERN "*.yaml"
 )
 
 install(DIRECTORY rviz/
