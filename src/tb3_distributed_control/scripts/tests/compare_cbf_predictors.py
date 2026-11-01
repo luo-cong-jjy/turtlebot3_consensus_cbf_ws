@@ -21,6 +21,9 @@ from test_cbf_inline_geometry import PACKAGE
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',required=True)
     parser.add_argument('--seeds',type=int,default=10)
+    parser.add_argument('--seed-start',type=int,default=0)
+    parser.add_argument('--modes',nargs='+',choices=['frozen','cv','ca','singer'],default=['frozen','cv','ca'])
+    parser.add_argument('--singer-tau',type=float,default=1.)
     args=parser.parse_args();out=Path(args.output).resolve();out.mkdir(parents=True,exist_ok=False)
     specs=yaml.safe_load((PACKAGE/'config/cbf_dynamic_scenarios.yaml').read_text())
     cases={name:specs[name][0] for name in ('crossing','accelerating_crossing','decelerating_crossing','stop_go_crossing','maneuver')}
@@ -28,7 +31,7 @@ def main():
     rows=[];inputs=[]
     for case,spec in cases.items():
         for noise in (.005,.015):
-            for seed in range(args.seeds):
+            for seed in range(args.seed_start,args.seed_start+args.seeds):
                 rng=np.random.default_rng(seed+2811)
                 times=np.arange(301)*.1+rng.uniform(-.009,.009,301);times[0]=0.
                 measurements=[]
@@ -38,8 +41,8 @@ def main():
                     present=bool(rng.random()>.10 and not 8.<t<8.3)
                     measurements.append((t,center,present))
                     inputs.append(dict(case=case,noise=noise,seed=seed,stamp=t,center=center.tolist(),present=present))
-                for mode in ('frozen','cv','ca'):
-                    tracker=inline.DynamicEllipseTracker(mode=mode)
+                for mode in args.modes:
+                    tracker=inline.DynamicEllipseTracker(mode=mode,singer_tau=args.singer_tau)
                     buckets={}
                     for t,center,present in measurements:
                         fits=[inline.Ellipse(*center,.20,.12,0.,20)] if present else []
@@ -80,7 +83,7 @@ def main():
             for phase in ('accelerating','constant_or_stopped'):
                 for j in (.5,1.):
                     modes={}
-                    for mode in ('frozen','cv','ca'):
+                    for mode in args.modes:
                         group=[r for r in rows if (r['case'],r['noise'],r['mode'],r['phase'],r['horizon_s'])==(case,noise,mode,phase,j)]
                         if not group:continue
                         modes[mode]={metric:float(np.mean([r[metric] for r in group])) for metric in ('absolute_rmse','displacement_rmse')}
@@ -90,7 +93,7 @@ def main():
     sources={str(p.relative_to(PACKAGE)):hashlib.sha256(p.read_bytes()).hexdigest() for p in
         [PACKAGE/'scripts/tb3_controller_node_cbf.py',Path(__file__).resolve(),PACKAGE/'scripts/cbf_dynamic_scenario.py',
          PACKAGE/'config/cbf_dynamic_scenarios.yaml']}
-    (out/'protocol.json').write_text(json.dumps(dict(seeds=args.seeds,source_sha256=sources,dt=.1,horizon=10,
+    (out/'protocol.json').write_text(json.dumps(dict(seeds=args.seeds,seed_start=args.seed_start,modes=args.modes,singer_tau=args.singer_tau,source_sha256=sources,dt=.1,horizon=10,
         ca_jerk_density=.01,ca_acceleration_variance=.04,parameters='Fixed before replay; no evaluation-set tuning',
         note='Synthetic full-ellipse centers, independent Gaussian noise, 10% random misses plus a fixed gap. No visible-contour bias, ego-pose errors or real laser clustering. Means of per-seed RMSE, not pooled sample RMSE or physical safety evidence.'),indent=2))
     for item in summary:

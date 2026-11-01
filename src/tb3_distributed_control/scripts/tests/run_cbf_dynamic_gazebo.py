@@ -20,7 +20,10 @@ def main():
     parser.add_argument('--scenario',default='crossing',choices=['crossing','head_on','overtaking','maneuver','mixed','accelerating_crossing','decelerating_crossing','stop_go_crossing'])
     parser.add_argument('--robots',type=int,default=1,choices=[1,5])
     parser.add_argument('--duration',type=float,default=32.)
-    parser.add_argument('--prediction-mode',choices=['cv','frozen','ca'],default='cv')
+    parser.add_argument('--prediction-mode',choices=['cv','frozen','ca','singer'],default='cv')
+    parser.add_argument('--singer-tau',type=float,default=1.)
+    parser.add_argument('--acceleration-buffer',choices=['true','false'],default='true')
+    parser.add_argument('--stage-velocity-guidance',choices=['true','false'],default='true')
     parser.add_argument('--output',required=True)
     parser.add_argument('--wall-timeout',type=float,default=240.)
     args=parser.parse_args();out=Path(args.output).resolve();out.mkdir(parents=True,exist_ok=True)
@@ -79,7 +82,8 @@ def main():
         name='single_turtlebot3_cbf_dynamic.launch' if args.robots==1 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch'
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),
-            'prediction_mode:='+args.prediction_mode],'launch')
+            'prediction_mode:='+args.prediction_mode,'singer_tau:='+str(args.singer_tau),
+            'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
         report=0.
         while time.monotonic()-wall<args.wall_timeout:
             if begins and not audit:

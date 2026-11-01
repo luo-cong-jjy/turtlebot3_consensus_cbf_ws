@@ -17,6 +17,9 @@
   <arg name="rviz_config" default="$(eval find('tb3_distributed_control') + '/rviz/' + ('tb3_cbf_single.rviz' if arg('robot_count') == '1' else 'tb3_cbf.rviz'))" />
   <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
   <arg name="prediction_mode" default="cv" />
+  <arg name="singer_tau" default="1.0" />
+  <arg name="acceleration_buffer" default="true" />
+  <arg name="stage_velocity_guidance" default="true" />
   <arg name="ca_jerk_density" default="0.01" />
   <arg name="ca_acceleration_variance" default="0.04" />
   <arg name="dynamic_reaction_time" default="0.35" />
@@ -42,6 +45,9 @@
   <param name="/cbf/dynamic_prediction" value="$(arg dynamic_prediction)" type="bool" />
   <param name="/cbf/dynamic/ca_jerk_density" value="$(arg ca_jerk_density)" />
   <param name="/cbf/dynamic/ca_acceleration_variance" value="$(arg ca_acceleration_variance)" />
+  <param name="/cbf/dynamic/singer_tau" value="$(arg singer_tau)" />
+  <param name="/cbf/dynamic/acceleration_buffer" value="$(arg acceleration_buffer)" />
+  <param name="/cbf/dynamic/stage_velocity_guidance" value="$(arg stage_velocity_guidance)" />
   <param name="/cbf/dynamic/prediction_mode" value="$(arg prediction_mode)" />
   <param name="/cbf/dynamic/reaction_time" value="$(arg dynamic_reaction_time)" />
   <param name="/cbf/dynamic/extra_margin" value="$(arg dynamic_extra_margin)" />

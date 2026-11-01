@@ -1,0 +1,6 @@
+{
+  "source_commit": "32170e2012fb7834debfe419e8b05437102e8c39",
+  "source_sha256": "94420fc2711de407c53e497fce2891e05241babd33dbcf5502fdedc152e071e9",
+  "measurements": "cv_tracker_reference.npz",
+  "note": "Generated using independently archived prior CA source, not the modified implementation"
+}

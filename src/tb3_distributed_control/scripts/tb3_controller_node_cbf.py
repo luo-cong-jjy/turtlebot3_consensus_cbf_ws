@@ -354,8 +354,9 @@ class DynamicEllipseTracker:
     """
     def __init__(self, dt=.1, horizon=10, association_distance=.65, timeout=.65,
                  history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02,
-                 ca_jerk_density=.01,ca_acceleration_variance=.04):
-        if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca'):
+                 ca_jerk_density=.01,ca_acceleration_variance=.04,singer_tau=1.,
+                 acceleration_buffer=True,stage_velocity_guidance=True):
+        if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
         self.history_size,self.speed_threshold,self.mode=history_size,speed_threshold,mode
@@ -366,7 +367,13 @@ class DynamicEllipseTracker:
             raise ValueError('CA jerk density and acceleration prior must be finite and positive')
         self.ca_jerk_density=ca_jerk_density
         self.ca_acceleration_variance=ca_acceleration_variance
-        if mode=='ca':self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
+        if not np.isfinite(singer_tau) or singer_tau<=0:raise ValueError('Singer tau must be finite and positive')
+        self.singer_tau=singer_tau
+        self.acceleration_buffer=bool(acceleration_buffer)
+        self.stage_velocity_guidance=bool(stage_velocity_guidance)
+        if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
+        # Positive quadrature weights retain PSD of the diffusion integral.
+        self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
         self.tracks={};self.next_id=1;self.last_stamp=None
 
     def reset(self):
@@ -375,6 +382,29 @@ class DynamicEllipseTracker:
     def propagate(self,state,covariance,elapsed):
         if not np.isfinite(elapsed) or elapsed<0:raise ValueError('Invalid propagation time')
         a=np.eye(9);a[0,5]=a[1,6]=elapsed
+        if self.mode=='singer':
+            h=elapsed;tau=self.singer_tau
+            a[0,7]=a[1,8]=tau*tau*(h/tau+np.expm1(-h/tau))
+            a[5,7]=a[6,8]=-tau*np.expm1(-h/tau)
+            a[7,7]=a[8,8]=np.exp(-h/tau)
+            u=.5*h*(self.quadrature_nodes+1.)
+            g=np.column_stack((tau*tau*(u/tau+np.expm1(-u/tau)),
+                               -tau*np.expm1(-u/tau),np.exp(-u/tau)))
+            block=self.ca_jerk_density*.5*h*(g.T@(self.quadrature_weights[:,None]*g))
+            if h/tau>1.:
+                # Closed-form integral avoids resolving a narrow exponential
+                # boundary layer when the elapsed time greatly exceeds tau.
+                z=h/tau;e=np.exp(-z);d=-np.expm1(-z);d2=-np.expm1(-2*z)
+                block=self.ca_jerk_density*np.array([
+                    [tau**5*(z**3/3-z*z+z-2*z*e+.5*d2),
+                     tau**4*(z*z/2-z+z*e+d-.5*d2),tau**3*(-z*e+.5*d2)],
+                    [tau**4*(z*z/2-z+z*e+d-.5*d2),
+                     tau**3*(z-2*d+.5*d2),tau*tau*(d-.5*d2)],
+                    [tau**3*(-z*e+.5*d2),tau*tau*(d-.5*d2),tau*.5*d2]])
+            q=np.zeros((9,9))
+            for indices in ([0,5,7],[1,6,8]):q[np.ix_(indices,indices)]=block
+            for i in (2,3,4):q[i,i]=self.Q[i,i]*(h/self.dt)
+            return a@state,a@covariance@a.T+q
         if self.mode=='ca':
             h=elapsed
             a[0,7]=a[1,8]=.5*h*h;a[5,7]=a[6,8]=h
@@ -448,7 +478,7 @@ class DynamicEllipseTracker:
         x,p=self.propagate(track['x'],track['P'],max(0.,now-track['stamp']))
         if self.mode=='frozen':x[5:7]=0.
         centers=[];axes=[];velocities=[];position_covariances=[];margins=[]
-        acceleration=x[7:9].copy() if self.mode=='ca' else np.zeros(2)
+        acceleration=x[7:9].copy() if self.mode in ('ca','singer') else np.zeros(2)
         # Enclose the most recent measured ellipse even if the mean lags it.
         c,s=np.cos(x[4]-track['raw_theta']),np.sin(x[4]-track['raw_theta'])
         rotation=np.array([[c,-s],[s,c]])
@@ -467,18 +497,19 @@ class DynamicEllipseTracker:
             centers.append(x[:2].copy())
             velocities.append(x[5:7].copy());position_covariances.append(p[:2,:2].copy())
             margin=execution_margin
-            if self.mode=='ca':
+            if self.mode in ('ca','singer') and self.acceleration_buffer:
                 # Reaction displacement under estimated acceleration, an
                 # engineering buffer, NOT a certified acceleration bound.
                 margin=self.extra_margin+self.reaction_time*np.linalg.norm(x[5:7])+\
-                    .5*self.reaction_time**2*np.linalg.norm(acceleration)
+                    .5*self.reaction_time**2*np.linalg.norm(x[7:9])
             margins.append(float(margin))
             inflated=shape_guard+reference_axis_inflation(p)
             axes.append(inflated*(1.+margin/inflated[1]))
         return dict(id=track['id'],name='tracked_'+str(track['id']),center=np.asarray(centers[0]),
             a=float(axes[0][0]),b=float(axes[0][1]),theta=float(x[4]),
             prediction_centers=np.asarray(centers),prediction_axes=np.asarray(axes),
-            prediction_model=self.mode,prediction_velocities=np.asarray(velocities),
+            prediction_model=self.mode,stage_velocity_guidance=self.stage_velocity_guidance,
+            prediction_velocities=np.asarray(velocities),
             prediction_position_covariances=np.asarray(position_covariances),
             prediction_execution_margins=np.asarray(margins),acceleration=acceleration,
             velocity=track['x'][5:7].copy(),dynamic=track['dynamic'],
@@ -506,7 +537,7 @@ class TurtleBot3CBFController:
         "validated_steps","dual_warm","budget_hit","solver_seed","geometry_sequence",
         "geometry_sample_stamp","geometry_cpu_ms","geometry_peer_cpu_ms",
         "dynamic_tracks","missed_tracks","max_obstacle_speed","motion_prediction_enabled",
-        "ca_prediction_enabled","max_obstacle_acceleration",
+        "ca_prediction_enabled","singer_prediction_enabled","max_obstacle_acceleration",
         "detected_static_ellipses","detected_dynamic_ellipses",
         "metrics_schema_version","evaluation_time","evaluation_ros_time","reference_quality",
         "leader_reference_x","leader_reference_y","leader_reference_heading",
@@ -659,7 +690,10 @@ class TurtleBot3CBFController:
             reaction_time=float(get('/cbf/dynamic/reaction_time',.35)),
             extra_margin=float(get('/cbf/dynamic/extra_margin',.02)),
             ca_jerk_density=float(get('/cbf/dynamic/ca_jerk_density',.01)),
-            ca_acceleration_variance=float(get('/cbf/dynamic/ca_acceleration_variance',.04)))
+            ca_acceleration_variance=float(get('/cbf/dynamic/ca_acceleration_variance',.04)),
+            singer_tau=float(get('/cbf/dynamic/singer_tau',1.)),
+            acceleration_buffer=bool(get('/cbf/dynamic/acceleration_buffer',True)),
+            stage_velocity_guidance=bool(get('/cbf/dynamic/stage_velocity_guidance',True)))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
         if (self.max_range <= self.min_range or self.min_range < 0
@@ -827,7 +861,9 @@ class TurtleBot3CBFController:
                     centers=o['prediction_centers'].tolist(),axes=o['prediction_axes'].tolist(),
                     theta=o['theta']) for o in observed]
                 self.predictions_pub.publish(String(data=json.dumps(dict(stamp=stamp.to_sec(),
-                    observer=self.name,dt=self.dt,mode=self.dynamic_tracker.mode,tracks=rows))))
+                    observer=self.name,dt=self.dt,mode=self.dynamic_tracker.mode,tracks=rows,
+                    measurements=[dict(center=[e.cx,e.cy],a=e.a,b=e.b,theta=e.theta,
+                        point_count=e.point_count) for e in fits]))))
             self.publish_geometry(stamp, world_points, fits, clusters)
             self.processed_scan = scan
             self.last_success = now
@@ -1315,8 +1351,9 @@ class TurtleBot3CBFController:
             dynamic_tracks=sum(o.get('dynamic',False) for o in obstacles),
             missed_tracks=sum(o.get('missed',0)>0 for o in obstacles),
             max_obstacle_speed=max([float(np.linalg.norm(o.get('velocity',[0.,0.]))) for o in obstacles]+[0.]),
-            motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode in ('cv','ca')),
+            motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode in ('cv','ca','singer')),
             ca_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='ca'),
+            singer_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='singer'),
             max_obstacle_acceleration=max([float(np.linalg.norm(o.get('acceleration',[0.,0.]))) for o in obstacles]+[0.]),
             detected_static_ellipses=sum(not o.get('dynamic',False) for o in self.observed),
             detected_dynamic_ellipses=sum(o.get('dynamic',False) for o in self.observed),
