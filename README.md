@@ -2,14 +2,14 @@
 
 基于 ROS Noetic / Gazebo 的多机器人编队跟踪、避障及纯 Python 仿真工程。
 
-当前已实现的是 **CV（恒速）动态障碍预测版本**：本机雷达检测与椭圆估计、目标关联、Kalman 状态估计、多步预测及不确定性膨胀、MPC-D-CBF 联合优化，并加入执行反应裕量和相对运动绕行引导。CA/IMM 尚未实现。
+当前已实现的是 **CV（恒速）动态障碍预测版本**：本机雷达检测与椭圆估计、目标关联、Kalman 状态估计、多步预测及不确定性膨胀、MPC-D-CBF 联合优化，并加入执行反应裕量和相对运动绕行引导。研究分支另有可切换的 CA 实验模式；IMM 尚未实现。
 
 ## 版本保留
 
 | 引用 | 内容 |
 |---|---|
 | `main` | 当前可复现的 CV 基线及使用说明 |
-| `research/ca-prediction` | 后续研究分支，目前仍为 CV 基线 |
+| `research/ca-prediction` | 评价口径统一及可切换 CA 研究；默认仍为 CV |
 | `baseline/cv-dynamic-2026-10-24` | 已验证 CV 源码的初始保留标签 |
 | `teacher/static-2026-10-20-r04` | 10 月 20 日静态 Gazebo，编队半径 0.4 m |
 | `teacher/static-2026-10-21-r05` | 10 月 21 日静态 Gazebo，编队半径 0.5 m |
@@ -72,7 +72,7 @@ roslaunch tb3_distributed_control single_turtlebot3_cbf_dynamic.launch scenario:
 python3 -m unittest discover -s src/tb3_distributed_control/scripts/tests -p 'test_cbf*.py' -v
 ```
 
-CV 基线版本完成 37 项数值／记录检查及单机穿越、迎面、追越、变速、双目标与五机闭环验证。本研究分支增加评价 schema 2 后共 54 项检查通过。[小体积验证摘要](docs/stages/cv_dynamic_validation.json)保留场景结果和来源说明。这些是有限场景的单次验证，不是普适安全或统计性能结论。
+CV 基线版本完成 37 项数值／记录检查及单机穿越、迎面、追越、变速、双目标与五机闭环验证。本研究分支增加评价 schema 2 与 CA 检查后共 61 项检查通过。[小体积验证摘要](docs/stages/cv_dynamic_validation.json)保留场景结果和来源说明。这些是有限场景的单次验证，不是普适安全或统计性能结论。
 
 默认实验输出在包内 `data_collect/<时间>-CBF-结果`；代码版本与结果应一并登记。原始 CSV、完整日志、图表、Git bundle 和完整工程归档继续保存在本地独立阶段目录，不纳入本次源码提交。请另行备份实验数据，不能只依赖 Git 标签。
 
@@ -93,6 +93,10 @@ git worktree add ../tb3_static_20261021 teacher/static-2026-10-21-r05
 
 ## 当前研究分支：评价口径升级
 
-本分支已完成 [metrics schema 2](docs/metrics_schema_v2.md)：统一测量时刻、目标减实际的朝向符号，分离名义编队误差、上一采用规划—执行偏差和对齐观测参考误差。缺失内部参考不填零，旧数据只在新目录中重算。控制／预测数学定义未变；CA/IMM 尚未实现。
+本分支已完成 [metrics schema 2](docs/metrics_schema_v2.md)：统一测量时刻、目标减实际的朝向符号，分离名义编队误差、上一采用规划—执行偏差和对齐观测参考误差。缺失内部参考不填零，旧数据只在新目录中重算。控制／预测数学定义未变；研究分支另有可切换的 CA 实验模式；IMM 尚未实现。
 
 main 和既有基线标签保留。阶段提交及独立本地归档用于追溯，不将本次评价调整当作新的控制性能提升。
+
+## 当前研究分支：变速预测对照
+
+已增加 `prediction_mode:=ca` 和 `accelerating_crossing`、`decelerating_crossing`、`stop_go_crossing` 三类动态场景。CV/frozen 默认与历史阶段保留；CA 不是全场景替换方案，也不单独作为原创贡献。模型、参数、指令、测试边界见 [CA 阶段说明](docs/ca_prediction.md)，有限验证结果见 [阶段数据](docs/stages/ca_prediction_validation.json)。

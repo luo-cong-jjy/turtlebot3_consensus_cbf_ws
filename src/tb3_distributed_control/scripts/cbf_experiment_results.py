@@ -566,6 +566,8 @@ class ExperimentRecorder:
             stagger_callbacks=rospy.get_param('/cbf/stagger_callbacks',True),
             dynamic_prediction=rospy.get_param('/cbf/dynamic_prediction',False),
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
+            ca_jerk_density=rospy.get_param('/cbf/dynamic/ca_jerk_density',.01),
+            ca_acceleration_variance=rospy.get_param('/cbf/dynamic/ca_acceleration_variance',.04),
             dynamic_reaction_time=rospy.get_param('/cbf/dynamic/reaction_time',.35),
             dynamic_extra_margin=rospy.get_param('/cbf/dynamic/extra_margin',.02),
             dynamic_scenario=rospy.get_param('/cbf/dynamic_scenario','none'),

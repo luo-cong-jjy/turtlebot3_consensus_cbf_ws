@@ -11,3 +11,11 @@
 两个 `static*_provenance.json` 保留关键文件来源和 SHA；`cv_dynamic_validation.json` 保留单次验证摘要。SHA 清单只能关联对应版本，不能把不同参数、不同半径的结果混为同一实验。
 
 不发布内部恢复复制态标签。默认忽略实验输出；本地保留的失败记录没有删除。正式论文性能比较仍需统一评价口径并增加重复试验。
+
+## 2026-11-01 研究阶段
+
+- `stage/metrics-v2-2026-11-01`：误差时标及上一采用规划记录，保留原 CV 控制数学；独立阶段归档。
+- `baseline/before-ca-2026-11-01`：开始 CA 前的 CV+schema 2。
+- `stage/ca-prediction-validation-2026-11-01`：可切换 CA、变速场景、61 项检查与单机四组 CV/CA 对照。默认 CV；包含未通过的 CV 加速案例与 CA 减速代价。
+
+[CA 技术说明](../ca_prediction.md)、[有限验证摘要](ca_prediction_validation.json)、[论文后续工作及失败分析](ca_prediction_research_notes_2026-11-01.md)。CA 五机及实物实验尚未验证。

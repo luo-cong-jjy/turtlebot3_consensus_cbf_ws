@@ -263,7 +263,7 @@ def _stationary_guidance(state, goals, obstacles, config, memory):
 
 
 def continuous_guidance(state,goals,obstacles,config,memory):
-    """Use the existing soft bypass field in a moving obstacle's CV frame.
+    """Use the existing soft bypass field in a predicted moving frame.
 
     Predicted obstacle displacement is removed from nominal goal positions,
     then added back to the desired velocity. The NLP still uses the original
@@ -290,7 +290,8 @@ def continuous_guidance(state,goals,obstacles,config,memory):
     virtual=dict(obs,guidance=True,dynamic=False)
     guide,moving_level=_stationary_guidance(state,relative_goals,[virtual],config,memory['moving_guide_memory'])
     if moving_level<=level:return stationary,level
-    velocity=(centers[1]-centers[0])/config['dt']
+    velocity=(np.diff(centers[:len(goals)],axis=0)/config['dt']
+              if obs.get('prediction_model')=='ca' else (centers[1]-centers[0])/config['dt'])
     guide+=velocity
     speed=np.linalg.norm(guide,axis=1)
     guide*=np.minimum(1.,.22/np.maximum(speed,1e-12))[:,None]

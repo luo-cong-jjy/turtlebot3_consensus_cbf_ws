@@ -20,6 +20,16 @@ from tb3_distributed_control.msg import LeaderHistoryData
 
 def trajectory(spec,t,shift_y=0.):
     t=max(0.,float(t));x,y=spec['start'];vx,vy=spec['velocity']
+    if 'acceleration_segments' in spec:
+        remaining=t
+        for segment in spec['acceleration_segments']:
+            duration=float(segment['duration']);ax,ay=segment['acceleration']
+            if not (math.isfinite(duration) and duration>0 and math.isfinite(ax) and math.isfinite(ay)):
+                raise ValueError('Invalid prescribed acceleration segment')
+            step=min(remaining,duration)
+            x+=vx*step+.5*ax*step*step;y+=vy*step+.5*ay*step*step
+            vx+=ax*step;vy+=ay*step;remaining-=step
+        return x+vx*remaining,y+shift_y+vy*remaining,vx,vy
     amplitude=spec.get('sine_x',0.);frequency=spec.get('frequency',0.);phase=spec.get('phase',0.)
     return (x+vx*t+amplitude*math.sin(frequency*t+phase),y+shift_y+vy*t,
             vx+amplitude*frequency*math.cos(frequency*t+phase),vy)

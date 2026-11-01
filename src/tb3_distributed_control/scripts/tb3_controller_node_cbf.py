@@ -345,27 +345,47 @@ def predicted_peer_envelope(peer_id, stamp, state, velocity, now, dt, horizon,
 class DynamicEllipseTracker:
     """Local measured ellipses -> predictive association -> upstream 9-state KF.
 
-    State order and Q/R/P follow MPC-D-CBF obs_param/obs_kf.cpp. Unlike its
+    CV state order and Q/R/P follow MPC-D-CBF obs_param/obs_kf.cpp. CA uses
+    the two previously unused states as ax/ay with a white-jerk process model.
+    Unlike its
     fixed-rate callback, actual scan stamps determine elapsed time. Predictions
     include node zero and are re-aligned to the control stamp without updating
     the filter twice. No simulation or peer truth enters this estimator.
     """
     def __init__(self, dt=.1, horizon=10, association_distance=.65, timeout=.65,
-                 history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02):
-        if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen'):
+                 history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02,
+                 ca_jerk_density=.01,ca_acceleration_variance=.04):
+        if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
         self.history_size,self.speed_threshold,self.mode=history_size,speed_threshold,mode
         if reaction_time<0 or extra_margin<0:raise ValueError('Negative execution margin')
         self.reaction_time,self.extra_margin=reaction_time,extra_margin
         self.A,self.Q,self.R,self.H,self.P0=reference_covariance_matrices(dt)
+        if not all(np.isfinite(v) and v>0 for v in (ca_jerk_density,ca_acceleration_variance)):
+            raise ValueError('CA jerk density and acceleration prior must be finite and positive')
+        self.ca_jerk_density=ca_jerk_density
+        self.ca_acceleration_variance=ca_acceleration_variance
+        if mode=='ca':self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         self.tracks={};self.next_id=1;self.last_stamp=None
 
     def reset(self):
         self.tracks.clear();self.last_stamp=None;self.next_id=1
 
     def propagate(self,state,covariance,elapsed):
+        if not np.isfinite(elapsed) or elapsed<0:raise ValueError('Invalid propagation time')
         a=np.eye(9);a[0,5]=a[1,6]=elapsed
+        if self.mode=='ca':
+            h=elapsed
+            a[0,7]=a[1,8]=.5*h*h;a[5,7]=a[6,8]=h
+            # Exact discretization of independent continuous white jerk. The
+            # geometric states retain the upstream random-walk covariance.
+            block=self.ca_jerk_density*np.array([[h**5/20,h**4/8,h**3/6],
+                [h**4/8,h**3/3,h*h/2],[h**3/6,h*h/2,h]])
+            q=np.zeros((9,9))
+            for indices in ([0,5,7],[1,6,8]):q[np.ix_(indices,indices)]=block
+            for i in (2,3,4):q[i,i]=self.Q[i,i]*(h/self.dt)
+            return a@state,a@covariance@a.T+q
         return a@state,a@covariance@a.T+self.Q*(max(0.,elapsed)/self.dt)
 
     def update(self,ellipses,stamp):
@@ -427,7 +447,8 @@ class DynamicEllipseTracker:
         if not -1e-9<=now-track['seen']<=self.timeout:return None
         x,p=self.propagate(track['x'],track['P'],max(0.,now-track['stamp']))
         if self.mode=='frozen':x[5:7]=0.
-        centers=[];axes=[]
+        centers=[];axes=[];velocities=[];position_covariances=[];margins=[]
+        acceleration=x[7:9].copy() if self.mode=='ca' else np.zeros(2)
         # Enclose the most recent measured ellipse even if the mean lags it.
         c,s=np.cos(x[4]-track['raw_theta']),np.sin(x[4]-track['raw_theta'])
         rotation=np.array([[c,-s],[s,c]])
@@ -444,13 +465,24 @@ class DynamicEllipseTracker:
         for j in range(self.horizon+1):
             if j:x,p=self.propagate(x,p,self.dt)
             centers.append(x[:2].copy())
+            velocities.append(x[5:7].copy());position_covariances.append(p[:2,:2].copy())
+            margin=execution_margin
+            if self.mode=='ca':
+                # Reaction displacement under estimated acceleration, an
+                # engineering buffer, NOT a certified acceleration bound.
+                margin=self.extra_margin+self.reaction_time*np.linalg.norm(x[5:7])+\
+                    .5*self.reaction_time**2*np.linalg.norm(acceleration)
+            margins.append(float(margin))
             inflated=shape_guard+reference_axis_inflation(p)
-            axes.append(inflated*(1.+execution_margin/inflated[1]))
+            axes.append(inflated*(1.+margin/inflated[1]))
         return dict(id=track['id'],name='tracked_'+str(track['id']),center=np.asarray(centers[0]),
             a=float(axes[0][0]),b=float(axes[0][1]),theta=float(x[4]),
             prediction_centers=np.asarray(centers),prediction_axes=np.asarray(axes),
+            prediction_model=self.mode,prediction_velocities=np.asarray(velocities),
+            prediction_position_covariances=np.asarray(position_covariances),
+            prediction_execution_margins=np.asarray(margins),acceleration=acceleration,
             velocity=track['x'][5:7].copy(),dynamic=track['dynamic'],
-            execution_margin=float(execution_margin),
+            execution_margin=margins[0],
             guidance=not track['dynamic'],seen=track['seen'],measurement_age=now-track['seen'],
             raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'])
 
@@ -474,6 +506,7 @@ class TurtleBot3CBFController:
         "validated_steps","dual_warm","budget_hit","solver_seed","geometry_sequence",
         "geometry_sample_stamp","geometry_cpu_ms","geometry_peer_cpu_ms",
         "dynamic_tracks","missed_tracks","max_obstacle_speed","motion_prediction_enabled",
+        "ca_prediction_enabled","max_obstacle_acceleration",
         "detected_static_ellipses","detected_dynamic_ellipses",
         "metrics_schema_version","evaluation_time","evaluation_ros_time","reference_quality",
         "leader_reference_x","leader_reference_y","leader_reference_heading",
@@ -624,7 +657,9 @@ class TurtleBot3CBFController:
             speed_threshold=float(get('/cbf/dynamic/speed_threshold',.05)),
             mode=get('/cbf/dynamic/prediction_mode','cv'),
             reaction_time=float(get('/cbf/dynamic/reaction_time',.35)),
-            extra_margin=float(get('/cbf/dynamic/extra_margin',.02)))
+            extra_margin=float(get('/cbf/dynamic/extra_margin',.02)),
+            ca_jerk_density=float(get('/cbf/dynamic/ca_jerk_density',.01)),
+            ca_acceleration_variance=float(get('/cbf/dynamic/ca_acceleration_variance',.04)))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
         if (self.max_range <= self.min_range or self.min_range < 0
@@ -783,6 +818,10 @@ class TurtleBot3CBFController:
             self.publish_geometry_estimates(stamp.to_sec(),fits,observed)
             if moving:
                 rows=[dict(id=o['id'],dynamic=o['dynamic'],velocity=o['velocity'].tolist(),
+                    prediction_model=o['prediction_model'],acceleration=o['acceleration'].tolist(),
+                    velocities=o['prediction_velocities'].tolist(),
+                    position_covariances=o['prediction_position_covariances'].tolist(),
+                    execution_margins=o['prediction_execution_margins'].tolist(),
                     measurement_age=o['measurement_age'],missed=o['missed'],
                     execution_margin=o['execution_margin'],
                     centers=o['prediction_centers'].tolist(),axes=o['prediction_axes'].tolist(),
@@ -1276,7 +1315,9 @@ class TurtleBot3CBFController:
             dynamic_tracks=sum(o.get('dynamic',False) for o in obstacles),
             missed_tracks=sum(o.get('missed',0)>0 for o in obstacles),
             max_obstacle_speed=max([float(np.linalg.norm(o.get('velocity',[0.,0.]))) for o in obstacles]+[0.]),
-            motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='cv'),
+            motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode in ('cv','ca')),
+            ca_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='ca'),
+            max_obstacle_acceleration=max([float(np.linalg.norm(o.get('acceleration',[0.,0.]))) for o in obstacles]+[0.]),
             detected_static_ellipses=sum(not o.get('dynamic',False) for o in self.observed),
             detected_dynamic_ellipses=sum(o.get('dynamic',False) for o in self.observed),
             metrics_schema_version=METRICS_SCHEMA_VERSION,evaluation_time=evaluation_time,evaluation_ros_time=metrics['stamp'],

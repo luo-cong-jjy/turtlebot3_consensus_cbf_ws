@@ -17,10 +17,10 @@ from run_cbf_gazebo import free_port,stop
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument('--scenario',default='crossing',choices=['crossing','head_on','overtaking','maneuver','mixed'])
+    parser.add_argument('--scenario',default='crossing',choices=['crossing','head_on','overtaking','maneuver','mixed','accelerating_crossing','decelerating_crossing','stop_go_crossing'])
     parser.add_argument('--robots',type=int,default=1,choices=[1,5])
     parser.add_argument('--duration',type=float,default=32.)
-    parser.add_argument('--prediction-mode',choices=['cv','frozen'],default='cv')
+    parser.add_argument('--prediction-mode',choices=['cv','frozen','ca'],default='cv')
     parser.add_argument('--output',required=True)
     parser.add_argument('--wall-timeout',type=float,default=240.)
     args=parser.parse_args();out=Path(args.output).resolve();out.mkdir(parents=True,exist_ok=True)

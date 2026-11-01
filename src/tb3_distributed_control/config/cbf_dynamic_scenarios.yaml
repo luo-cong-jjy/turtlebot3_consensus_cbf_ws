@@ -12,3 +12,31 @@ maneuver:
 mixed:
   - {name: cbf_dynamic_0, start: [2.1, -1.8], velocity: [0.0, 0.16], radius: 0.18}
   - {name: cbf_dynamic_1, start: [3.7, 3.3], velocity: [0.0, -0.15], radius: 0.18}
+# Piecewise constant acceleration, continuous position and velocity. Truth is
+# confined to the scenario/evaluator and never exposed to the local tracker.
+accelerating_crossing:
+  - name: cbf_dynamic_0
+    start: [2.1, -0.84]
+    velocity: [0.0, 0.03]
+    radius: 0.18
+    acceleration_segments:
+      - {duration: 5.0, acceleration: [0.0, 0.0]}
+      - {duration: 7.0, acceleration: [0.0, 0.025]}
+decelerating_crossing:
+  - name: cbf_dynamic_0
+    start: [2.1, -1.76]
+    velocity: [0.0, 0.20]
+    radius: 0.18
+    acceleration_segments:
+      - {duration: 5.0, acceleration: [0.0, 0.0]}
+      - {duration: 7.0, acceleration: [0.0, -0.025]}
+stop_go_crossing:
+  - name: cbf_dynamic_0
+    start: [3.0, -1.4]
+    velocity: [0.0, 0.14]
+    radius: 0.18
+    acceleration_segments:
+      - {duration: 5.0, acceleration: [0.0, 0.0]}
+      - {duration: 4.0, acceleration: [0.0, -0.035]}
+      - {duration: 3.0, acceleration: [0.0, 0.0]}
+      - {duration: 4.0, acceleration: [0.0, 0.035]}

@@ -27,7 +27,7 @@ def main():
     positions={name:np.array([[float(r[name+'_x']),float(r[name+'_y'])] for r in rows]) for name in names+[s['name'] for s in specs]}
     predictions=[json.loads(line) for line in (p/'obstacle_predictions.jsonl').open() if line.strip()]
     selected=[r for r in predictions if r['observer']==names[0]]
-    comparison={};errors={0:[],10:[]};displacement_errors={0:[],10:[]}
+    comparison={};errors={0:[],5:[],10:[]};displacement_errors={0:[],5:[],10:[]}
     # Match only offline, using simultaneous truth. No association labels enter
     # the controller, and predictions outside the recorded time interval are skipped.
     for frame in selected:
