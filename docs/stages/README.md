@@ -21,3 +21,5 @@
 [CA 技术说明](../ca_prediction.md)、[有限验证摘要](ca_prediction_validation.json)、[论文后续工作及失败分析](ca_prediction_research_notes_2026-11-01.md)。CA 五机及实物实验尚未验证。
 
 - `experiment/singer-guidance-ablation-2026-11-01`：Singer／真实测量回放／速度坐标候选及14次有限验证；70项检查通过，3次终端跟踪未通过。默认CV与原引导，完整负结果见 [阶段报告](singer_ablation_research_notes_2026-11-01.md)。该标签是研究实验阶段，不表示所有候选已成为推荐方法。
+
+- `experiment/reliability-seeded-2026-11-01`：延迟评分与平滑专家选择、固定种子和完整因果重建。79 项检查，18 次主试验＋1 次预定重复，候选未形成整体优势。默认 CV；[阶段报告](reliability_seeded_research_notes_2026-11-01.md)。

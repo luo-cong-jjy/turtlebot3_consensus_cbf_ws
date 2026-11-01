@@ -104,3 +104,9 @@ main 和既有基线标签保留。阶段提交及独立本地归档用于追溯
 ## 研究对照：衰减预测与引导消融
 
 本分支增加 Singer 相关加速度模型、真实拟合测量共同输入回放和可关闭的缓冲／引导消融。速度坐标投影候选默认关闭，CV 仍为默认。70 项检查通过；14 次单机闭环有 3 次未通过终端跟踪要求，全部保留，不能当作全面性能提升。详见 [技术说明](docs/singer_ablation_2026-11-01.md)、[实验与局限](docs/stages/singer_ablation_research_notes_2026-11-01.md)。没有自动模型切换或新模式实物验证。
+
+## 在线可靠性预测候选与固定种子对照
+
+新增 `prediction_mode:=adaptive`，使用本机历史预测的延迟误差评分，平滑选择 CV/CA/Singer 并保留模型分歧协方差。默认仍 CV，既有模式保留；不是 IMM 或安全概率估计。79 项检查通过，19 次预定配对／重复试验及完整负结果已归档。停走场景改善，加速／减速仍有恢复失败，不推荐替换默认。
+
+[方法、参数与运行命令](docs/reliability_prediction_2026-11-01.md)、[完整研究报告](docs/stages/reliability_seeded_research_notes_2026-11-01.md)、[小体积验证记录](docs/stages/reliability_seeded_validation.json)。固定 Gazebo 种子不保证整个闭环逐位复现。
