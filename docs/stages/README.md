@@ -19,3 +19,5 @@
 - `stage/ca-prediction-validation-2026-11-01`：可切换 CA、变速场景、61 项检查与单机四组 CV/CA 对照。默认 CV；包含未通过的 CV 加速案例与 CA 减速代价。
 
 [CA 技术说明](../ca_prediction.md)、[有限验证摘要](ca_prediction_validation.json)、[论文后续工作及失败分析](ca_prediction_research_notes_2026-11-01.md)。CA 五机及实物实验尚未验证。
+
+- `experiment/singer-guidance-ablation-2026-11-01`：Singer／真实测量回放／速度坐标候选及14次有限验证；70项检查通过，3次终端跟踪未通过。默认CV与原引导，完整负结果见 [阶段报告](singer_ablation_research_notes_2026-11-01.md)。该标签是研究实验阶段，不表示所有候选已成为推荐方法。

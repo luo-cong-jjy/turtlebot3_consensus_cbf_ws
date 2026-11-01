@@ -80,6 +80,12 @@ def first_step_mask(state, commands, obstacles, bounds, previous, config):
     return valid,positions,angle
 
 
+def project_relative_velocity(velocity,frame_velocity,limit=.22):
+    """Project onto ||v_relative + v_frame|| <= limit in velocity space."""
+    world=np.asarray(velocity)+np.asarray(frame_velocity)
+    return world*min(1.,limit/max(np.linalg.norm(world),1e-12))-frame_velocity
+
+
 def _stationary_guidance(state, goals, obstacles, config, memory):
     """Smooth, side-persistent field used only as a soft MPC objective.
 
@@ -94,6 +100,11 @@ def _stationary_guidance(state, goals, obstacles, config, memory):
     position = state[:2]
     feed = (goals[1, :2]-goals[0, :2])/dt
     aim = goals[-1, :2]+2.0*feed
+    frame=config.get('_guide_frame_velocities')
+
+    def bounded(vector,stage):
+        if frame is not None:return project_relative_velocity(vector,frame[stage])
+        return vector*min(1.,.22/max(np.linalg.norm(vector),1e-9))
 
     def geometry(point, obs, stage):
         a, b = obstacle_axes(obs, stage)
@@ -236,12 +247,12 @@ def _stationary_guidance(state, goals, obstacles, config, memory):
     guide = np.zeros((n, 2))
     point = position.copy()
     previous_vector = memory.get('guide_vector', feed.copy())
-    previous_vector = previous_vector*min(1., .22/max(np.linalg.norm(previous_vector), 1e-9))
+    previous_vector = bounded(previous_vector,0)
     for j in range(n):
         h, normal = geometry(point, obstacles[index], j)
         tangent = memory.get('guide_side', 1)*np.array([-normal[1], normal[0]])
         attraction = feed+1.2*(goals[j, :2]-point)
-        attraction *= min(1., .22/max(np.linalg.norm(attraction), 1e-9))
+        attraction = bounded(attraction,j)
         local_feed = (projections[j+1]-projections[j])/dt
         if visible(point, projections[j+1], obs, axes, rotation):
             flow = local_feed+1.2*(projections[j+1]-point)
@@ -249,12 +260,14 @@ def _stationary_guidance(state, goals, obstacles, config, memory):
             side = memory.get('guide_side', 1)
             route = routes(point, projections[-1], obs, axes, rotation)[side]
             arc_progress = min(route[0], max(axes)*route[1])
-            speed = np.clip(.9*arc_progress+max(np.dot(local_feed, tangent), 0.), 0., .20)
+            maximum=.20+(np.linalg.norm(frame[j]) if frame is not None else 0.)
+            speed = np.clip(.9*arc_progress+max(np.dot(local_feed, tangent), 0.), 0., maximum)
             radial = np.clip(.8*(.06-h), -.08, .12)
             flow = speed*tangent+radial*normal
         desired = (1-level)*attraction+level*flow
-        desired *= min(1., .22/max(np.linalg.norm(desired), 1e-9))
+        desired = bounded(desired,j)
         desired = previous_vector+.25*(desired-previous_vector)
+        if frame is not None:desired=bounded(desired,j)
         previous_vector = desired
         guide[j] = desired
         point += dt*desired
@@ -288,10 +301,13 @@ def continuous_guidance(state,goals,obstacles,config,memory):
     centers=np.asarray(obs['prediction_centers'])
     relative_goals[:,:2]-=centers[:len(goals)]-centers[0]
     virtual=dict(obs,guidance=True,dynamic=False)
-    guide,moving_level=_stationary_guidance(state,relative_goals,[virtual],config,memory['moving_guide_memory'])
+    velocities=np.diff(centers[:len(goals)],axis=0)/config['dt']
+    shifted=bool(config.get('moving_frame_projection',False))
+    moving_config=dict(config,_guide_frame_velocities=velocities) if shifted else config
+    guide,moving_level=_stationary_guidance(state,relative_goals,[virtual],moving_config,memory['moving_guide_memory'])
     if moving_level<=level:return stationary,level
-    velocity=(np.diff(centers[:len(goals)],axis=0)/config['dt']
-              if obs.get('prediction_model') in ('ca','singer') and obs.get('stage_velocity_guidance',True)
+    velocity=(velocities
+              if shifted or obs.get('prediction_model') in ('ca','singer') and obs.get('stage_velocity_guidance',True)
               else (centers[1]-centers[0])/config['dt'])
     guide+=velocity
     speed=np.linalg.norm(guide,axis=1)

@@ -100,3 +100,7 @@ main 和既有基线标签保留。阶段提交及独立本地归档用于追溯
 ## 当前研究分支：变速预测对照
 
 已增加 `prediction_mode:=ca` 和 `accelerating_crossing`、`decelerating_crossing`、`stop_go_crossing` 三类动态场景。CV/frozen 默认与历史阶段保留；CA 不是全场景替换方案，也不单独作为原创贡献。模型、参数、指令、测试边界见 [CA 阶段说明](docs/ca_prediction.md)，有限验证结果见 [阶段数据](docs/stages/ca_prediction_validation.json)。
+
+## 研究对照：衰减预测与引导消融
+
+本分支增加 Singer 相关加速度模型、真实拟合测量共同输入回放和可关闭的缓冲／引导消融。速度坐标投影候选默认关闭，CV 仍为默认。70 项检查通过；14 次单机闭环有 3 次未通过终端跟踪要求，全部保留，不能当作全面性能提升。详见 [技术说明](docs/singer_ablation_2026-11-01.md)、[实验与局限](docs/stages/singer_ablation_research_notes_2026-11-01.md)。没有自动模型切换或新模式实物验证。

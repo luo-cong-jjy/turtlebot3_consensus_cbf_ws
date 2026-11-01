@@ -7,6 +7,7 @@
   <arg name="geometry_observer" default="0" />
   <arg name="output_dir" default="" />
   <arg name="prediction_mode" default="cv" />
+  <arg name="moving_frame_projection" default="false" />
   <arg name="singer_tau" default="1.0" />
   <arg name="acceleration_buffer" default="true" />
   <arg name="stage_velocity_guidance" default="true" />
@@ -27,6 +28,7 @@
     <arg name="dynamic_scenario" value="$(arg scenario)" />
     <arg name="ca_jerk_density" value="$(arg ca_jerk_density)" />
     <arg name="ca_acceleration_variance" value="$(arg ca_acceleration_variance)" />
+    <arg name="moving_frame_projection" value="$(arg moving_frame_projection)" />
     <arg name="singer_tau" value="$(arg singer_tau)" />
     <arg name="acceleration_buffer" value="$(arg acceleration_buffer)" />
     <arg name="stage_velocity_guidance" value="$(arg stage_velocity_guidance)" />

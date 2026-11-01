@@ -551,6 +551,7 @@ class TurtleBot3CBFController:
         self.names=rospy.get_param("/cbf/robot_names",["tb3_"+str(i) for i in range(5)])
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
+        self.cfg['moving_frame_projection']=bool(rospy.get_param('/cbf/moving_frame_projection',False))
         self.cfg['feasible_seed_search']=bool(rospy.get_param('/cbf/feasible_seed_search',False))
         self.cfg['realtime']=bool(rospy.get_param('/cbf/realtime_solver',True))
         self.control_budget=float(rospy.get_param('/cbf/control_budget_ms',100.))/1000.

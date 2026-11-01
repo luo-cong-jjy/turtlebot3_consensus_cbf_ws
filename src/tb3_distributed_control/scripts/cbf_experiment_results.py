@@ -566,6 +566,7 @@ class ExperimentRecorder:
             stagger_callbacks=rospy.get_param('/cbf/stagger_callbacks',True),
             dynamic_prediction=rospy.get_param('/cbf/dynamic_prediction',False),
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
+            moving_frame_projection=rospy.get_param('/cbf/moving_frame_projection',False),
             singer_tau=rospy.get_param('/cbf/dynamic/singer_tau',1.),
             acceleration_buffer=rospy.get_param('/cbf/dynamic/acceleration_buffer',True),
             stage_velocity_guidance=rospy.get_param('/cbf/dynamic/stage_velocity_guidance',True),
