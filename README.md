@@ -72,7 +72,7 @@ roslaunch tb3_distributed_control single_turtlebot3_cbf_dynamic.launch scenario:
 python3 -m unittest discover -s src/tb3_distributed_control/scripts/tests -p 'test_cbf*.py' -v
 ```
 
-CV 版本已完成 37 项数值／记录检查，以及单机穿越、迎面、追越、变速、双目标与五机闭环验证。[小体积验证摘要](docs/stages/cv_dynamic_validation.json)保留场景结果和来源说明。这些是有限场景的单次验证，不是普适安全或统计性能结论。
+CV 基线版本完成 37 项数值／记录检查及单机穿越、迎面、追越、变速、双目标与五机闭环验证。本研究分支增加评价 schema 2 后共 54 项检查通过。[小体积验证摘要](docs/stages/cv_dynamic_validation.json)保留场景结果和来源说明。这些是有限场景的单次验证，不是普适安全或统计性能结论。
 
 默认实验输出在包内 `data_collect/<时间>-CBF-结果`；代码版本与结果应一并登记。原始 CSV、完整日志、图表、Git bundle 和完整工程归档继续保存在本地独立阶段目录，不纳入本次源码提交。请另行备份实验数据，不能只依赖 Git 标签。
 
@@ -90,3 +90,9 @@ git worktree add ../tb3_static_20261021 teacher/static-2026-10-21-r05
 ## 参考源码
 
 动态预测和包络处理参考 [MPC-D-CBF](https://github.com/jianzhuozhuTHU/MPC-D-CBF)。第三方源码、模型资产和随附许可／作者信息保留在原目录中；不将参考算法声明为本工程原创。
+
+## 当前研究分支：评价口径升级
+
+本分支已完成 [metrics schema 2](docs/metrics_schema_v2.md)：统一测量时刻、目标减实际的朝向符号，分离名义编队误差、上一采用规划—执行偏差和对齐观测参考误差。缺失内部参考不填零，旧数据只在新目录中重算。控制／预测数学定义未变；CA/IMM 尚未实现。
+
+main 和既有基线标签保留。阶段提交及独立本地归档用于追溯，不将本次评价调整当作新的控制性能提升。

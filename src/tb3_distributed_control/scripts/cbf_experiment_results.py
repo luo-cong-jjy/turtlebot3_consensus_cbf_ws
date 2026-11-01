@@ -7,8 +7,14 @@ from pathlib import Path
 import pickle
 import threading
 import time
+import sys
 
 import numpy as np
+
+_scripts=Path(__file__).resolve().parent
+for _directory in (_scripts,_scripts.parent/'纯仿真代码'):
+    if _directory.is_dir() and str(_directory) not in sys.path:sys.path.insert(0,str(_directory))
+from cbf_mpc_core import metric_definitions,METRICS_SCHEMA_VERSION
 
 
 ORIGINAL_CHARTS=(
@@ -75,10 +81,24 @@ def chart_manifest(stamp,robots,leader):
     if not has('obstacle_distance'):
         manifest['obstacle_distance'].update(status='partial' if has('raw_min_distance') else 'unavailable',
             note='Historical reference-to-point distance was not recorded. Available laser-origin ranges are shown separately.')
-    if leader is None:
+    if leader is None and not (has('observer_aligned_x') and has('leader_reference_x')):
         manifest['observer_estimation'].update(status='partial',note='Observer traces exist; historical leader trace unavailable.')
     if not has('thetae'):manifest['heading_error'].update(status='unavailable',note='Historical heading error was not recorded.')
+    if not has('plan_execution_error_x'):
+        manifest['tracking_error_xy'].update(status='unavailable',note='Accepted auxiliary-plan execution reference was not recorded; nominal reference is not substituted.')
     return manifest
+
+
+def finite_error_summary(values):
+    values=np.asarray(values,float);valid=values[np.isfinite(values)]
+    return dict(valid_samples=int(len(valid)),missing_samples=int(len(values)-len(valid)),
+        mean=float(np.mean(valid)) if len(valid) else np.nan,
+        mean_signed=float(np.mean(valid)) if len(valid) else np.nan,
+        mae=float(np.mean(np.abs(valid))) if len(valid) else np.nan,
+        rmse=float(np.sqrt(np.mean(valid**2))) if len(valid) else np.nan,
+        max_abs=float(np.max(np.abs(valid))) if len(valid) else np.nan,
+        final=float(values[-1]) if len(values) and np.isfinite(values[-1]) else np.nan,
+        final_abs=float(abs(values[-1])) if len(values) and np.isfinite(values[-1]) else np.nan)
 
 
 def create_run_directory(package, requested=''):
@@ -134,12 +154,15 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
     for i,data in rows.items():
         if not data:
             robots[i]=None;continue
-        robot={k:[] for k in ('t','xc','yc','thetac','vc','wc','xe','ye','thetae','xr','yr',
+        robot={k:[] for k in ('t','control_t','xc','yc','thetac','vc','wc','xe','ye','thetae','xr','yr',
             'zxeo_x','zxeo_y','computation_time','full_cycle_time','raw_min_distance',
             'obstacle_distance','total_clusters_count','avoidance_force_magnitude',
-            'static_clusters_count','dynamic_clusters_count','peer_clusters_count')}
+            'static_clusters_count','dynamic_clusters_count','peer_clusters_count',
+            'plan_reference_x','plan_reference_y','plan_execution_error_x','plan_execution_error_y',
+            'observer_aligned_x','observer_aligned_y','observer_error_x','observer_error_y',
+            'leader_reference_x','leader_reference_y','reference_quality','plan_reference_valid')}
         for r in data:
-            values=dict(t=r['time'],xc=r['x'],yc=r['y'],thetac=r['theta'],vc=r['v'],wc=r['omega'],
+            values=dict(t=r.get('evaluation_time',r['time']),control_t=r['time'],xc=r['x'],yc=r['y'],thetac=r['theta'],vc=r['v'],wc=r['omega'],
                 xe=r['consensus_error_x'],ye=r['consensus_error_y'],thetae=r.get('heading_error',np.nan),
                 xr=r.get('reference_x',r['x']-r['consensus_error_x']),
                 yr=r.get('reference_y',r['y']-r['consensus_error_y']),
@@ -151,14 +174,36 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
                 static_clusters_count=r.get('detected_static_ellipses',r['detected_ellipses']),
                 dynamic_clusters_count=r.get('detected_dynamic_ellipses',np.nan),
                 peer_clusters_count=r.get('detected_peer_ellipses',np.nan),avoidance_force_magnitude=np.nan)
+            for key in ('plan_reference_x','plan_reference_y','plan_execution_error_x','plan_execution_error_y',
+                    'observer_aligned_x','observer_aligned_y','observer_error_x','observer_error_y',
+                    'leader_reference_x','leader_reference_y','reference_quality','plan_reference_valid'):
+                values[key]=r.get(key,np.nan)
             for k,value in values.items():robot[k].append(value)
         robots[i]=robot
         statuses={s:sum(r['status']==s for r in data) for s in sorted({r['status'] for r in data})}
         errors=np.hypot(robot['xe'],robot['ye'])
         milliseconds=np.array([r['solve_ms'] for r in data])
         period_ms=1000.*metadata.get('control_dt',.1)
-        statistics[str(i)]=dict(rows=len(data),statuses=statuses,mean_position_error=float(errors.mean()),
-            max_position_error=float(errors.max()),final_position_error=float(errors[-1]),
+        eval_times=np.asarray(robot['t']);time_window=(eval_times>=0)&np.isfinite(eval_times)
+        if metadata.get('total_time') is not None:time_window&=eval_times<=float(metadata['total_time'])+1e-9
+        stamps=np.asarray([r.get('evaluation_ros_time',r.get('ros_time',r['time'])-r.get('odom_age',0.)) for r in data])
+        fresh=np.asarray([abs(r.get('odom_age',0.))<=float(metadata.get('data_timeout',.6)) for r in data])
+        last_stamp=-np.inf
+        for j,t in enumerate(stamps):
+            if not np.isfinite(t) or t<=last_stamp+1e-9:fresh[j]=False
+            elif fresh[j]:last_stamp=t
+        window=time_window&fresh
+        position_summary=finite_error_summary(errors[window])
+        quality=np.asarray(robot['reference_quality'])[window]
+        statistics[str(i)]=dict(rows=len(data),statuses=statuses,mean_position_error=position_summary['mean'],
+            max_position_error=position_summary['max_abs'],final_position_error=position_summary['final'],
+            evaluated_rows=int(window.sum()),excluded_window_rows=int((~time_window).sum()),
+            excluded_measurement_rows=int(np.sum(time_window&~fresh)),
+            reference_quality_counts={label:int(np.sum(quality==code)) for code,label in
+                ((0,'unavailable'),(1,'interpolated'),(2,'bounded_extrapolation'),(3,'exact'))},
+            position_error_summary=position_summary,heading_error_summary=finite_error_summary(np.asarray(robot['thetae'])[window]),
+            plan_execution_summary=finite_error_summary(np.hypot(robot['plan_execution_error_x'],robot['plan_execution_error_y'])[window]),
+            observer_error_summary=finite_error_summary(np.hypot(robot['observer_error_x'],robot['observer_error_y'])[window]),
             mean_computation_ms=float(milliseconds.mean()),median_computation_ms=float(np.median(milliseconds)),
             std_computation_ms=float(milliseconds.std()),min_computation_ms=float(milliseconds.min()),
             max_computation_ms=float(milliseconds.max()),overruns=int(np.sum(milliseconds>period_ms)),
@@ -173,7 +218,7 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
     dataset=dict(run_time=stamp,save_dir=str(path),leader=leader,robots=robots,formation_centroid=aligned_centroid(robots),
         metadata=metadata,cbf_diagnostics=rows,geometry_statistics=geometry_stats,
         chart_categories=categories,
-        reference_note='Controller nominal reference; independent Gazebo truth evaluation is separate.')
+        reference_note='xr/yr are nominal compatibility fields. Internal plan execution uses dedicated plan_reference/error fields; independent Gazebo truth is separate.')
     with (path/('consensus_data_'+stamp+'.pkl')).open('wb') as stream:pickle.dump(dataset,stream)
     (path/'experiment_statistics.json').write_text(json.dumps(statistics,indent=2,ensure_ascii=False))
     (path/'geometry_statistics.json').write_text(json.dumps(geometry_stats,indent=2,ensure_ascii=False))
@@ -325,21 +370,25 @@ def plot_results(path,stamp,robots,leader,geometry_stats,metadata):
     for name,key,ylabel,title,prefix,limits,leader_key in specs:
         fig,ax=plt.subplots(figsize=(8,4))
         for i,r in valid.items():
-            ax.plot(r['t'],r[key],label=prefix+'_'+str(i),color=color(i),lw=width)
+            times=r.get('control_t',r['t']) if key in ('vc','wc') else r['t']
+            ax.plot(times,r[key],label=prefix+'_'+str(i),color=color(i),lw=width)
         if leader_key and leader and len(leader.get(leader_key,[])):
             ax.plot(leader['t'],leader[leader_key],'--',color='#8c564b',lw=width,label=prefix+'_Leader')
         if limits:ax.set_ylim(*limits)
         if not any(np.isfinite(r[key]).any() for r in valid.values()):
             ax.text(.5,.5,'Historical data unavailable',ha='center',transform=ax.transAxes)
         _time_axis(ax,end,ylabel,title+' - '+stamp)
+        if key=='thetae' and int(metadata.get('metrics_schema_version',1))<2:
+            ax.set_title('Historical heading error: sign as recorded - '+stamp,fontsize=12)
         ax.legend();fig.tight_layout();_save_plot(fig,path,name,stamp)
     # Figure 7: wall duration, not a fabricated separate pure-optimizer duration.
     fig,ax=plt.subplots(figsize=(16,10));stats=[];all_times=[]
     period=1000.*metadata.get('control_dt',.1);maximum=period*2
     for i,r in valid.items():
         values=np.asarray(r['computation_time'])*1000.
-        mask=np.isfinite(values)&np.isfinite(r['t'])
-        t=np.asarray(r['t'])[mask];values=values[mask]
+        control_times=r.get('control_t',r['t'])
+        mask=np.isfinite(values)&np.isfinite(control_times)
+        t=np.asarray(control_times)[mask];values=values[mask]
         if not len(values):continue
         all_times.extend(values.tolist());maximum=max(maximum,float(values.max())*1.12)
         timing_color=('blue','orange','green','red','purple')[i%5]
@@ -418,26 +467,41 @@ def plot_results(path,stamp,robots,leader,geometry_stats,metadata):
     fig.tight_layout();_save_plot(fig,path,'avoidance_forces',stamp)
     # Figure 11: reference 2.5 pt; estimates 1.5 pt; solid x / dash-dot y.
     fig,ax=plt.subplots(figsize=(14,8))
-    if leader:
+    aligned=any(np.isfinite(r.get('observer_aligned_x',[])).any() and np.isfinite(r.get('leader_reference_x',[])).any() for r in valid.values())
+    if aligned:
+        r=next(r for r in valid.values() if np.isfinite(r.get('leader_reference_x',[])).any())
+        ax.plot(r['t'],r['leader_reference_x'],'--',color='darkblue',lw=PLOT_STYLE['leader_width'],label='x_Leader')
+        ax.plot(r['t'],r['leader_reference_y'],'--',color='darkred',lw=PLOT_STYLE['leader_width'],label='y_Leader')
+    elif leader:
         for key,reference_color,label in (('x0','darkblue','x_Leader'),('y0','darkred','y_Leader')):
             ax.plot(leader['t'],leader[key],ls='--',color=reference_color,lw=PLOT_STYLE['leader_width'],
                 label=label,alpha=.9,zorder=10)
     else:ax.text(.5,.96,'Leader history unavailable; recorded observer estimates shown',ha='center',transform=ax.transAxes)
     for i,r in valid.items():
-        ax.plot(r['t'],r['zxeo_x'],color=color(i),label='x_est_'+str(i),lw=secondary,alpha=.8)
-        ax.plot(r['t'],r['zxeo_y'],color=color(i),ls='-.',label='y_est_'+str(i),lw=secondary,alpha=.8)
-    _time_axis(ax,end,'Position (m)','Observer Estimation Performance - '+stamp)
+        ax.plot(r['t'],r['observer_aligned_x'] if aligned else r['zxeo_x'],color=color(i),label='x_est_'+str(i),lw=secondary,alpha=.8)
+        ax.plot(r['t'],r['observer_aligned_y'] if aligned else r['zxeo_y'],color=color(i),ls='-.',label='y_est_'+str(i),lw=secondary,alpha=.8)
+    _time_axis(ax,end,'Position (m)',('Aligned Observer Reference' if aligned else 'Historical Raw Observer State')+' - '+stamp)
     ax.legend(loc='upper right',ncol=3,fontsize=7,framealpha=.9)
     fig.tight_layout();_save_plot(fig,path,'observer_estimation',stamp)
-    # Figure 12 retains the original xr-xc / yr-yc definition and red/blue colors.
+    # Dedicated prior-plan reference: the newly anchored r[0] would fake zero.
     fig,ax=plt.subplots(figsize=(8,6))
     for i,r in valid.items():
-        ax.plot(r['t'],np.asarray(r['xr'])-r['xc'],color='red',lw=secondary,alpha=.8,label='x_error_'+str(i))
-        ax.plot(r['t'],np.asarray(r['yr'])-r['yc'],color='blue',lw=secondary,alpha=.8,label='y_error_'+str(i))
+        ax.plot(r['t'],r.get('plan_execution_error_x',[np.nan]*len(r['t'])),color='red',lw=secondary,alpha=.8,label='x_error_'+str(i))
+        ax.plot(r['t'],r.get('plan_execution_error_y',[np.nan]*len(r['t'])),color='blue',lw=secondary,alpha=.8,label='y_error_'+str(i))
+    if not any(np.isfinite(r.get('plan_execution_error_x',[])).any() for r in valid.values()):
+        ax.text(.5,.5,'Accepted plan reference not recorded; internal error unavailable',ha='center',transform=ax.transAxes)
     ax.axhline(0,color='black',ls=':',lw=secondary,alpha=.5,label='Zero Error')
-    _time_axis(ax,end,'Tracking Error (m)','X & Y Tracking Error (xr-xc, yr-yc) - '+stamp)
+    _time_axis(ax,end,'Plan - Measured Position (m)','Previous Accepted Plan / Execution Error - '+stamp)
     ax.legend(loc='upper right',ncol=2,fontsize=8,framealpha=.9)
     fig.tight_layout();_save_plot(fig,path,'tracking_error_xy',stamp)
+    fig,ax=plt.subplots(figsize=(8,4))
+    for i,r in valid.items():
+        ax.plot(r['t'],r.get('observer_error_x',[np.nan]*len(r['t'])),color=color(i),lw=secondary,label='x_'+str(i))
+        ax.plot(r['t'],r.get('observer_error_y',[np.nan]*len(r['t'])),color=color(i),ls='-.',lw=secondary,label='y_'+str(i))
+    if not any(np.isfinite(r.get('observer_error_x',[])).any() for r in valid.values()):
+        ax.text(.5,.5,'Aligned observer reference not recorded',ha='center',transform=ax.transAxes)
+    _time_axis(ax,end,'Aligned Estimate - Leader (m)','Aligned Observer Reference Error')
+    ax.legend(ncol=2,fontsize=7);fig.tight_layout();_save_plot(fig,path,'observer_error',stamp)
     if geometry_stats:
         keys=sorted(geometry_stats)
         fig,axes=plt.subplots(2,1,figsize=(14,8),sharex=True)
@@ -488,6 +552,9 @@ class ExperimentRecorder:
         self.key='/cbf/results/'+self.run_id
         self.robots={i:[] for i in range(5)};self.leader=[];self.geometry_stats={}
         self.meta=dict(timestamp=stamp,run_id=self.run_id,output_dir=str(self.path),
+            metrics_schema_version=METRICS_SCHEMA_VERSION,metric_definitions=metric_definitions(),
+            total_time=rospy.get_param('/tb3_virtual_leader/leader_node/total_time',None),
+            data_timeout=rospy.get_param('/cbf/data_timeout',.6),
             timezone='Asia/Shanghai',method='MPC-D-CBF',
             world_file=rospy.get_param('/cbf/world_file',''),
             formation_radius=rospy.get_param('/cbf/formation_radius',.5),

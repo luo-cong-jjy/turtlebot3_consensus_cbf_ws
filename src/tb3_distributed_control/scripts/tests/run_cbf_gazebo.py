@@ -225,9 +225,17 @@ def main():
             for j in range(i):pair=min(pair,float(np.linalg.norm(pos[i]-pos[j],axis=1).min()-.26))
         result.update(evaluation_body_radius=.13,physical_obstacle_clearance_min=minimum,
                       pair_body_clearance_min=pair)
-        final_leader=np.array([2.5*np.sin(times[-1]/15),.3+2.5*np.sin(times[-1]/30)])
-        offsets=.4*np.column_stack((np.cos(np.arange(5)*2*np.pi/5),np.sin(np.arange(5)*2*np.pi/5)))
-        result['truth_final_position_error_max']=float(np.linalg.norm(pos[:,-1,:]-final_leader-offsets,axis=1).max())
+        metadata=json.loads((actual_dir/'run_metadata.json').read_text()) if actual_dir is not None else {}
+        mission=times<=args.duration+1e-9
+        final_index=int(np.flatnonzero(mission)[-1])
+        final_leader=np.array([2.5*np.sin(times[final_index]/15),.3+2.5*np.sin(times[final_index]/30)])
+        radius=float(metadata.get('formation_radius',.4))
+        offsets=radius*np.column_stack((np.cos(np.arange(5)*2*np.pi/5),np.sin(np.arange(5)*2*np.pi/5)))
+        result['truth_final_position_error_max']=float(np.linalg.norm(pos[:,final_index,:]-final_leader-offsets,axis=1).max())
+        result['truth_tracking_evaluation_end']=float(times[final_index])
+        result['truth_post_mission_rows']=int((~mission).sum())
+        result['evaluation_formation_radius']=radius
+        result['truth_evaluation_note']='Tracking uses the mission endpoint and metadata radius; physical clearance also includes post-stop samples.'
         fig,ax=plt.subplots(figsize=(8,7))
         from matplotlib.patches import Circle,Rectangle
         from matplotlib.transforms import Affine2D
@@ -238,7 +246,7 @@ def main():
                 patch=Rectangle((-a/2,-b/2),a,b,color='gray',alpha=.5)
                 patch.set_transform(Affine2D().rotate(theta).translate(*center)+ax.transData)
             ax.add_patch(patch)
-        ax.plot(2.5*np.sin(times/15),.3+2.5*np.sin(times/30),'k--',label='Leader')
+        ax.plot(2.5*np.sin(times[mission]/15),.3+2.5*np.sin(times[mission]/30),'k--',label='Leader')
         ax.set_aspect('equal');ax.grid(alpha=.25);ax.legend();ax.set_xlabel('x (m)');ax.set_ylabel('y (m)')
         fig.tight_layout();fig.savefig(out/'gazebo_trajectories.png',dpi=160);plt.close(fig)
     result['peer_envelopes_passed']=(len(result['robots'])==5

@@ -37,7 +37,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 if (PACKAGE / "纯仿真代码").is_dir():
     sys.path.insert(0, str(PACKAGE / "纯仿真代码"))
 from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes,
-                          peer_obstacle, padded_obstacles)
+                          peer_obstacle, padded_obstacles,LeaderMetricTimeline,
+                          accepted_plan_reference,sample_plan_reference,wrap_angle,METRICS_SCHEMA_VERSION)
 from mpc_dcbf_cached_solver import MPCSolverManager, CachedMPCProblem, barrier_values
 from mpc_dcbf_static_obstacles import reference_covariance_matrices, reference_axis_inflation
 
@@ -473,7 +474,13 @@ class TurtleBot3CBFController:
         "validated_steps","dual_warm","budget_hit","solver_seed","geometry_sequence",
         "geometry_sample_stamp","geometry_cpu_ms","geometry_peer_cpu_ms",
         "dynamic_tracks","missed_tracks","max_obstacle_speed","motion_prediction_enabled",
-        "detected_static_ellipses","detected_dynamic_ellipses"]
+        "detected_static_ellipses","detected_dynamic_ellipses",
+        "metrics_schema_version","evaluation_time","evaluation_ros_time","reference_quality",
+        "leader_reference_x","leader_reference_y","leader_reference_heading",
+        "nominal_reference_x","nominal_reference_y","plan_reference_x","plan_reference_y",
+        "plan_execution_error_x","plan_execution_error_y","plan_reference_valid","plan_reference_age","plan_source_cycle",
+        "observer_aligned_x","observer_aligned_y","observer_error_x","observer_error_y",
+        "legacy_consensus_error_x","legacy_consensus_error_y","legacy_heading_error"]
 
     def __init__(self):
         self.robot_id=int(rospy.get_param("~robot_id"))
@@ -511,6 +518,8 @@ class TurtleBot3CBFController:
         self.lock=threading.RLock();self.closed=False;self.running=False;self.warmed=False
         self.poses={};self.pose_history={};self.neighbors={};self.pending={};self.last_step=-1
         self.z=np.zeros(2);self.dz=np.zeros(2)
+        self.metric_leader=LeaderMetricTimeline(self.dt)
+        self.metric_plan=None;self.metric_context={}
         self.A=np.asarray(rospy.get_param("/cbf/adjacency",[[0,0,0,0,0],[1,0,0,0,0],
             [0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0]]),float)
         self.B=np.asarray(rospy.get_param("/cbf/pinning",[1,0,0,0,0]),float)
@@ -1005,6 +1014,7 @@ class TurtleBot3CBFController:
 
     def clock_callback(self,msg):
         with self.lock:
+            self.metric_leader.observe_clock(msg.trajectory_time,msg.ros_timestamp)
             self.clock_sources[int(round(msg.trajectory_time/self.dt))]=msg.ros_timestamp
             if len(self.clock_sources)>100:
                 del self.clock_sources[min(self.clock_sources)]
@@ -1014,6 +1024,7 @@ class TurtleBot3CBFController:
         if len(values)<6 or not np.isfinite(values[:6]).all():return
         step=int(round(values[0]/self.dt));now=rospy.get_time()
         with self.lock:
+            self.metric_leader.observe_state(values[0],values[1:3],values[3:5],values[5])
             self.pending[step]=(values[:6].copy(),now)
             self.latest_leader=(step,values[:6].copy(),now)
             self.running=True
@@ -1060,6 +1071,19 @@ class TurtleBot3CBFController:
     def stop_motion(self):
         self.cmd_pub.publish(Twist())
         self.applied_control=np.zeros(2)
+        self.metric_plan=None
+
+    def capture_metric_context(self,stamp,state):
+        """Freeze evaluation inputs before solving, under the control lock."""
+        reference=self.metric_leader.evaluate(stamp)
+        aligned=np.full(2,np.nan)
+        if self.reference.history:
+            source=self.clock_sources.get(self.last_step,self.observer_source)
+            if abs(stamp-source)<=self.stale:
+                aligned=self.reference.goals(stamp-source,state[2])[0,:2]-self.reference.offset()
+        return dict(stamp=stamp,leader=reference,nominal=reference['position']+self.reference.offset(),
+            observer_raw=self.z.copy(),observer_aligned=aligned,observer_step=self.last_step,
+            plan=sample_plan_reference(self.metric_plan,stamp))
 
     def watchdog(self,_event):
         # Independent of the possibly busy NLP timer. Never hold an old moving
@@ -1076,6 +1100,7 @@ class TurtleBot3CBFController:
         self.cycle_cpu_begin=time.thread_time();self.input_ms=0.;self.manager_ms=0.;self.command_wall_ms=0.
         self.cycle_validated_steps=0
         with self.lock:
+            self.metric_context={}
             poses={k:(s,x.copy(),v.copy()) for k,(s,x,v) in self.poses.items()}
             observed=list(self.observed);stamp=self.geometry_stamp
             if self.dynamic_prediction:
@@ -1088,6 +1113,7 @@ class TurtleBot3CBFController:
                 self.stop_motion();return
             odom_stamp,state,_=poses[self.robot_id]
             self.snapshot_stamps=(odom_stamp,stamp)
+            self.metric_context=self.capture_metric_context(odom_stamp,state)
             if now-odom_stamp>self.stale or now-stamp>self.stale:
                 self.stop_motion();self.record(now,state,None,observed,0.,'stale_data',begin);return
             if len(poses)<len(self.names):
@@ -1198,7 +1224,13 @@ class TurtleBot3CBFController:
         source=self.clock_sources.get(step,received)
         clock=leader[0]+now-source
         # Diagnostic only: align the legacy next-step leader sample to wall/sim time.
-        nominal=leader[1:3]+(now-source-self.dt)*leader[3:5]+self.reference.offset()
+        legacy_nominal=leader[1:3]+(now-source-self.dt)*leader[3:5]+self.reference.offset()
+        metrics=self.metric_context
+        reference=metrics['leader'];nominal=metrics['nominal'];plan=metrics['plan']
+        formation_error=state[:2]-nominal
+        plan_error=plan['position']-state[:2]
+        observer_error=metrics['observer_aligned']-reference['position']
+        evaluation_time=reference['logical_time'] if np.isfinite(reference['logical_time']) else clock+metrics['stamp']-now
         points,point_stamp=self.record_points
         peer_count=self.record_peer_count
         closest=float('nan')
@@ -1210,11 +1242,11 @@ class TurtleBot3CBFController:
         attempts=detail.get('attempt_trace',[])
         geometry=self.record_geometry_timing
         row=dict(time=clock,ros_time=now,robot=self.name,status=status,x=state[0],y=state[1],
-            theta=state[2],v=control[0],omega=control[1],observer_x=self.z[0],observer_y=self.z[1],
+            theta=state[2],v=control[0],omega=control[1],observer_x=metrics['observer_raw'][0],observer_y=metrics['observer_raw'][1],
             goal_x=goals[0,0] if goals is not None else np.nan,
             goal_y=goals[0,1] if goals is not None else np.nan,
-            consensus_error_x=state[0]-nominal[0],consensus_error_y=state[1]-nominal[1],
-            observer_step=self.last_step,leader_step=step,observer_age=age,
+            consensus_error_x=formation_error[0],consensus_error_y=formation_error[1],
+            observer_step=metrics['observer_step'],leader_step=step,observer_age=age,
             odom_age=now-self.snapshot_stamps[0],geometry_age=now-self.snapshot_stamps[1],
             detected_ellipses=len(self.observed),static_constraints=sum(o['name']!='inactive' and not o.get('peer',False) and not o.get('dynamic',False) for o in obstacles),
             peer_constraints=sum(o.get('peer',False) for o in obstacles),
@@ -1227,7 +1259,7 @@ class TurtleBot3CBFController:
             odometry_peer_constraints=sum(o.get('peer_source')=='odometry' for o in obstacles),
             geometry_ms=geometry.get('wall_ms',0.),peer_fit_ms=geometry.get('peer_wall_ms',0.),
             reference_x=nominal[0],reference_y=nominal[1],
-            heading_error=float((state[2]-np.arctan2(leader[4],leader[3])+np.pi)%(2*np.pi)-np.pi),
+            heading_error=wrap_angle(reference['heading']-state[2]),
             raw_min_range=self.raw_min_range,closest_obstacle_distance=closest,
             detected_peer_ellipses=peer_count,total_clusters_count=len(self.observed)+peer_count,
             cycle_id=self.cycle_id,input_ms=self.input_ms,manager_ms=self.manager_ms,
@@ -1246,21 +1278,43 @@ class TurtleBot3CBFController:
             max_obstacle_speed=max([float(np.linalg.norm(o.get('velocity',[0.,0.]))) for o in obstacles]+[0.]),
             motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='cv'),
             detected_static_ellipses=sum(not o.get('dynamic',False) for o in self.observed),
-            detected_dynamic_ellipses=sum(o.get('dynamic',False) for o in self.observed))
+            detected_dynamic_ellipses=sum(o.get('dynamic',False) for o in self.observed),
+            metrics_schema_version=METRICS_SCHEMA_VERSION,evaluation_time=evaluation_time,evaluation_ros_time=metrics['stamp'],
+            reference_quality=reference['quality'],leader_reference_x=reference['position'][0],
+            leader_reference_y=reference['position'][1],leader_reference_heading=reference['heading'],
+            nominal_reference_x=nominal[0],nominal_reference_y=nominal[1],
+            plan_reference_x=plan['position'][0],plan_reference_y=plan['position'][1],
+            plan_execution_error_x=plan_error[0],plan_execution_error_y=plan_error[1],
+            plan_reference_valid=plan['valid'],plan_reference_age=plan['age'],plan_source_cycle=plan['cycle'],
+            observer_aligned_x=metrics['observer_aligned'][0],observer_aligned_y=metrics['observer_aligned'][1],
+            observer_error_x=observer_error[0],observer_error_y=observer_error[1],
+            legacy_consensus_error_x=state[0]-legacy_nominal[0],legacy_consensus_error_y=state[1]-legacy_nominal[1],
+            legacy_heading_error=wrap_angle(state[2]-np.arctan2(leader[4],leader[3])))
         self.writer.writerow(row);self.rows+=1;self.counts[status]+=1
         if self.rows%10==0:self.stream.flush()
         self.diagnostics_pub.publish(String(data=json.dumps(row)))
         msg=RobotHistoryData(robot_id=self.robot_id,trajectory_time=clock,ros_timestamp=now,
             xc=float(state[0]),yc=float(state[1]),thetac=float(state[2]),vc=float(control[0]),wc=float(control[1]),
-            xr=float(nominal[0]),yr=float(nominal[1]),zxeo_x=float(self.z[0]),zxeo_y=float(self.z[1]),
+            xr=float(nominal[0]),yr=float(nominal[1]),zxeo_x=float(metrics['observer_raw'][0]),zxeo_y=float(metrics['observer_raw'][1]),
             xe=float(state[0]-nominal[0]),ye=float(state[1]-nominal[1]),thetae=row['heading_error'],
             computation_time=float(row['solve_ms']/1000.),full_cycle_time=float(row['solve_ms']/1000.),
             raw_min_obstacle_distance=self.raw_min_range,closest_obstacle_distance=closest,
             avoidance_force_magnitude=float('nan'),total_clusters_count=row['total_clusters_count'])
         self.history_pub.publish(msg)
+        with self.lock:
+            if (solution is not None and status in ('ok','feasible_iterate') and self.cycle_validated_steps>=self.n
+                    and np.allclose(self.applied_control,control,atol=1e-9,rtol=0)):
+                self.metric_plan=accepted_plan_reference(metrics['stamp'],state[:2],solution['plan_controls'],
+                    self.dt,self.last_command_time,self.cycle_id)
+            else:self.metric_plan=None
+            plan_for_trace=self.metric_plan
         with self.trace_lock:
             if not self.closed:
                 self.trace_stream.write(json.dumps(dict(cycle_id=self.cycle_id,trajectory_time=clock,
+                    metrics_schema_version=METRICS_SCHEMA_VERSION,
+                    accepted_auxiliary_plan=None if plan_for_trace is None else dict(
+                        origin=plan_for_trace['origin'],issued_at=plan_for_trace['issued_at'],dt=plan_for_trace['dt'],
+                        positions=plan_for_trace['positions'].tolist(),cycle=plan_for_trace['cycle']),
                     status=status,command=control.tolist(),control_wall_ms=row['solve_ms'],
                     command_wall_ms=self.command_wall_ms,cycle_end_ms=1000*(time.perf_counter()-begin),
                     cycle_cpu_ms=1000*(time.thread_time()-self.cycle_cpu_begin),manager=detail))+'\n')
