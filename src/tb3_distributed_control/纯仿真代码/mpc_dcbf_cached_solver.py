@@ -307,7 +307,7 @@ def continuous_guidance(state,goals,obstacles,config,memory):
     guide,moving_level=_stationary_guidance(state,relative_goals,[virtual],moving_config,memory['moving_guide_memory'])
     if moving_level<=level:return stationary,level
     velocity=(velocities
-              if shifted or obs.get('prediction_model') in ('ca','singer') and obs.get('stage_velocity_guidance',True)
+              if shifted or obs.get('prediction_model') in ('ca','singer','adaptive') and obs.get('stage_velocity_guidance',True)
               else (centers[1]-centers[0])/config['dt'])
     guide+=velocity
     speed=np.linalg.norm(guide,axis=1)

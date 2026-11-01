@@ -15,7 +15,7 @@ from test_cbf_dynamic import inline
 from test_cbf_ca_prediction import scenario
 
 
-def replay(directory):
+def replay(directory,modes=('cv','ca','singer'),trace=None):
     p=Path(directory);meta=json.loads((p/'run_metadata.json').read_text())
     if len(meta['robot_names'])!=1:raise ValueError('This replay protocol requires one robot')
     truth=list(csv.DictReader((p/'gazebo_truth.csv').open()))
@@ -29,14 +29,19 @@ def replay(directory):
     if not frames or any('measurements' not in f for f in frames):
         raise ValueError('Raw fitted ellipse measurements not recorded; do not reconstruct them from filtered predictions')
     rows=[]
-    for mode in ('cv','ca','singer'):
-        tracker=inline.DynamicEllipseTracker(dt=float(meta['control_dt']),mode=mode,singer_tau=1.)
+    for mode in modes:
+        tracker=inline.make_dynamic_tracker(dt=float(meta['control_dt']),mode=mode,singer_tau=1.)
         buckets={};available={};eligible={}
         for frame in frames:
             stamp=float(frame['stamp'])
             fits=[inline.Ellipse(*m['center'],m['a'],m['b'],m['theta'],m['point_count']) for m in frame['measurements']]
             tracker.update(fits,stamp)
             predictions=tracker.obstacles(tracker.snapshot(stamp),stamp)
+            if mode=='adaptive' and trace is not None:
+                for obs in predictions:trace.append(dict(input_directory=p.name,stamp=stamp,time=stamp-origin,
+                    track_id=obs['id'],selected_model=obs['selected_model'],weights=obs['model_weights'].tolist(),
+                    scores=obs['model_scores'],score_count=obs['score_count'],score_origin=obs['score_origin'],
+                    switches=obs['model_switches']))
             if not 0<=stamp-origin<=end or not stamps[0]<=stamp<=stamps[-1]:continue
             now=np.array([np.interp(stamp,stamps,target[:,a]) for a in (0,1)])
             t=stamp-origin
@@ -70,19 +75,22 @@ def replay(directory):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('directories',nargs='+');parser.add_argument('--output',required=True)
+    parser.add_argument('--modes',nargs='+',choices=['cv','ca','singer','adaptive'],default=['cv','ca','singer'])
     args=parser.parse_args();out=Path(args.output);out.mkdir(parents=True,exist_ok=False)
-    metrics=[];sources={}
+    metrics=[];sources={};selections=[]
     for directory in args.directories:
-        metrics.extend(replay(directory));p=Path(directory)
+        metrics.extend(replay(directory,args.modes,selections));p=Path(directory)
         sources[p.name]={name:hashlib.sha256((p/name).read_bytes()).hexdigest() for name in
             ('run_metadata.json','gazebo_truth.csv','obstacle_predictions.jsonl')}
+    with (out/'selection_trace.jsonl').open('w') as stream:
+        for item in selections:stream.write(json.dumps(item)+'\n')
     with (out/'metrics.csv').open('w',newline='') as stream:
         writer=csv.DictWriter(stream,fieldnames=list(metrics[0]));writer.writeheader();writer.writerows(metrics)
     (out/'metrics.json').write_text(json.dumps(metrics,indent=2))
     package=Path(__file__).resolve().parents[2]
     code_sha={str(p.relative_to(package)):hashlib.sha256(p.read_bytes()).hexdigest() for p in
         [Path(__file__).resolve(),package/'scripts/tb3_controller_node_cbf.py',package/'scripts/cbf_dynamic_scenario.py']}
-    (out/'protocol.json').write_text(json.dumps(dict(source_sha256=sources,code_sha256=code_sha,singer_tau=1.,
+    (out/'protocol.json').write_text(json.dumps(dict(source_sha256=sources,code_sha256=code_sha,modes=args.modes,singer_tau=1.,
         note='Identical timestamped raw fitted ellipses per recorded viewpoint. Same scan-stamp forecast epoch, no added latency. Ground truth is scoring only; nearest current-truth identity assignment without error threshold. Coverage retained; no score fabrication when no forecast. Not raw-scan processing replay or closed-loop evidence.'),indent=2))
     for row in metrics:
         if row['horizon_s']==1. and row['phase']=='all':print(row['input_directory'],row['mode'],round(row['displacement_rmse'],4),row['coverage'])

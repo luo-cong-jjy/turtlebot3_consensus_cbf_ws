@@ -16,6 +16,7 @@
   <arg name="robot_count" default="5" />
   <arg name="rviz_config" default="$(eval find('tb3_distributed_control') + '/rviz/' + ('tb3_cbf_single.rviz' if arg('robot_count') == '1' else 'tb3_cbf.rviz'))" />
   <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
+  <arg name="gazebo_seed" default="" />
   <arg name="prediction_mode" default="cv" />
   <arg name="moving_frame_projection" default="false" />
   <arg name="singer_tau" default="1.0" />
@@ -39,6 +40,7 @@
   <param name="/cbf/recovery_gamma" value="$(arg recovery_gamma)" />
   <arg name="leader_init_x" default="0.0" />
   <arg name="leader_init_y" default="0.3" />
+  <param name="/cbf/gazebo_seed" value="$(arg gazebo_seed)" type="str" />
   <param name="/use_sim_time" value="true" />
   <rosparam param="/cbf/robot_names" subst_value="true">$(eval ['tb3_0','tb3_1','tb3_2','tb3_3','tb3_4'][:int(arg('robot_count'))])</rosparam>
   <rosparam param="/cbf/adjacency" subst_value="true">$(eval [[0, 0, 0, 0, 0][:int(arg('robot_count'))], [1, 0, 0, 0, 0][:int(arg('robot_count'))], [0, 1, 0, 0, 0][:int(arg('robot_count'))], [0, 0, 1, 0, 0][:int(arg('robot_count'))], [0, 0, 0, 1, 0][:int(arg('robot_count'))]][:int(arg('robot_count'))])</rosparam>
@@ -80,6 +82,7 @@
   <env name="OMP_NUM_THREADS" value="1" />
   <env name="MKL_NUM_THREADS" value="1" />
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="extra_gazebo_args" value="$(eval '' if arg('gazebo_seed') == '' else '--seed ' + str(int(arg('gazebo_seed'))))" />
     <arg name="world_name" value="$(arg world_name)" />
     <arg name="paused" value="$(arg paused)" />
     <arg name="use_sim_time" value="true" />

@@ -19,19 +19,23 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--scenario',default='crossing',choices=['crossing','head_on','overtaking','maneuver','mixed','accelerating_crossing','decelerating_crossing','stop_go_crossing'])
     parser.add_argument('--robots',type=int,default=1,choices=[1,5])
+    parser.add_argument('--gazebo-seed',type=int,default=None)
     parser.add_argument('--duration',type=float,default=32.)
-    parser.add_argument('--prediction-mode',choices=['cv','frozen','ca','singer'],default='cv')
+    parser.add_argument('--prediction-mode',choices=['cv','frozen','ca','singer','adaptive'],default='cv')
     parser.add_argument('--moving-frame-projection',choices=['true','false'],default='false')
     parser.add_argument('--singer-tau',type=float,default=1.)
     parser.add_argument('--acceleration-buffer',choices=['true','false'],default='true')
     parser.add_argument('--stage-velocity-guidance',choices=['true','false'],default='true')
     parser.add_argument('--output',required=True)
     parser.add_argument('--wall-timeout',type=float,default=240.)
-    args=parser.parse_args();out=Path(args.output).resolve();out.mkdir(parents=True,exist_ok=True)
+    args=parser.parse_args();out=Path(args.output).resolve()
+    if any(out.glob('tb3_*.csv')) or (out/'evaluation.json').exists():
+        raise FileExistsError('Existing experiment: choose a new output directory')
+    out.mkdir(parents=True,exist_ok=True)
     package=Path(__file__).resolve().parents[2]
     sources=out/'sources';sources.mkdir(exist_ok=True)
     manifest={}
-    for relative in ['scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py',
+    for relative in ['scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py','scripts/leader_node.py',
             'scripts/cbf_dynamic_scenario.py','scripts/cbf_experiment_results.py','config/cbf_dynamic_scenarios.yaml',
             '纯仿真代码/mpc_dcbf_cached_solver.py','launch/multi_turtlebot3_consensus_gazebo_cbf.launch',
             'launch/single_turtlebot3_cbf_dynamic.launch','launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch',
@@ -42,7 +46,7 @@ def main():
     env.update(ROS_MASTER_URI='http://127.0.0.1:'+str(free_port()),ROS_IP='127.0.0.1',
         GAZEBO_MASTER_URI='http://127.0.0.1:'+str(free_port()),ROS_HOME=str(out/'ros'),ROS_LOG_DIR=str(out/'roslog'),
         GAZEBO_MODEL_DATABASE_URI='',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',MPLBACKEND='Agg')
-    os.environ.update(env);processes=[];streams=[];truth=[];begins=[];completed=[];last={};audit={}
+    os.environ.update(env);processes=[];streams=[];truth=[];begins=[];completed=[];last={};audit={};seed_info={}
     def launch(command,name):
         stream=(out/(name+'.log')).open('w');streams.append(stream)
         process=subprocess.Popen(command,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
@@ -83,6 +87,7 @@ def main():
         name='single_turtlebot3_cbf_dynamic.launch' if args.robots==1 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch'
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),
+            'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
             'prediction_mode:='+args.prediction_mode,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
             'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
         report=0.
@@ -90,6 +95,11 @@ def main():
             if begins and not audit:
                 _,_,graph=server.getSystemState('/cbf_dynamic_test')
                 audit={topic:members for topic,members in graph[1] if any('/tb3_controller_cbf_' in n for n in members)}
+                try:
+                    uri=server.lookupNode('/cbf_dynamic_test','/gazebo')[2]
+                    pid=xmlrpc.client.ServerProxy(uri).getPid('/cbf_dynamic_test')[2]
+                    seed_info['gazebo_command']=[s.decode('utf-8',errors='replace') for s in Path('/proc/%d/cmdline'%pid).read_bytes().split(b'\0') if s]
+                except Exception as exc:seed_info['seed_check_error']=str(exc)
             if completed and (out/'RESULTS_SAVED').exists():break
             if completed and time.monotonic()-completed[0]>45:raise RuntimeError('Result export timeout')
             if process.poll() is not None:raise RuntimeError('roslaunch exited')
@@ -102,7 +112,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(scenario=args.scenario,robots=args.robots,prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if truth:
         fields=sorted(set().union(*(r.keys() for r in truth)))
@@ -144,11 +154,17 @@ def main():
             final_error=float(np.hypot(float(rows[-1]['consensus_error_x']),float(rows[-1]['consensus_error_y']))),
             dynamic_cycles=sum(float(r['dynamic_tracks'])>0 for r in rows),
             max_estimated_speed=max(float(r['max_obstacle_speed']) for r in rows))
+    result.update(seed_info)
+    argv=seed_info.get('gazebo_command',[])
+    metadata_path=out/'run_metadata.json'
+    seed_metadata=json.loads(metadata_path.read_text()).get('gazebo_seed','') if metadata_path.exists() else ''
+    result['seed_configured']=(args.gazebo_seed is None or (str(seed_metadata)==str(args.gazebo_seed)
+        and '--seed' in argv and argv.index('--seed')+1<len(argv) and argv[argv.index('--seed')+1]==str(args.gazebo_seed)))
     result['no_truth_input_passed']=bool(audit) and not any(topic in audit for topic in ('/gazebo/model_states','/cbf/scenario/truth','/gazebo/set_model_state'))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
-        and result['no_truth_input_passed']
+        and result['no_truth_input_passed'] and result['seed_configured']
         and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and s['final_error']<.25
                 for s in result['robot_statistics'].values()))
     (out/'evaluation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2),flush=True)

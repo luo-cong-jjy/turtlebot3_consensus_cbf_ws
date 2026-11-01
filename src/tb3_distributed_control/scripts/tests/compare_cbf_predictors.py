@@ -22,13 +22,13 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',required=True)
     parser.add_argument('--seeds',type=int,default=10)
     parser.add_argument('--seed-start',type=int,default=0)
-    parser.add_argument('--modes',nargs='+',choices=['frozen','cv','ca','singer'],default=['frozen','cv','ca'])
+    parser.add_argument('--modes',nargs='+',choices=['frozen','cv','ca','singer','adaptive'],default=['frozen','cv','ca'])
     parser.add_argument('--singer-tau',type=float,default=1.)
     args=parser.parse_args();out=Path(args.output).resolve();out.mkdir(parents=True,exist_ok=False)
     specs=yaml.safe_load((PACKAGE/'config/cbf_dynamic_scenarios.yaml').read_text())
     cases={name:specs[name][0] for name in ('crossing','accelerating_crossing','decelerating_crossing','stop_go_crossing','maneuver')}
     cases['stationary']=dict(start=[2.,1.],velocity=[0.,0.])
-    rows=[];inputs=[]
+    rows=[];inputs=[];selections=[]
     for case,spec in cases.items():
         for noise in (.005,.015):
             for seed in range(args.seed_start,args.seed_start+args.seeds):
@@ -42,7 +42,7 @@ def main():
                     measurements.append((t,center,present))
                     inputs.append(dict(case=case,noise=noise,seed=seed,stamp=t,center=center.tolist(),present=present))
                 for mode in args.modes:
-                    tracker=inline.DynamicEllipseTracker(mode=mode,singer_tau=args.singer_tau)
+                    tracker=inline.make_dynamic_tracker(mode=mode,singer_tau=args.singer_tau)
                     buckets={}
                     for t,center,present in measurements:
                         fits=[inline.Ellipse(*center,.20,.12,0.,20)] if present else []
@@ -54,6 +54,9 @@ def main():
                         track=max(snapshot,key=lambda item:item['seen'])
                         obs=tracker.forecast(track,t+.03)
                         if obs is None:continue
+                        if mode=='adaptive':selections.append(dict(case=case,noise=noise,seed=seed,stamp=t,track_id=track['id'],
+                            selected_model=obs['selected_model'],weights=obs['model_weights'].tolist(),scores=obs['model_scores'],
+                            score_count=obs['score_count'],score_origin=obs['score_origin'],switches=obs['model_switches']))
                         now=t+.03;p0=np.array(scenario.trajectory(spec,now)[:2])
                         v_before=np.array(scenario.trajectory(spec,max(0.,now-.01))[2:])
                         v_after=np.array(scenario.trajectory(spec,now+.01)[2:])
@@ -75,6 +78,8 @@ def main():
                             absolute_max=float(a[:,0].max()),mean_acceleration=float(a[:,2].mean()),tracks_created=tracker.next_id-1))
     with (out/'measurements.jsonl').open('w') as stream:
         for item in inputs:stream.write(json.dumps(item)+'\n')
+    with (out/'selection_trace.jsonl').open('w') as stream:
+        for item in selections:stream.write(json.dumps(item)+'\n')
     with (out/'per_seed_metrics.csv').open('w',newline='') as stream:
         writer=csv.DictWriter(stream,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
     summary=[]

@@ -418,7 +418,9 @@ class DynamicEllipseTracker:
             return a@state,a@covariance@a.T+q
         return a@state,a@covariance@a.T+self.Q*(max(0.,elapsed)/self.dt)
 
-    def update(self,ellipses,stamp):
+    def update(self,ellipses,stamp,forced_ids=None):
+        if forced_ids is not None and (len(forced_ids)!=len(ellipses) or len(set(forced_ids))!=len(forced_ids)):
+            raise ValueError('Common association IDs must be unique per frame')
         if not np.isfinite(stamp):raise ValueError('Non-finite scan time')
         if self.last_stamp is not None and stamp<self.last_stamp:self.reset()
         if self.last_stamp is not None and stamp<=self.last_stamp:return ellipses
@@ -429,7 +431,8 @@ class DynamicEllipseTracker:
             track['x'],track['P']=self.propagate(track['x'],track['P'],stamp-track['stamp'])
             track['stamp']=stamp;track['missed']+=1
         assigned={}
-        if ellipses and ids:
+        if forced_ids is not None:assigned=dict(enumerate(forced_ids))
+        elif ellipses and ids:
             centers=np.array([[e.cx,e.cy] for e in ellipses])
             predicted=np.array([self.tracks[i]['x'][:2] for i in ids])
             distances=np.linalg.norm(centers[:,None,:]-predicted[None,:,:],axis=2)
@@ -442,8 +445,9 @@ class DynamicEllipseTracker:
         for index,ellipse in enumerate(ellipses):
             key=assigned.get(index)
             z=np.array([ellipse.cx,ellipse.cy,ellipse.a,ellipse.b,ellipse.theta])
-            if key is None:
-                key=self.next_id;self.next_id+=1
+            if key is None or key not in self.tracks:
+                if key is None:key=self.next_id;self.next_id+=1
+                else:self.next_id=max(self.next_id,key+1)
                 x=np.zeros(9);x[:5]=z
                 self.tracks[key]=dict(x=x,P=self.P0.copy(),stamp=stamp,seen=stamp,
                     history=deque(maxlen=self.history_size),count=0,moving_votes=0,dynamic=False,missed=0)
@@ -521,6 +525,188 @@ class DynamicEllipseTracker:
         return [obs for obs in (self.forecast(t,now) for t in snapshot) if obs is not None]
 
 
+def mixture_moments(means,covariances,weights):
+    """Moment matching includes between-model scatter; not a confidence bound."""
+    means=np.asarray(means);weights=np.asarray(weights)
+    mean=np.einsum('i,ij->j',weights,means);delta=means-mean
+    covariance=np.einsum('i,ijk->jk',weights,np.asarray(covariances)+delta[:,:,None]*delta[:,None,:])
+    return mean,(covariance+covariance.T)/2
+
+
+class ReliabilityEllipseTracker:
+    """Causal delayed forecast scoring, shared IDs and smooth expert selection.
+
+    Independent CV/CA/Singer filters see exactly the same associated detections.
+    No interacting-filter state mixing, model probabilities or truth input.
+    Scores are physical squared forecast errors against later measurements.
+    """
+    MODES=('cv','ca','singer')
+
+    def __init__(self,*args,reliability_horizon=1.,score_tau=.5,weight_tau=.3,
+                 score_floor=.015,switch_ratio=.8,switch_hold=.6,**kwargs):
+        values=(reliability_horizon,score_tau,weight_tau,score_floor,switch_hold)
+        if not all(np.isfinite(v) and v>0 for v in values) or not 0<switch_ratio<1:
+            raise ValueError('Invalid reliability parameters')
+        self.filters={m:DynamicEllipseTracker(*args,mode=m,**kwargs) for m in self.MODES}
+        base=self.filters['cv']
+        for key in ('dt','horizon','max_distance','timeout','reaction_time','extra_margin','speed_threshold','stage_velocity_guidance'):
+            setattr(self,key,getattr(base,key))
+        self.mode='adaptive';self.score_horizon=reliability_horizon
+        self.score_tau,self.weight_tau,self.score_floor=score_tau,weight_tau,score_floor
+        self.switch_ratio,self.switch_hold=switch_ratio,switch_hold
+        self.tracks={};self.next_id=1;self.last_stamp=None
+
+    def reset(self):
+        for model in self.filters.values():model.reset()
+        self.tracks.clear();self.next_id=1;self.last_stamp=None
+
+    def _score(self,track,measurement,stamp):
+        elapsed=stamp-track['weight_stamp'];track['weight_stamp']=stamp
+        mature=None
+        while track['queue'] and track['queue'][0]['stamp']<=stamp-self.score_horizon+1e-9:
+            mature=track['queue'].popleft()
+        if mature is None or stamp-mature['stamp']>self.score_horizon+max(.15,2*self.dt):return
+        errors=[]
+        for mode in self.MODES:
+            x,p=mature['banks'][mode]
+            predicted,_=self.filters[mode].propagate(x,p,stamp-mature['stamp'])
+            errors.append(min(float(np.sum((predicted[:2]-measurement)**2)),.25**2))
+        errors=np.asarray(errors)
+        if track['score_count']==0:track['scores']=errors
+        else:
+            alpha=-np.expm1(-(stamp-track['score_stamp'])/self.score_tau)
+            track['scores']+=alpha*(errors-track['scores'])
+        track['score_count']+=1;track['score_stamp']=stamp;track['score_origin']=mature['stamp']
+        if track['score_count']<3:return
+        scores=track['scores'];best=int(np.argmin(scores));current=track['selected']
+        # Prefer the simpler CV expert when measured skill is indistinguishable.
+        if scores[0]<=scores[best]+self.score_floor**2:best=0
+        improvement=scores[current]-scores[best]
+        qualified=(best!=current and ((best==0 and scores[0]<=scores[current]+self.score_floor**2)
+            or (scores[best]<self.switch_ratio*scores[current] and improvement>self.score_floor**2)))
+        if qualified:
+            track['confirm']=track['confirm']+1 if track['challenger']==best else 1
+            track['challenger']=best
+            if track['confirm']>=3 and stamp-track['switch_stamp']>=self.switch_hold:
+                track['selected']=best;track['switch_stamp']=stamp;track['switches']+=1
+                track['confirm']=0;track['challenger']=-1
+        else:track['confirm']=0;track['challenger']=-1
+        target=np.eye(3)[track['selected']]
+        alpha=-np.expm1(-max(0.,elapsed)/self.weight_tau)
+        track['weights']+=alpha*(target-track['weights'])
+        track['weights']/=track['weights'].sum()
+
+    def update(self,ellipses,stamp):
+        if not np.isfinite(stamp):raise ValueError('Non-finite scan time')
+        if self.last_stamp is not None and stamp<self.last_stamp:self.reset()
+        if self.last_stamp is not None and stamp<=self.last_stamp:return ellipses
+        self.last_stamp=stamp
+        self.tracks={i:t for i,t in self.tracks.items() if stamp-t['seen']<=self.timeout}
+        ids=sorted(self.tracks);assigned={}
+        if ids and ellipses:
+            predicted=[]
+            for key in ids:
+                points=[]
+                for mode in self.MODES:
+                    bank=self.filters[mode].tracks[key]
+                    x,_=self.filters[mode].propagate(bank['x'],bank['P'],stamp-bank['stamp'])
+                    points.append(x[:2])
+                predicted.append(self.tracks[key]['weights']@np.asarray(points))
+            centers=np.array([[e.cx,e.cy] for e in ellipses])
+            distance=np.linalg.norm(centers[:,None,:]-np.asarray(predicted)[None,:,:],axis=2)
+            cost=np.full((len(ellipses),len(ids)+len(ellipses)),2*self.max_distance)
+            cost[:,:len(ids)]=np.where(distance<=self.max_distance,distance,100*self.max_distance)
+            rr,cc=linear_sum_assignment(cost)
+            assigned={r:ids[c] for r,c in zip(rr,cc) if c<len(ids) and distance[r,c]<=self.max_distance}
+        keys=[]
+        for index,ellipse in enumerate(ellipses):
+            key=assigned.get(index)
+            if key is None:
+                key=self.next_id;self.next_id+=1
+                self.tracks[key]=dict(seen=stamp,weights=np.array([1.,0.,0.]),scores=np.full(3,np.nan),
+                    score_count=0,selected=0,switch_stamp=stamp,weight_stamp=stamp,score_stamp=None,
+                    score_origin=None,switches=0,challenger=-1,confirm=0,moving_votes=0,dynamic=False,
+                    queue=deque(maxlen=int(np.ceil(self.score_horizon/self.dt))+8))
+            self._score(self.tracks[key],np.array([ellipse.cx,ellipse.cy]),stamp)
+            keys.append(key);ellipse.track_id=key
+        for mode,model in self.filters.items():
+            copies=[Ellipse(e.cx,e.cy,e.a,e.b,e.theta,e.point_count) for e in ellipses]
+            model.update(copies,stamp,forced_ids=keys)
+        for key,track in self.tracks.items():
+            banks=[self.filters[m].tracks[key] for m in self.MODES]
+            x,p=mixture_moments([b['x'] for b in banks],[b['P'] for b in banks],track['weights'])
+            track.update(x=x,P=p,stamp=stamp,missed=banks[0]['missed'])
+        for ellipse,key in zip(ellipses,keys):
+            track=self.tracks[key];base=self.filters['cv'].tracks[key]
+            track['seen']=stamp
+            moving=np.linalg.norm(track['x'][5:7])>self.speed_threshold
+            track['moving_votes']=max(-3,min(3,track['moving_votes']+(1 if moving else -1)))
+            if track['moving_votes']>=2:track['dynamic']=True
+            elif track['moving_votes']<=-2:track['dynamic']=False
+            ellipse.variance=base['variance']
+            track['queue'].append(dict(stamp=stamp,banks={m:(self.filters[m].tracks[key]['x'].copy(),
+                self.filters[m].tracks[key]['P'].copy()) for m in self.MODES}))
+        return ellipses
+
+    def snapshot(self,now):
+        snapshots=[]
+        for key,t in sorted(self.tracks.items()):
+            if not -1e-9<=now-t['seen']<=self.timeout:continue
+            item={k:v for k,v in t.items() if k!='queue'}
+            item.update(id=key,x=t['x'].copy(),P=t['P'].copy(),weights=t['weights'].copy(),scores=t['scores'].copy())
+            item['banks']={}
+            for mode,model in self.filters.items():
+                b=model.tracks[key]
+                item['banks'][mode]=dict(b,id=key,x=b['x'].copy(),P=b['P'].copy())
+            snapshots.append(item)
+        return snapshots
+
+    def forecast(self,track,now):
+        if not -1e-9<=now-track['seen']<=self.timeout:return None
+        experts=[self.filters[m].forecast(track['banks'][m],now) for m in self.MODES]
+        w=track['weights'];centers=[];covariances=[]
+        for j in range(self.horizon+1):
+            mean,p=mixture_moments([e['prediction_centers'][j] for e in experts],
+                [e['prediction_position_covariances'][j] for e in experts],w)
+            centers.append(mean);covariances.append(p)
+        states=[];ps=[]
+        for mode in self.MODES:
+            bank=track['banks'][mode]
+            x,p=self.filters[mode].propagate(bank['x'],bank['P'],max(0.,now-bank['stamp']))
+            states.append(x);ps.append(p)
+        x,p=mixture_moments(states,ps,w);raw=track['banks']['cv']
+        c,s=np.cos(x[4]-raw['raw_theta']),np.sin(x[4]-raw['raw_theta'])
+        rotation=np.array([[c,-s],[s,c]]);base=np.maximum(x[2:4],[raw['raw_a'],raw['raw_b']])
+        c,s=np.cos(x[4]),np.sin(x[4]);local=(raw['raw_center']-x[:2])@np.array([[c,-s],[s,c]])
+        shape=np.diag(1./base)@rotation@np.diag([raw['raw_a'],raw['raw_b']])
+        guard=base*max(1.,np.linalg.norm(local/base)+np.linalg.norm(shape,2))
+        margins=np.einsum('i,ij->j',w,[e['prediction_execution_margins'] for e in experts]);axes=[]
+        for j,position_p in enumerate(covariances):
+            geo=p[2:4,2:4]+j*self.filters['cv'].Q[2:4,2:4]
+            inflation=.95*np.sqrt(max(np.diag(position_p)))+.95*np.sqrt(max(np.diag(geo)))
+            inflated=guard+inflation;axes.append(inflated*(1.+margins[j]/inflated[1]))
+        velocity=np.einsum('i,ijk->jk',w,[e['prediction_velocities'] for e in experts])
+        return dict(id=track['id'],name='tracked_'+str(track['id']),center=np.asarray(centers[0]),
+            a=float(axes[0][0]),b=float(axes[0][1]),theta=float(x[4]),prediction_model='adaptive',
+            stage_velocity_guidance=self.stage_velocity_guidance,prediction_centers=np.asarray(centers),
+            prediction_axes=np.asarray(axes),prediction_velocities=velocity,
+            prediction_position_covariances=np.asarray(covariances),prediction_execution_margins=margins,
+            velocity=velocity[0],acceleration=np.einsum('i,ij->j',w,[e['acceleration'] for e in experts]),
+            dynamic=track['dynamic'],guidance=not track['dynamic'],execution_margin=float(margins[0]),
+            seen=track['seen'],measurement_age=now-track['seen'],missed=track['missed'],
+            raw_a=raw['raw_a'],raw_b=raw['raw_b'],point_count=raw['point_count'],
+            model_weights=w.copy(),model_scores=[float(s) if np.isfinite(s) else None for s in track['scores']],
+            selected_model=self.MODES[track['selected']],score_count=track['score_count'],
+            score_origin=track['score_origin'],model_switches=track['switches'])
+
+    def obstacles(self,snapshot,now):
+        return [o for o in (self.forecast(t,now) for t in snapshot) if o is not None]
+
+
+def make_dynamic_tracker(*args,mode='cv',**kwargs):
+    return ReliabilityEllipseTracker(*args,**kwargs) if mode=='adaptive' else DynamicEllipseTracker(*args,mode=mode,**kwargs)
+
+
 class TurtleBot3CBFController:
     COLORS = ((0.1, 0.8, 1.0), (1.0, 0.35, 0.2), (0.3, 1.0, 0.3),
               (1.0, 0.3, 0.85), (0.8, 0.7, 0.2), (0.6, 0.4, 1.0))
@@ -537,7 +723,7 @@ class TurtleBot3CBFController:
         "validated_steps","dual_warm","budget_hit","solver_seed","geometry_sequence",
         "geometry_sample_stamp","geometry_cpu_ms","geometry_peer_cpu_ms",
         "dynamic_tracks","missed_tracks","max_obstacle_speed","motion_prediction_enabled",
-        "ca_prediction_enabled","singer_prediction_enabled","max_obstacle_acceleration",
+        "ca_prediction_enabled","singer_prediction_enabled","adaptive_prediction_enabled","adaptive_switches_active","max_obstacle_acceleration",
         "detected_static_ellipses","detected_dynamic_ellipses",
         "metrics_schema_version","evaluation_time","evaluation_ros_time","reference_quality",
         "leader_reference_x","leader_reference_y","leader_reference_heading",
@@ -683,18 +869,20 @@ class TurtleBot3CBFController:
             # External targets are associated frame by frame; never accumulate
             # their old locations into the static world representation.
             self.static_accumulation=False
-        self.dynamic_tracker=DynamicEllipseTracker(self.dt,self.n,
+        dynamic_mode=get('/cbf/dynamic/prediction_mode','cv')
+        self.dynamic_tracker=make_dynamic_tracker(self.dt,self.n,
             float(get('/cbf/dynamic/association_distance',.65)),
             float(get('/cbf/dynamic/track_timeout',.65)),
             speed_threshold=float(get('/cbf/dynamic/speed_threshold',.05)),
-            mode=get('/cbf/dynamic/prediction_mode','cv'),
+            mode=dynamic_mode,
             reaction_time=float(get('/cbf/dynamic/reaction_time',.35)),
             extra_margin=float(get('/cbf/dynamic/extra_margin',.02)),
             ca_jerk_density=float(get('/cbf/dynamic/ca_jerk_density',.01)),
             ca_acceleration_variance=float(get('/cbf/dynamic/ca_acceleration_variance',.04)),
             singer_tau=float(get('/cbf/dynamic/singer_tau',1.)),
             acceleration_buffer=bool(get('/cbf/dynamic/acceleration_buffer',True)),
-            stage_velocity_guidance=bool(get('/cbf/dynamic/stage_velocity_guidance',True)))
+            stage_velocity_guidance=bool(get('/cbf/dynamic/stage_velocity_guidance',True)),
+            **(get('/cbf/dynamic/reliability',{}) if dynamic_mode=='adaptive' else {}))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
         if (self.max_range <= self.min_range or self.min_range < 0
@@ -861,6 +1049,10 @@ class TurtleBot3CBFController:
                     execution_margin=o['execution_margin'],
                     centers=o['prediction_centers'].tolist(),axes=o['prediction_axes'].tolist(),
                     theta=o['theta']) for o in observed]
+                if self.dynamic_tracker.mode=='adaptive':
+                    for row,o in zip(rows,observed):row.update(model_weights=o['model_weights'].tolist(),
+                        model_scores=o['model_scores'],selected_model=o['selected_model'],
+                        score_count=o['score_count'],score_origin=o['score_origin'],model_switches=o['model_switches'])
                 self.predictions_pub.publish(String(data=json.dumps(dict(stamp=stamp.to_sec(),
                     observer=self.name,dt=self.dt,mode=self.dynamic_tracker.mode,tracks=rows,
                     measurements=[dict(center=[e.cx,e.cy],a=e.a,b=e.b,theta=e.theta,
@@ -1352,9 +1544,11 @@ class TurtleBot3CBFController:
             dynamic_tracks=sum(o.get('dynamic',False) for o in obstacles),
             missed_tracks=sum(o.get('missed',0)>0 for o in obstacles),
             max_obstacle_speed=max([float(np.linalg.norm(o.get('velocity',[0.,0.]))) for o in obstacles]+[0.]),
-            motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode in ('cv','ca','singer')),
+            motion_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode in ('cv','ca','singer','adaptive')),
             ca_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='ca'),
             singer_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='singer'),
+            adaptive_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='adaptive'),
+            adaptive_switches_active=sum(o.get('model_switches',0) for o in obstacles),
             max_obstacle_acceleration=max([float(np.linalg.norm(o.get('acceleration',[0.,0.]))) for o in obstacles]+[0.]),
             detected_static_ellipses=sum(not o.get('dynamic',False) for o in self.observed),
             detected_dynamic_ellipses=sum(o.get('dynamic',False) for o in self.observed),
