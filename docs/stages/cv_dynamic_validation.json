@@ -1,0 +1,267 @@
+{
+  "date": "2026-10-24",
+  "selected": [
+    {
+      "run": "guided_crossing",
+      "scenario": "crossing",
+      "robots": 1,
+      "mode": "cv",
+      "passed": true,
+      "clearance_m": 0.21374153761569487,
+      "peer_clearance_m": null,
+      "final_error_max_m": 5.251588346645108e-05,
+      "wall_max_ms": 95.35508399130777,
+      "no_truth_input_passed": true,
+      "prediction_accuracy": {
+        "observer": "tb3_0",
+        "errors_by_node": {
+          "0": {
+            "samples": 284,
+            "rmse": 0.12438423110597138,
+            "mean": 0.12406167672674404,
+            "maximum": 0.1601383672722836,
+            "displacement_rmse": 0.0
+          },
+          "10": {
+            "samples": 284,
+            "rmse": 0.1319839445758326,
+            "mean": 0.13077922655100535,
+            "maximum": 0.18166636015106502,
+            "displacement_rmse": 0.027156486337320075
+          }
+        },
+        "note": "Offline nearest-truth association within .45 m; centres are ellipse estimates, not known object centres."
+      }
+    },
+    {
+      "run": "guided_crossing_frozen",
+      "scenario": "crossing",
+      "robots": 1,
+      "mode": "frozen",
+      "passed": false,
+      "clearance_m": -0.02104357571519294,
+      "peer_clearance_m": null,
+      "final_error_max_m": 0.0002183632619629225,
+      "wall_max_ms": 95.26081598596647,
+      "no_truth_input_passed": true,
+      "prediction_accuracy": {
+        "observer": "tb3_0",
+        "errors_by_node": {
+          "0": {
+            "samples": 284,
+            "rmse": 0.1274390342862564,
+            "mean": 0.1257517935840672,
+            "maximum": 0.16706429922437593,
+            "displacement_rmse": 0.0
+          },
+          "10": {
+            "samples": 284,
+            "rmse": 0.2063909102255642,
+            "mean": 0.1912222597554081,
+            "maximum": 0.2979523705701298,
+            "displacement_rmse": 0.1600354180556677
+          }
+        },
+        "note": "Offline nearest-truth association within .45 m; centres are ellipse estimates, not known object centres."
+      }
+    },
+    {
+      "run": "guided_head_on",
+      "scenario": "head_on",
+      "robots": 1,
+      "mode": "cv",
+      "passed": true,
+      "clearance_m": 0.16883645018562282,
+      "peer_clearance_m": null,
+      "final_error_max_m": 0.00016217059992142802,
+      "wall_max_ms": 83.5775010054931,
+      "no_truth_input_passed": true,
+      "prediction_accuracy": {
+        "observer": "tb3_0",
+        "errors_by_node": {
+          "0": {
+            "samples": 290,
+            "rmse": 0.12595429565022156,
+            "mean": 0.1254596775587855,
+            "maximum": 0.17354299501515308,
+            "displacement_rmse": 0.0
+          },
+          "10": {
+            "samples": 290,
+            "rmse": 0.13329798849526678,
+            "mean": 0.1312785589119338,
+            "maximum": 0.1931786874835357,
+            "displacement_rmse": 0.026708617236757107
+          }
+        },
+        "note": "Offline nearest-truth association within .45 m; centres are ellipse estimates, not known object centres."
+      }
+    },
+    {
+      "run": "guided_overtaking",
+      "scenario": "overtaking",
+      "robots": 1,
+      "mode": "cv",
+      "passed": true,
+      "clearance_m": 0.18128481212278796,
+      "peer_clearance_m": null,
+      "final_error_max_m": 0.00010100648637895705,
+      "wall_max_ms": 98.07025600457564,
+      "no_truth_input_passed": true,
+      "prediction_accuracy": {
+        "observer": "tb3_0",
+        "errors_by_node": {
+          "0": {
+            "samples": 393,
+            "rmse": 0.1233379996086927,
+            "mean": 0.12295895138828491,
+            "maximum": 0.14641883877585204,
+            "displacement_rmse": 0.0
+          },
+          "10": {
+            "samples": 383,
+            "rmse": 0.12961321628445688,
+            "mean": 0.12836638318060375,
+            "maximum": 0.18275722829586374,
+            "displacement_rmse": 0.020505877356781027
+          }
+        },
+        "note": "Offline nearest-truth association within .45 m; centres are ellipse estimates, not known object centres."
+      }
+    },
+    {
+      "run": "guided_maneuver",
+      "scenario": "maneuver",
+      "robots": 1,
+      "mode": "cv",
+      "passed": true,
+      "clearance_m": 0.20144359233235004,
+      "peer_clearance_m": null,
+      "final_error_max_m": 8.964260573596859e-05,
+      "wall_max_ms": 81.97421301156282,
+      "no_truth_input_passed": true,
+      "prediction_accuracy": {
+        "observer": "tb3_0",
+        "errors_by_node": {
+          "0": {
+            "samples": 282,
+            "rmse": 0.1238407642270156,
+            "mean": 0.12349662192796818,
+            "maximum": 0.16460060224160106,
+            "displacement_rmse": 0.0
+          },
+          "10": {
+            "samples": 282,
+            "rmse": 0.13667734463841846,
+            "mean": 0.13476785970275687,
+            "maximum": 0.17157061235318233,
+            "displacement_rmse": 0.042305338561881796
+          }
+        },
+        "note": "Offline nearest-truth association within .45 m; centres are ellipse estimates, not known object centres."
+      }
+    },
+    {
+      "run": "guided_mixed_single",
+      "scenario": "mixed",
+      "robots": 1,
+      "mode": "cv",
+      "passed": true,
+      "clearance_m": 0.19743986880082215,
+      "peer_clearance_m": null,
+      "final_error_max_m": 0.00022739490545306708,
+      "wall_max_ms": 80.23607596987858,
+      "no_truth_input_passed": true,
+      "prediction_accuracy": {
+        "observer": "tb3_0",
+        "errors_by_node": {
+          "0": {
+            "samples": 627,
+            "rmse": 0.12438934728681693,
+            "mean": 0.12387781232876731,
+            "maximum": 0.17966146461153504,
+            "displacement_rmse": 0.0
+          },
+          "10": {
+            "samples": 617,
+            "rmse": 0.1293860493370763,
+            "mean": 0.12804645081085328,
+            "maximum": 0.2077787975698439,
+            "displacement_rmse": 0.029126618315350142
+          }
+        },
+        "note": "Offline nearest-truth association within .45 m; centres are ellipse estimates, not known object centres."
+      }
+    },
+    {
+      "run": "guided_formation",
+      "scenario": "mixed",
+      "robots": 5,
+      "mode": "cv",
+      "passed": true,
+      "clearance_m": 0.20275057247350642,
+      "peer_clearance_m": 0.08835649785919847,
+      "final_error_max_m": 0.0013661613029581103,
+      "wall_max_ms": 91.68610500637442,
+      "no_truth_input_passed": true,
+      "prediction_accuracy": {
+        "observer": "tb3_0",
+        "errors_by_node": {
+          "0": {
+            "samples": 686,
+            "rmse": 0.12570983775699243,
+            "mean": 0.12485122456737599,
+            "maximum": 0.19626045457945449,
+            "displacement_rmse": 0.0
+          },
+          "10": {
+            "samples": 676,
+            "rmse": 0.1322921977597034,
+            "mean": 0.1296078597697527,
+            "maximum": 0.26363599792680226,
+            "displacement_rmse": 0.032381619514923035
+          }
+        },
+        "note": "Offline nearest-truth association within .45 m; centres are ellipse estimates, not known object centres."
+      }
+    }
+  ],
+  "core_source_matches": {
+    "guided_crossing": {
+      "scripts/tb3_controller_node_cbf.py": true,
+      "scripts/cbf_mpc_core.py": true,
+      "纯仿真代码/mpc_dcbf_cached_solver.py": true
+    },
+    "guided_crossing_frozen": {
+      "scripts/tb3_controller_node_cbf.py": true,
+      "scripts/cbf_mpc_core.py": true,
+      "纯仿真代码/mpc_dcbf_cached_solver.py": true
+    },
+    "guided_head_on": {
+      "scripts/tb3_controller_node_cbf.py": true,
+      "scripts/cbf_mpc_core.py": true,
+      "纯仿真代码/mpc_dcbf_cached_solver.py": true
+    },
+    "guided_overtaking": {
+      "scripts/tb3_controller_node_cbf.py": true,
+      "scripts/cbf_mpc_core.py": true,
+      "纯仿真代码/mpc_dcbf_cached_solver.py": true
+    },
+    "guided_maneuver": {
+      "scripts/tb3_controller_node_cbf.py": true,
+      "scripts/cbf_mpc_core.py": true,
+      "纯仿真代码/mpc_dcbf_cached_solver.py": true
+    },
+    "guided_mixed_single": {
+      "scripts/tb3_controller_node_cbf.py": true,
+      "scripts/cbf_mpc_core.py": true,
+      "纯仿真代码/mpc_dcbf_cached_solver.py": true
+    },
+    "guided_formation": {
+      "scripts/tb3_controller_node_cbf.py": true,
+      "scripts/cbf_mpc_core.py": true,
+      "纯仿真代码/mpc_dcbf_cached_solver.py": true
+    }
+  },
+  "note": "Single-run Gazebo verification, not statistical benchmark. Clearance uses a sampled 0.13 m circular body proxy. Frozen is an intentionally ablated baseline, not the full method."
+}

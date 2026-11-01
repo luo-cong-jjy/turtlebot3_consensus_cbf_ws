@@ -1,0 +1,48 @@
+{
+  "scripts/tb3_controller_node_cbf.py": {
+    "type": "original saved static file",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/scripts/tb3_controller_node_cbf.py",
+    "sha256": "f6bec42520b4584217574eae37293835ac94f4d0d2b549d7f6666a4cc5013138"
+  },
+  "scripts/leader_node_cbf.py": {
+    "type": "original saved static file",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/scripts/leader_node_cbf.py",
+    "sha256": "ed5834cc4cedd521e396b2c1b6a8eb49191ce0cd7d0d4f66f53ee86861ff9787"
+  },
+  "scripts/cbf_experiment_results.py": {
+    "type": "original saved static file",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/scripts/cbf_experiment_results.py",
+    "sha256": "140c8ff60e9a9c167541bad6c95d2cd82ccf66321687faff7c6c23743f92eb82"
+  },
+  "scripts/tests/run_cbf_gazebo.py": {
+    "type": "original saved static file",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/scripts/tests/run_cbf_gazebo.py",
+    "sha256": "97d888e6b79cb4af17ac3338ee5904f5b0301cee2b83cd1584203669744b5974"
+  },
+  "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": {
+    "type": "original saved static file",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/launch/multi_turtlebot3_consensus_gazebo_cbf.launch",
+    "sha256": "a6a3d2689af32a68c852c3732d1a299109f4969c71e6db1154f6bdb79fb4e957"
+  },
+  "CMakeLists.txt": {
+    "type": "original saved static file",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/CMakeLists.txt",
+    "sha256": "c0e1bbe9031328a79213a4dd89d3427d6f241a4fdad95c7e7669531831f61bf9"
+  },
+  "package.xml": {
+    "type": "original saved static file",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/package.xml",
+    "sha256": "a0c5c8d87afaa4cb6c7f0140c801e9953b85692035b21c37fbab8669869e4f17"
+  },
+  "纯仿真代码/mpc_dcbf_cached_solver.py": {
+    "type": "original saved optimizer, identical to Oct 20 validated optimizer",
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/mpc_dcbf_cached_solver.py",
+    "sha256": "cf6f921f19214fdc6f0c9c42469cc743af877fe4598a5944ba6984e17ebc01f9"
+  },
+  "scripts/cbf_mpc_core.py": {
+    "type": "minimal reconstruction from recorded one-line radius change",
+    "source": "10/20 original helper + 10/21 recorded diff",
+    "sha256": "15896bdf6ae01422c755e42ce3d54b3442b02bd69a8832e264c149333f835948",
+    "note": "Only radius default .4 -> .5. Not represented as a separately saved historical original."
+  }
+}

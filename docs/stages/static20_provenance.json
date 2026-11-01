@@ -1,0 +1,57 @@
+{
+  "CMakeLists.txt": {
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/CMakeLists.txt",
+    "type": "original saved file",
+    "sha256": "c0e1bbe9031328a79213a4dd89d3427d6f241a4fdad95c7e7669531831f61bf9"
+  },
+  "package.xml": {
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/package.xml",
+    "type": "original saved file",
+    "sha256": "a0c5c8d87afaa4cb6c7f0140c801e9953b85692035b21c37fbab8669869e4f17"
+  },
+  "scripts/tests/run_cbf_gazebo.py": {
+    "source": "四脚本对比证据/CBF动态障碍预测/修改前/scripts/tests/run_cbf_gazebo.py",
+    "type": "original saved file",
+    "sha256": "97d888e6b79cb4af17ac3338ee5904f5b0301cee2b83cd1584203669744b5974"
+  },
+  "scripts/tb3_controller_node_cbf.py": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/tb3_controller_node_cbf.py",
+    "type": "original execution snapshot",
+    "sha256": "ac7a0f9ae25098286d29de95c975fda6c6457a02f1b97960e0fb2bd4b38e036f"
+  },
+  "scripts/cbf_mpc_core.py": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/cbf_mpc_core.py",
+    "type": "original execution snapshot",
+    "sha256": "d298c8deadf2114967efc28558c6cecf33c8382b78c4e22f1a52403ab237f44a"
+  },
+  "scripts/leader_node_cbf.py": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/leader_node_cbf.py",
+    "type": "original execution snapshot",
+    "sha256": "ed5834cc4cedd521e396b2c1b6a8eb49191ce0cd7d0d4f66f53ee86861ff9787"
+  },
+  "scripts/cbf_experiment_results.py": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/cbf_experiment_results.py",
+    "type": "original execution snapshot",
+    "sha256": "e400580c887f615a259427909d31bd5e4f749544982feec94b3d0315ef0a4ee0"
+  },
+  "纯仿真代码/mpc_dcbf_cached_solver.py": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/mpc_dcbf_cached_solver.py",
+    "type": "original execution snapshot",
+    "sha256": "cf6f921f19214fdc6f0c9c42469cc743af877fe4598a5944ba6984e17ebc01f9"
+  },
+  "纯仿真代码/mpc_dcbf_static_obstacles.py": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/mpc_dcbf_static_obstacles.py",
+    "type": "original execution snapshot",
+    "sha256": "a3737836aa5f7d231a5fe28d03332856bf5f2b6aa6b30576be6dad876f537f17"
+  },
+  "rviz/tb3_cbf.rviz": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/tb3_cbf.rviz",
+    "type": "original execution snapshot",
+    "sha256": "ebd3cf3a5963c76a62dce506cf6b2962f4592b1d0a611c7165625626e69bc7c4"
+  },
+  "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": {
+    "source": "四脚本对比证据/CBF实时求解改进/realtime180_final/sources/multi_turtlebot3_consensus_gazebo_cbf.launch",
+    "type": "original execution snapshot",
+    "sha256": "13514ca84113b8d778ce4f9c197bc8281b23e42bb56e063e90f9bf3af09f5217"
+  }
+}
