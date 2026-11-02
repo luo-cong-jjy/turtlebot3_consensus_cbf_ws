@@ -275,7 +275,7 @@ def _stationary_guidance(state, goals, obstacles, config, memory):
     return guide, float(level)
 
 
-def continuous_guidance(state,goals,obstacles,config,memory):
+def _legacy_continuous_guidance(state,goals,obstacles,config,memory):
     """Use the existing soft bypass field in a predicted moving frame.
 
     Predicted obstacle displacement is removed from nominal goal positions,
@@ -313,6 +313,191 @@ def continuous_guidance(state,goals,obstacles,config,memory):
     speed=np.linalg.norm(guide,axis=1)
     guide*=np.minimum(1.,.22/np.maximum(speed,1e-12))[:,None]
     return guide,moving_level
+
+
+def progress_centers(obstacle,times,dt):
+    """Existing predictor means at longer times, for soft decisions ONLY."""
+    times=np.asarray(times);motion=obstacle.get('guidance_motion')
+    if motion is not None:
+        result=np.zeros((len(times),2))
+        for weight,model in zip(motion['weights'],motion['models']):
+            p=np.asarray(model['position']);v=np.asarray(model['velocity']);a=np.asarray(model['acceleration'])
+            if model['mode']=='frozen':value=np.tile(p,(len(times),1))
+            else:
+                value=p+times[:,None]*v
+                if model['mode']=='ca':value=value+.5*times[:,None]**2*a
+                elif model['mode']=='singer':
+                    tau=model['tau'];value=value+tau*tau*(times/tau+np.expm1(-times/tau))[:,None]*a
+            result+=weight*value
+        return result
+    centers=np.asarray(obstacle.get('prediction_centers',[obstacle['center']]))
+    if centers.ndim==1:return np.tile(centers,(len(times),1))
+    nodes=np.arange(len(centers))*dt
+    result=np.column_stack([np.interp(times,nodes,centers[:,j]) for j in (0,1)])
+    if len(centers)>1:
+        velocity=(centers[-1]-centers[-2])/dt
+        result+=np.maximum(0.,times-nodes[-1])[:,None]*velocity
+    return result
+
+
+def progress_obstacles(obstacles,times,config):
+    """Keep the original safety-window nodes; hold axes beyond that window.
+
+    Long means / held axes are a decision approximation, not new hard CBFs.
+    """
+    result=[];n=config['horizon'];dt=config['dt']
+    for obs in obstacles:
+        item=dict(obs);item['prediction_centers']=progress_centers(obs,times,dt)
+        item['prediction_axes']=np.array([obstacle_axes(obs,min(int(round(t/dt)),n)) for t in times])
+        angles=np.asarray(obs.get('prediction_angles',[obs['theta']]))
+        item['prediction_angles']=angles[np.minimum(np.rint(times/dt).astype(int),len(angles)-1)]
+        result.append(item)
+    return result
+
+
+def progress_targets(goals,times,dt):
+    nodes=np.arange(len(goals))*dt
+    result=np.column_stack([np.interp(times,nodes,goals[:,j]) for j in (0,1)])
+    result+=np.maximum(0.,np.asarray(times)-nodes[-1])[:,None]*(goals[-1,:2]-goals[-2,:2])/dt
+    return result
+
+
+def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds):
+    """A bounded unicycle reference primitive; never an applied command."""
+    dt=config['dt'];steps=max(config['horizon'],int(round(config.get('progress_horizon',4.)/dt)))
+    times=np.arange(steps+1)*dt;targets=progress_targets(goals,times,dt)
+    feeds=np.diff(targets,axis=0)/dt;feed=feeds[0]
+    forecast=progress_obstacles(obstacles,times,config);obs=forecast[selected]
+    centers=obs['prediction_centers'];axes=obs['prediction_axes'];angles=obs['prediction_angles']
+    direction=feed/max(np.linalg.norm(feed),1e-12);normal_line=np.array([-direction[1],direction[0]])
+    release=float('inf')
+    if mode=='yield':
+        future=np.arange(int(round(config.get('progress_wait_horizon',6.)/dt))+1)*dt
+        c=progress_centers(obstacles[selected],future,dt)
+        a,b=obstacle_axes(obstacles[selected],config['horizon']);theta=obstacles[selected]['theta']
+        radius=np.hypot(a*np.dot([np.cos(theta),np.sin(theta)],normal_line),
+                        b*np.dot([-np.sin(theta),np.cos(theta)],normal_line))+config['margin']+.04
+        lateral=(c-goals[0,:2])@normal_line
+        blocked=np.flatnonzero(np.abs(lateral)<=radius)
+        j=int(blocked[-1])+1 if len(blocked) else 0
+        if j<len(future) and future[-1]-future[j]>=.5:release=float(future[j])
+    states=np.empty((steps+1,3));states[0]=state;controls=np.zeros((steps,2));vectors=np.zeros((steps,2))
+    velocity=previous[0]*np.array([np.cos(state[2]),np.sin(state[2])]);last=np.array(previous,copy=True)
+    for j in range(steps):
+        p=states[j,:2];theta=states[j,2]
+        desired=feeds[j]+1.2*(targets[j]-p)
+        if mode=='yield' and times[j]<release:desired=np.zeros(2)
+        if mode in ('ccw','cw'):
+            c,s=np.cos(angles[j]),np.sin(angles[j]);rotation=np.array([[c,-s],[s,c]])
+            local=(p-centers[j])@rotation;a,b=axes[j]
+            h=b*(np.linalg.norm(local/[a,b])-1)-config['margin']
+            aim=targets[j]+2.*feeds[j]
+            scale=1.+(config['margin']+.04)/b
+            start=local/(scale*np.array([a,b]));end=(aim-centers[j])@rotation/(scale*np.array([a,b]))
+            line=end-start;fraction=np.clip(-np.dot(start,line)/max(np.dot(line,line),1e-12),0.,1.)
+            blocked=(np.linalg.norm(start+fraction*line)<1. and (fraction>1e-6 or np.dot(start,line)<0))
+            if blocked:
+                normal=rotation@(local/np.array([a*a,b*b]));normal/=max(np.linalg.norm(normal),1e-12)
+                tangent=(1 if mode=='ccw' else -1)*np.array([-normal[1],normal[0]])
+                flow=.20*tangent+np.clip(.8*(.06-h),-.08,.12)*normal
+                level=float(np.clip((.4-h)/.25,0.,1.));desired=(1-level)*desired+level*flow
+        desired*=min(1.,max(abs(bounds[0]),abs(bounds[1]))/max(np.linalg.norm(desired),1e-12))
+        velocity+=.25*(desired-velocity)
+        if np.linalg.norm(velocity)<1e-8:angle=theta;sign=1.
+        else:
+            angle=np.arctan2(velocity[1],velocity[0]);delta=np.arctan2(np.sin(angle-theta),np.cos(angle-theta))
+            sign=-1. if abs(delta)>np.pi/2 and bounds[0]<0 else 1.
+            if sign<0:angle+=np.pi
+        error=np.arctan2(np.sin(angle-theta),np.cos(angle-theta))
+        omega=np.clip(error/dt,-config['omega_max'],config['omega_max'])
+        if config['delta_limit']:omega=np.clip(omega,last[1]-config['delta_w'],last[1]+config['delta_w'])
+        new_theta=theta+dt*omega;heading=np.array([np.cos(new_theta),np.sin(new_theta)])
+        speed=np.clip(np.dot(velocity,heading),bounds[0],bounds[1])
+        if config['delta_limit']:speed=np.clip(speed,last[0]-config['delta_v'],last[0]+config['delta_v'])
+        controls[j]=[speed,omega];vectors[j]=speed*heading
+        states[j+1,:2]=p+dt*vectors[j];states[j+1,2]=new_theta;last=controls[j]
+    h=barrier_values(states,forecast,config['margin'])
+    n=config['horizon'];gamma=np.array([o.get('gamma',config['gamma']) for o in obstacles])[:,None]
+    slack=h[:,1:n+1]-(1-gamma)*h[:,:n]
+    feasible=bool(h.min(initial=np.inf)>=-2e-6 and slack.min(initial=np.inf)>=-2e-6)
+    if mode=='yield' and not np.isfinite(release):feasible=False
+    error=states[:,:2]-targets;along=error[-1]@direction;lateral=error[-1]@normal_line
+    headroom=max(max(abs(bounds[0]),abs(bounds[1]))-np.linalg.norm(feed),.02)
+    recovery=max(0.,-along)/headroom+abs(lateral)/max(max(abs(bounds[0]),abs(bounds[1])),.02)
+    cost=float(np.mean(np.sum(error**2,axis=1))+2*np.sum(error[-1]**2)+.03*recovery+
+               .01*np.mean((controls[:,1]/config['omega_max'])**2))
+    return dict(mode=mode,feasible=feasible,cost=cost,min_h=float(h.min(initial=np.inf)),
+        min_slack=float(slack.min(initial=np.inf)),release_time=release if np.isfinite(release) else None,
+        terminal_error=float(np.linalg.norm(error[-1])),estimated_recovery=float(recovery),
+        states=states,controls=controls,vectors=vectors)
+
+
+def progress_guidance(state,goals,obstacles,config,memory):
+    """Compare waiting and both world-frame bypass sides using bounded previews."""
+    original_obstacles=obstacles
+    obstacles=[o for o in obstacles if o.get('name')!='inactive']
+    candidates=[];feed=(goals[-1,:2]-goals[0,:2])/(config['horizon']*config['dt'])
+    if np.linalg.norm(feed)<.02:return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
+    for i,obs in enumerate(obstacles):
+        if obs.get('peer',False) or not obs.get('dynamic',False) or 'guidance_motion' not in obs:continue
+        h=barrier_values(np.asarray(state)[None,:],[obs],config['margin'])[0,0]
+        if h<.65:candidates.append((h,obs['name'],i))
+    if not candidates:
+        memory.pop('progress_state',None)
+        memory['progress_summary']=dict(mode='inactive',decision_id=memory.get('progress_counter',0))
+        return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
+    _,name,index=min(candidates);obs=obstacles[index]
+    now=float(obs['guidance_motion']['stamp']);previous=np.asarray(memory.get('progress_previous',[0.,0.]))
+    bounds=tuple(memory.get('progress_bounds',(-.22,.22)))
+    saved=memory.get('progress_state');reevaluate=(saved is None or saved['name']!=name or now-saved['decision_time']>=.5 or now<saved['decision_time'])
+    if reevaluate:
+        begin=time.perf_counter();previews={mode:progress_preview(state,goals,obstacles,index,mode,config,previous,bounds)
+            for mode in ('direct','yield','ccw','cw')}
+        valid=[p for p in previews.values() if p['feasible']]
+        selected=min(valid,key=lambda p:p['cost'])['mode'] if valid else 'legacy'
+        switch_time=now
+        if saved is not None and saved['name']==name:
+            incumbent=previews.get(saved['selected'])
+            switch_time=saved['switch_time']
+            if incumbent is not None and incumbent['feasible'] and selected!=saved['selected']:
+                advantage=incumbent['cost']-previews[selected]['cost']
+                if now-switch_time<.8 or advantage<max(.03,.15*incumbent['cost']):selected=saved['selected']
+            if selected!=saved['selected']:switch_time=now
+        saved=dict(name=name,selected=selected,decision_time=now,switch_time=switch_time,
+            decision_id=memory.get('progress_counter',0)+1)
+        memory['progress_counter']=saved['decision_id'];memory['progress_state']=saved
+        memory['progress_decision']=dict(saved,state=np.asarray(state).tolist(),goals=np.asarray(goals).tolist(),
+            previous=previous.tolist(),bounds=list(bounds),selected_obstacle=index,
+            config=dict({k:config[k] for k in ('dt','horizon','margin','gamma','omega_max','delta_limit','delta_v','delta_w')},
+                        progress_horizon=config.get('progress_horizon',4.),progress_wait_horizon=config.get('progress_wait_horizon',6.)),
+            obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
+                gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
+                prediction_axes=np.array([obstacle_axes(o,j) for j in range(config['horizon']+1)]).tolist(),
+                prediction_angles=obstacle_angles(o,config['horizon']+1).tolist(),guidance_motion=o.get('guidance_motion')) for o in obstacles],
+            previews={mode:{k:v for k,v in p.items() if k not in ('states','controls','vectors')} for mode,p in previews.items()},
+            decision_ms=1000*(time.perf_counter()-begin))
+    mode=saved['selected']
+    memory['progress_summary']=dict(mode=mode,decision_id=saved['decision_id'],obstacle=name)
+    if mode=='legacy':return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
+    preview=(previews[mode] if reevaluate else progress_preview(state,goals,obstacles,index,mode,
+        dict(config,progress_horizon=config['horizon']*config['dt']),previous,bounds))
+    if not preview['feasible']:
+        memory['progress_summary']['mode']='legacy_recheck'
+        return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
+    return preview['vectors'][:config['horizon']],1.
+
+
+def continuous_guidance(state,goals,obstacles,config,memory):
+    if config.get('progress_guidance',False):return progress_guidance(state,goals,obstacles,config,memory)
+    return _legacy_continuous_guidance(state,goals,obstacles,config,memory)
+
+
+def attach_progress_record(record,memory):
+    record['progress']=dict(memory.get('progress_summary',{}))
+    decision=memory.get('progress_decision')
+    if decision is not None and decision['decision_id']!=memory.get('progress_logged_id'):
+        record['progress_decision']=decision
+        memory['progress_logged_id']=decision['decision_id']
 
 
 class IterationDeadline(ca.Callback):
@@ -607,6 +792,7 @@ class MPCSolverManager:
         memory=self.robot_memory.setdefault(label,dict(positions=deque(maxlen=11),cooldown=0,preferred=1,hold=0))
         memory['positions'].append(state[:2].copy())
         memory['cooldown']=max(0,memory['cooldown']-1)
+        if cfg.get('progress_guidance',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
         guidance=continuous_guidance(state,goals,obstacles,cfg,memory)
         signature=tuple((o.get('name',str(i)),o.get('gamma',cfg['gamma'])) for i,o in enumerate(obstacles))
         usable=last is not None and np.shape(last.get('controls'))==(n,2)
@@ -704,6 +890,7 @@ class MPCSolverManager:
             fallback_ms=fallback_ms,fallback_checked=checked,fallback_screen_valid=screen_valid,dual_warm=dual is not None,
             budget_expired=time.perf_counter()>deadline,pending_turns=list(pending))
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
+        if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         self.histories.setdefault(label,[]).append(record);self.last_records[label]=record
         if best is None:
             raise RuntimeError(label+': no validated control within the current computation budget')
@@ -765,6 +952,7 @@ class MPCSolverManager:
         plan_guess = np.clip(plan_guess, -cfg['plan_v_max'], cfg['plan_v_max'])
         memory = self.robot_memory.setdefault(label, {'positions': deque(maxlen=11),
                    'cooldown': 0, 'preferred': 1, 'hold': 0})
+        if cfg.get('progress_guidance',False):memory.update(progress_previous=np.zeros(2) if previous is None else np.array(previous),progress_bounds=list(bounds))
         guidance = continuous_guidance(state, goals, obstacles, cfg, memory)
         attempts, errors, trace = 0, [], []
 
@@ -837,6 +1025,7 @@ class MPCSolverManager:
                   'route_cost_cw': memory.get('route_cost_cw', float('nan')),
                   'projected_follow': memory.get('projected_follow', False),
                   'errors': errors}
+        if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         self.histories.setdefault(label, []).append(record);self.last_records[label]=record
         best.update(success=success, obstacle_count=len(obstacles))
         return best

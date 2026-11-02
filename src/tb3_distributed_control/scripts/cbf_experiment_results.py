@@ -569,6 +569,7 @@ class ExperimentRecorder:
             reliability_parameters=dict(dict(reliability_horizon=1.,score_tau=.5,weight_tau=.3,score_floor=.015,switch_ratio=.8,switch_hold=.6),
                 **rospy.get_param('/cbf/dynamic/reliability',{})),
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
+            progress_guidance=rospy.get_param('/cbf/progress_guidance',False),
             moving_frame_projection=rospy.get_param('/cbf/moving_frame_projection',False),
             singer_tau=rospy.get_param('/cbf/dynamic/singer_tau',1.),
             acceleration_buffer=rospy.get_param('/cbf/dynamic/acceleration_buffer',True),

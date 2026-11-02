@@ -481,6 +481,8 @@ class DynamicEllipseTracker:
         if not -1e-9<=now-track['seen']<=self.timeout:return None
         x,p=self.propagate(track['x'],track['P'],max(0.,now-track['stamp']))
         if self.mode=='frozen':x[5:7]=0.
+        motion=dict(mode=self.mode,position=x[:2].tolist(),velocity=x[5:7].tolist(),
+            acceleration=x[7:9].tolist(),tau=self.singer_tau)
         centers=[];axes=[];velocities=[];position_covariances=[];margins=[]
         acceleration=x[7:9].copy() if self.mode in ('ca','singer') else np.zeros(2)
         # Enclose the most recent measured ellipse even if the mean lags it.
@@ -513,6 +515,7 @@ class DynamicEllipseTracker:
             a=float(axes[0][0]),b=float(axes[0][1]),theta=float(x[4]),
             prediction_centers=np.asarray(centers),prediction_axes=np.asarray(axes),
             prediction_model=self.mode,stage_velocity_guidance=self.stage_velocity_guidance,
+            guidance_motion=dict(stamp=now,weights=[1.],models=[motion]),
             prediction_velocities=np.asarray(velocities),
             prediction_position_covariances=np.asarray(position_covariances),
             prediction_execution_margins=np.asarray(margins),acceleration=acceleration,
@@ -696,6 +699,7 @@ class ReliabilityEllipseTracker:
             seen=track['seen'],measurement_age=now-track['seen'],missed=track['missed'],
             raw_a=raw['raw_a'],raw_b=raw['raw_b'],point_count=raw['point_count'],
             model_weights=w.copy(),model_scores=[float(s) if np.isfinite(s) else None for s in track['scores']],
+            guidance_motion=dict(stamp=now,weights=w.tolist(),models=[e['guidance_motion']['models'][0] for e in experts]),
             selected_model=self.MODES[track['selected']],score_count=track['score_count'],
             score_origin=track['score_origin'],model_switches=track['switches'])
 
@@ -724,6 +728,7 @@ class TurtleBot3CBFController:
         "geometry_sample_stamp","geometry_cpu_ms","geometry_peer_cpu_ms",
         "dynamic_tracks","missed_tracks","max_obstacle_speed","motion_prediction_enabled",
         "ca_prediction_enabled","singer_prediction_enabled","adaptive_prediction_enabled","adaptive_switches_active","max_obstacle_acceleration",
+        "progress_enabled","progress_mode","progress_decision_id","progress_decision_ms",
         "detected_static_ellipses","detected_dynamic_ellipses",
         "metrics_schema_version","evaluation_time","evaluation_ros_time","reference_quality",
         "leader_reference_x","leader_reference_y","leader_reference_heading",
@@ -737,6 +742,7 @@ class TurtleBot3CBFController:
         self.names=rospy.get_param("/cbf/robot_names",["tb3_"+str(i) for i in range(5)])
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
+        self.cfg['progress_guidance']=bool(rospy.get_param('/cbf/progress_guidance',False))
         self.cfg['moving_frame_projection']=bool(rospy.get_param('/cbf/moving_frame_projection',False))
         self.cfg['feasible_seed_search']=bool(rospy.get_param('/cbf/feasible_seed_search',False))
         self.cfg['realtime']=bool(rospy.get_param('/cbf/realtime_solver',True))
@@ -1549,6 +1555,10 @@ class TurtleBot3CBFController:
             singer_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='singer'),
             adaptive_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='adaptive'),
             adaptive_switches_active=sum(o.get('model_switches',0) for o in obstacles),
+            progress_enabled=int(self.cfg.get('progress_guidance',False)),
+            progress_mode={'direct':1,'yield':2,'ccw':3,'cw':4}.get(detail.get('progress',{}).get('mode'),0),
+            progress_decision_id=detail.get('progress',{}).get('decision_id',0),
+            progress_decision_ms=detail.get('progress_decision',{}).get('decision_ms',0.),
             max_obstacle_acceleration=max([float(np.linalg.norm(o.get('acceleration',[0.,0.]))) for o in obstacles]+[0.]),
             detected_static_ellipses=sum(not o.get('dynamic',False) for o in self.observed),
             detected_dynamic_ellipses=sum(o.get('dynamic',False) for o in self.observed),
