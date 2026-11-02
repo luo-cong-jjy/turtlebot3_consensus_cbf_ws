@@ -417,9 +417,18 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
         controls[j]=[speed,omega];vectors[j]=speed*heading
         states[j+1,:2]=p+dt*vectors[j];states[j+1,2]=new_theta;last=controls[j]
     h=barrier_values(states,forecast,config['margin'])
+    hypothesis_h={}
+    for i,original in enumerate(obstacles):
+        motion=original.get('guidance_motion',{})
+        if original.get('peer',False) or not original.get('dynamic',False):continue
+        for k,model in enumerate(motion.get('models',[])):
+            alternative=dict(original,guidance_motion=dict(stamp=motion['stamp'],weights=[1.],models=[model]))
+            other=dict(forecast[i],prediction_centers=progress_centers(alternative,times,dt))
+            hypothesis_h[original['name']+'/'+str(k)+'/'+model['mode']]=float(barrier_values(states,[other],config['margin']).min())
     n=config['horizon'];gamma=np.array([o.get('gamma',config['gamma']) for o in obstacles])[:,None]
     slack=h[:,1:n+1]-(1-gamma)*h[:,:n]
     feasible=bool(h.min(initial=np.inf)>=-2e-6 and slack.min(initial=np.inf)>=-2e-6)
+    if hypothesis_h and min(hypothesis_h.values())<-2e-6:feasible=False
     if mode=='yield' and not np.isfinite(release):feasible=False
     error=states[:,:2]-targets;along=error[-1]@direction;lateral=error[-1]@normal_line
     headroom=max(max(abs(bounds[0]),abs(bounds[1]))-np.linalg.norm(feed),.02)
@@ -428,6 +437,7 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
                .01*np.mean((controls[:,1]/config['omega_max'])**2))
     return dict(mode=mode,feasible=feasible,cost=cost,min_h=float(h.min(initial=np.inf)),
         min_slack=float(slack.min(initial=np.inf)),release_time=release if np.isfinite(release) else None,
+        hypothesis_min_h=hypothesis_h,
         terminal_error=float(np.linalg.norm(error[-1])),estimated_recovery=float(recovery),
         states=states,controls=controls,vectors=vectors)
 
