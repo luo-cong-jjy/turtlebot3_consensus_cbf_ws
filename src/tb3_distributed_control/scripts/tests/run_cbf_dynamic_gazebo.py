@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--gazebo-seed',type=int,default=None)
     parser.add_argument('--duration',type=float,default=32.)
     parser.add_argument('--prediction-mode',choices=['cv','frozen','ca','singer','adaptive'],default='cv')
+    parser.add_argument('--progress-hypotheses',choices=['true','false'],default='true')
     parser.add_argument('--progress-guidance',choices=['true','false'],default='false')
     parser.add_argument('--moving-frame-projection',choices=['true','false'],default='false')
     parser.add_argument('--singer-tau',type=float,default=1.)
@@ -89,7 +90,7 @@ def main():
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
-            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
+            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
             'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
         report=0.
         while time.monotonic()-wall<args.wall_timeout:
@@ -113,7 +114,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if truth:
         fields=sorted(set().union(*(r.keys() for r in truth)))
@@ -150,7 +151,10 @@ def main():
         rows=list(csv.DictReader(file.open()))
         if not rows:continue
         times=np.array([float(r['solve_ms']) for r in rows]);statuses={s:sum(r['status']==s for r in rows) for s in set(r['status'] for r in rows)}
-        result['robot_statistics'][str(i)]=dict(rows=len(rows),last_time=float(rows[-1]['time']),
+        exported=out/'experiment_statistics.json'
+        window_final=(json.loads(exported.read_text()).get(str(i),{}).get('position_error_summary',{}).get('final',float('nan'))
+                      if exported.exists() else float('nan'))
+        result['robot_statistics'][str(i)]=dict(window_final_error=window_final,rows=len(rows),last_time=float(rows[-1]['time']),
             statuses=statuses,timing_p95_ms=float(np.percentile(times,95)),timing_max_ms=float(times.max()),
             final_error=float(np.hypot(float(rows[-1]['consensus_error_x']),float(rows[-1]['consensus_error_y']))),
             dynamic_cycles=sum(float(r['dynamic_tracks'])>0 for r in rows),
@@ -162,12 +166,13 @@ def main():
     result['seed_configured']=(args.gazebo_seed is None or (str(seed_metadata)==str(args.gazebo_seed)
         and '--seed' in argv and argv.index('--seed')+1<len(argv) and argv[argv.index('--seed')+1]==str(args.gazebo_seed)))
     result['progress_configured']=(bool(json.loads(metadata_path.read_text()).get('progress_guidance',False))==result['progress_guidance']) if metadata_path.exists() else False
+    if metadata_path.exists():result['progress_configured'] &= bool(json.loads(metadata_path.read_text()).get('progress_hypotheses',True))==result['progress_hypotheses']
     result['no_truth_input_passed']=bool(audit) and not any(topic in audit for topic in ('/gazebo/model_states','/cbf/scenario/truth','/gazebo/set_model_state'))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
         and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured']
-        and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and s['final_error']<.25
+        and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and np.isfinite(s['window_final_error']) and s['window_final_error']<.25
                 for s in result['robot_statistics'].values()))
     (out/'evaluation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2),flush=True)
     if not result['passed']:raise SystemExit(1)

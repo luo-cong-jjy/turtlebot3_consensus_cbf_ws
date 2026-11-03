@@ -460,7 +460,9 @@ def progress_guidance(state,goals,obstacles,config,memory):
     for i,obs in enumerate(obstacles):
         if obs.get('peer',False) or 'guidance_motion' not in obs:continue
         motion=obs['guidance_motion'];velocity=np.einsum('i,ij->j',motion['weights'],[m['velocity'] for m in motion['models']])
-        if np.linalg.norm(velocity)<.02:continue
+        speed=(max(np.linalg.norm(m['velocity']) for m in motion['models']) if config.get('progress_hypotheses',True)
+               else np.linalg.norm(velocity))
+        if speed<.02:continue
         h=barrier_values(np.asarray(state)[None,:],[obs],config['margin'])[0,0]
         if h<.65:candidates.append((h,obs['name'],i))
     if not candidates:
@@ -472,6 +474,7 @@ def progress_guidance(state,goals,obstacles,config,memory):
     bounds=tuple(memory.get('progress_bounds',(-.22,.22)))
     saved=memory.get('progress_state');reevaluate=(saved is None or saved['name']!=name or now-saved['decision_time']>=.5 or now<saved['decision_time'])
     if reevaluate:
+        prior_decision=None if saved is None else dict(saved)
         begin=time.perf_counter();previews={mode:progress_preview(state,goals,obstacles,index,mode,config,previous,bounds)
             for mode in ('direct','yield','ccw','cw')}
         valid=[p for p in previews.values() if p['feasible']]
@@ -487,7 +490,7 @@ def progress_guidance(state,goals,obstacles,config,memory):
         saved=dict(name=name,selected=selected,decision_time=now,switch_time=switch_time,
             decision_id=memory.get('progress_counter',0)+1)
         memory['progress_counter']=saved['decision_id'];memory['progress_state']=saved
-        memory['progress_decision']=dict(saved,state=np.asarray(state).tolist(),goals=np.asarray(goals).tolist(),
+        memory['progress_decision']=dict(saved,previous_decision=prior_decision,state=np.asarray(state).tolist(),goals=np.asarray(goals).tolist(),
             previous=previous.tolist(),bounds=list(bounds),selected_obstacle=index,
             config=dict({k:config[k] for k in ('dt','horizon','margin','gamma','omega_max','delta_limit','delta_v','delta_w')},
                         progress_horizon=config.get('progress_horizon',4.),progress_wait_horizon=config.get('progress_wait_horizon',6.),

@@ -72,6 +72,21 @@ class ProgressChecks(unittest.TestCase):
             short=progress_preview(self.state,self.goals,[crossing()],0,mode,dict(self.cfg,progress_horizon=1.),self.previous,(-.22,.22))
             np.testing.assert_array_equal(full['vectors'][:10],short['vectors'])
 
+    def test_zero_weight_maneuver_hypothesis_is_retained_in_reference_screen(self):
+        obs=crossing();obs['center']=np.array([2.1,-.5])
+        obs['guidance_motion']['models']=[
+            dict(mode='cv',position=[2.1,-.5],velocity=[0.,0.],acceleration=[0.,0.],tau=1.),
+            dict(mode='ca',position=[2.1,-.5],velocity=[0.,.15],acceleration=[0.,.03],tau=1.)]
+        obs['guidance_motion']['weights']=[1.,0.]
+        obs['prediction_centers']=progress_centers(obs,np.arange(11)*.1,.1)
+        result=progress_preview(self.state,self.goals,[obs],0,'direct',self.cfg,self.previous,(-.22,.22))
+        self.assertGreater(result['min_h'],0.)
+        self.assertLess(result['hypothesis_min_h']['crossing/1/ca'],0.)
+        self.assertFalse(result['feasible'])
+        memory={'progress_previous':self.previous}
+        continuous_guidance(self.state,self.goals,[obs],self.cfg,memory)
+        self.assertGreater(memory['progress_summary']['decision_id'],0)
+
     def test_static_and_no_obstacle_paths_preserve_legacy_guidance(self):
         static=dict(name='static',center=np.array([2.,0.]),a=.2,b=.15,theta=.2)
         inactive=dict(name='inactive',center=np.array([1000.,1000.]),a=.1,b=.1,theta=0.,guidance=False)
