@@ -369,6 +369,13 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
     feeds=np.diff(targets,axis=0)/dt;feed=feeds[0]
     forecast=progress_obstacles(obstacles,times,config);obs=forecast[selected]
     centers=obs['prediction_centers'];axes=obs['prediction_axes'];angles=obs['prediction_angles']
+    motion=obstacles[selected].get('guidance_motion',{})
+    hypothesis_centers=[centers]
+    if config.get('progress_hypotheses',True):
+        for model in motion.get('models',[]):
+            alternative=dict(obstacles[selected],guidance_motion=dict(stamp=motion['stamp'],weights=[1.],models=[model]))
+            hypothesis_centers.append(progress_centers(alternative,times,dt))
+    hypothesis_centers=np.asarray(hypothesis_centers)
     direction=feed/max(np.linalg.norm(feed),1e-12);normal_line=np.array([-direction[1],direction[0]])
     release=float('inf')
     if mode=='yield':
@@ -389,18 +396,20 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
         if mode=='yield' and times[j]<release:desired=np.zeros(2)
         if mode in ('ccw','cw'):
             c,s=np.cos(angles[j]),np.sin(angles[j]);rotation=np.array([[c,-s],[s,c]])
-            local=(p-centers[j])@rotation;a,b=axes[j]
-            h=b*(np.linalg.norm(local/[a,b])-1)-config['margin']
+            local=(p-hypothesis_centers[:,j,:])@rotation;a,b=axes[j]
+            h=b*(np.linalg.norm(local/[a,b],axis=1)-1)-config['margin']
             aim=targets[j]+2.*feeds[j]
             scale=1.+(config['margin']+.04)/b
-            start=local/(scale*np.array([a,b]));end=(aim-centers[j])@rotation/(scale*np.array([a,b]))
-            line=end-start;fraction=np.clip(-np.dot(start,line)/max(np.dot(line,line),1e-12),0.,1.)
-            blocked=(np.linalg.norm(start+fraction*line)<1. and (fraction>1e-6 or np.dot(start,line)<0))
-            if blocked:
-                normal=rotation@(local/np.array([a*a,b*b]));normal/=max(np.linalg.norm(normal),1e-12)
+            start=local/(scale*np.array([a,b]));end=(aim-hypothesis_centers[:,j,:])@rotation/(scale*np.array([a,b]))
+            line=end-start;dot=np.sum(start*line,axis=1)
+            fraction=np.clip(-dot/np.maximum(np.sum(line*line,axis=1),1e-12),0.,1.)
+            blocked=(np.linalg.norm(start+fraction[:,None]*line,axis=1)<1.)&((fraction>1e-6)|(dot<0))
+            if blocked.any():
+                k=int(np.argmin(np.where(blocked,h,np.inf)))
+                normal=rotation@(local[k]/np.array([a*a,b*b]));normal/=max(np.linalg.norm(normal),1e-12)
                 tangent=(1 if mode=='ccw' else -1)*np.array([-normal[1],normal[0]])
-                flow=.20*tangent+np.clip(.8*(.06-h),-.08,.12)*normal
-                level=float(np.clip((.4-h)/.25,0.,1.));desired=(1-level)*desired+level*flow
+                flow=.20*tangent+np.clip(.8*(.06-h[k]),-.08,.12)*normal
+                level=float(np.clip((.4-h[k])/.25,0.,1.));desired=(1-level)*desired+level*flow
         desired*=min(1.,max(abs(bounds[0]),abs(bounds[1]))/max(np.linalg.norm(desired),1e-12))
         velocity+=.25*(desired-velocity)
         if np.linalg.norm(velocity)<1e-8:angle=theta;sign=1.
@@ -420,7 +429,7 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
     hypothesis_h={}
     for i,original in enumerate(obstacles):
         motion=original.get('guidance_motion',{})
-        if original.get('peer',False) or not original.get('dynamic',False):continue
+        if original.get('peer',False) or not config.get('progress_hypotheses',True):continue
         for k,model in enumerate(motion.get('models',[])):
             alternative=dict(original,guidance_motion=dict(stamp=motion['stamp'],weights=[1.],models=[model]))
             other=dict(forecast[i],prediction_centers=progress_centers(alternative,times,dt))
@@ -449,7 +458,9 @@ def progress_guidance(state,goals,obstacles,config,memory):
     candidates=[];feed=(goals[-1,:2]-goals[0,:2])/(config['horizon']*config['dt'])
     if np.linalg.norm(feed)<.02:return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
     for i,obs in enumerate(obstacles):
-        if obs.get('peer',False) or not obs.get('dynamic',False) or 'guidance_motion' not in obs:continue
+        if obs.get('peer',False) or 'guidance_motion' not in obs:continue
+        motion=obs['guidance_motion'];velocity=np.einsum('i,ij->j',motion['weights'],[m['velocity'] for m in motion['models']])
+        if np.linalg.norm(velocity)<.02:continue
         h=barrier_values(np.asarray(state)[None,:],[obs],config['margin'])[0,0]
         if h<.65:candidates.append((h,obs['name'],i))
     if not candidates:
@@ -479,7 +490,8 @@ def progress_guidance(state,goals,obstacles,config,memory):
         memory['progress_decision']=dict(saved,state=np.asarray(state).tolist(),goals=np.asarray(goals).tolist(),
             previous=previous.tolist(),bounds=list(bounds),selected_obstacle=index,
             config=dict({k:config[k] for k in ('dt','horizon','margin','gamma','omega_max','delta_limit','delta_v','delta_w')},
-                        progress_horizon=config.get('progress_horizon',4.),progress_wait_horizon=config.get('progress_wait_horizon',6.)),
+                        progress_horizon=config.get('progress_horizon',4.),progress_wait_horizon=config.get('progress_wait_horizon',6.),
+                        progress_hypotheses=config.get('progress_hypotheses',True)),
             obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
                 gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
                 prediction_axes=np.array([obstacle_axes(o,j) for j in range(config['horizon']+1)]).tolist(),
