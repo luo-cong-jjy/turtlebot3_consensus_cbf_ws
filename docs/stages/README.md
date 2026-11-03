@@ -23,3 +23,6 @@
 - `experiment/singer-guidance-ablation-2026-11-01`：Singer／真实测量回放／速度坐标候选及14次有限验证；70项检查通过，3次终端跟踪未通过。默认CV与原引导，完整负结果见 [阶段报告](singer_ablation_research_notes_2026-11-01.md)。该标签是研究实验阶段，不表示所有候选已成为推荐方法。
 
 - `experiment/reliability-seeded-2026-11-01`：延迟评分与平滑专家选择、固定种子和完整因果重建。79 项检查，18 次主试验＋1 次预定重复，候选未形成整体优势。默认 CV；[阶段报告](reliability_seeded_research_notes_2026-11-01.md)。
+
+- `experiment/progress-reference-v3-2026-11-02`：f18442d 冻结 V3、18 次试验和负净距重复，源码另存。
+- `experiment/progress-reference-2026-11-02`：无效参考撤销修正、两批34次试验与全部开发记录。89项检查；默认关闭，[结果与局限](progress_reference_research_notes_2026-11-02.md)。
