@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--duration',type=float,default=32.)
     parser.add_argument('--prediction-mode',choices=['cv','frozen','ca','singer','adaptive'],default='cv')
     parser.add_argument('--progress-hypotheses',choices=['true','false'],default='true')
+    parser.add_argument('--progress-abstain',choices=['true','false'],default='true')
     parser.add_argument('--progress-guidance',choices=['true','false'],default='false')
     parser.add_argument('--moving-frame-projection',choices=['true','false'],default='false')
     parser.add_argument('--singer-tau',type=float,default=1.)
@@ -90,7 +91,7 @@ def main():
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
-            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
+            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
             'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
         report=0.
         while time.monotonic()-wall<args.wall_timeout:
@@ -114,7 +115,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if truth:
         fields=sorted(set().union(*(r.keys() for r in truth)))
@@ -167,6 +168,7 @@ def main():
         and '--seed' in argv and argv.index('--seed')+1<len(argv) and argv[argv.index('--seed')+1]==str(args.gazebo_seed)))
     result['progress_configured']=(bool(json.loads(metadata_path.read_text()).get('progress_guidance',False))==result['progress_guidance']) if metadata_path.exists() else False
     if metadata_path.exists():result['progress_configured'] &= bool(json.loads(metadata_path.read_text()).get('progress_hypotheses',True))==result['progress_hypotheses']
+    if metadata_path.exists():result['progress_configured'] &= bool(json.loads(metadata_path.read_text()).get('progress_abstain',True))==result['progress_abstain']
     result['no_truth_input_passed']=bool(audit) and not any(topic in audit for topic in ('/gazebo/model_states','/cbf/scenario/truth','/gazebo/set_model_state'))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.

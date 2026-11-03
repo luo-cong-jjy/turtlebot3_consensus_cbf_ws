@@ -95,5 +95,20 @@ class ProgressChecks(unittest.TestCase):
             actual=continuous_guidance(self.state,self.goals,obstacles,self.cfg,{})
             np.testing.assert_array_equal(actual[0],expected[0]);self.assertEqual(actual[1],expected[1])
 
+    def test_invalid_dynamic_reference_is_withdrawn_without_commanding_a_stop(self):
+        obs=crossing();obs['center']=self.state[:2].copy()
+        obs['guidance_motion']['models'][0]['position']=self.state[:2].tolist()
+        obs['prediction_centers']=progress_centers(obs,np.arange(11)*.1,.1)
+        memory={'progress_previous':self.previous}
+        vectors,level=continuous_guidance(self.state,self.goals,[obs],dict(self.cfg,progress_abstain=True),memory)
+        self.assertEqual(memory['progress_state']['selected'],'legacy')
+        self.assertEqual(memory['progress_summary']['mode'],'tracking_only')
+        self.assertEqual(level,0.);np.testing.assert_array_equal(vectors,np.zeros((10,2)))
+        # The tuple is an inactive SOFT objective, not a returned v/omega command.
+        self.assertTrue(all(not p['feasible'] for p in memory['progress_decision']['previews'].values()))
+        disabled={};legacy=_legacy_continuous_guidance(self.state,self.goals,[obs],self.cfg,{})
+        old=continuous_guidance(self.state,self.goals,[obs],dict(self.cfg,progress_abstain=False),disabled)
+        np.testing.assert_array_equal(old[0],legacy[0]);self.assertEqual(old[1],legacy[1])
+
 
 if __name__=='__main__':unittest.main()

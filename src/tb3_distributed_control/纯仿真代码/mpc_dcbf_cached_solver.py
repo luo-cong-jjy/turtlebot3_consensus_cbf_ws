@@ -494,7 +494,7 @@ def progress_guidance(state,goals,obstacles,config,memory):
             previous=previous.tolist(),bounds=list(bounds),selected_obstacle=index,
             config=dict({k:config[k] for k in ('dt','horizon','margin','gamma','omega_max','delta_limit','delta_v','delta_w')},
                         progress_horizon=config.get('progress_horizon',4.),progress_wait_horizon=config.get('progress_wait_horizon',6.),
-                        progress_hypotheses=config.get('progress_hypotheses',True)),
+                        progress_hypotheses=config.get('progress_hypotheses',True),progress_abstain=config.get('progress_abstain',True)),
             obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
                 gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
                 prediction_axes=np.array([obstacle_axes(o,j) for j in range(config['horizon']+1)]).tolist(),
@@ -503,10 +503,17 @@ def progress_guidance(state,goals,obstacles,config,memory):
             decision_ms=1000*(time.perf_counter()-begin))
     mode=saved['selected']
     memory['progress_summary']=dict(mode=mode,decision_id=saved['decision_id'],obstacle=name)
-    if mode=='legacy':return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
+    if mode=='legacy':
+        if config.get('progress_abstain',True):
+            memory['progress_summary']['mode']='tracking_only'
+            return np.zeros((config['horizon'],2)),0.
+        return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
     preview=(previews[mode] if reevaluate else progress_preview(state,goals,obstacles,index,mode,
         dict(config,progress_horizon=config['horizon']*config['dt']),previous,bounds))
     if not preview['feasible']:
+        if config.get('progress_abstain',True):
+            memory['progress_summary']['mode']='tracking_only_recheck'
+            return np.zeros((config['horizon'],2)),0.
         memory['progress_summary']['mode']='legacy_recheck'
         return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
     return preview['vectors'][:config['horizon']],1.

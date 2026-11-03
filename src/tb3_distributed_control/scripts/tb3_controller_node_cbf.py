@@ -743,6 +743,7 @@ class TurtleBot3CBFController:
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
         self.cfg['progress_hypotheses']=bool(rospy.get_param('/cbf/progress_hypotheses',True))
+        self.cfg['progress_abstain']=bool(rospy.get_param('/cbf/progress_abstain',True))
         self.cfg['progress_guidance']=bool(rospy.get_param('/cbf/progress_guidance',False))
         self.cfg['moving_frame_projection']=bool(rospy.get_param('/cbf/moving_frame_projection',False))
         self.cfg['feasible_seed_search']=bool(rospy.get_param('/cbf/feasible_seed_search',False))
@@ -1557,7 +1558,7 @@ class TurtleBot3CBFController:
             adaptive_prediction_enabled=int(self.dynamic_prediction and self.dynamic_tracker.mode=='adaptive'),
             adaptive_switches_active=sum(o.get('model_switches',0) for o in obstacles),
             progress_enabled=int(self.cfg.get('progress_guidance',False)),
-            progress_mode={'direct':1,'yield':2,'ccw':3,'cw':4}.get(detail.get('progress',{}).get('mode'),0),
+            progress_mode={'direct':1,'yield':2,'ccw':3,'cw':4,'tracking_only':5,'tracking_only_recheck':5}.get(detail.get('progress',{}).get('mode'),0),
             progress_decision_id=detail.get('progress',{}).get('decision_id',0),
             progress_decision_ms=detail.get('progress_decision',{}).get('decision_ms',0.),
             max_obstacle_acceleration=max([float(np.linalg.norm(o.get('acceleration',[0.,0.]))) for o in obstacles]+[0.]),
