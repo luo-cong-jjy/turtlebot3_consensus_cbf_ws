@@ -116,3 +116,9 @@ main 和既有基线标签保留。阶段提交及独立本地归档用于追溯
 新增受限运动预览、保留运动假设的参考选择和无效参考撤销；默认 `progress_guidance=false`。开启后 `progress_abstain=true` 表示无参考时撤销额外引导，由原名义 MPC 继续优化，不是直接停止。89项检查，两批34次冻结试验及5次开发完整保留。首批主试验6/6但重复出现负代理净距，修正批主试验5/6且仍有恢复／追越局限，不推荐作为默认实物方案。
 
 [方法与运行命令](docs/progress_reference_2026-11-02.md)、[完整正反结果](docs/stages/progress_reference_research_notes_2026-11-02.md)、[验证摘要](docs/stages/progress_reference_validation.json)。
+
+## 可行后备与局部绕行开发
+
+研究分支新增默认关闭的 `execution_backup`：提前准备经原约束检查的后备控制，复用可行参考前缀初始化／后备，并加入短窗口绕行及方向保持退出条件。默认预测和原工程保留。这是效果改进候选，仍有恢复失败和偶发超时，不能当作稳定实物版本。
+
+[运行方法与限制](docs/execution_backup_2026-11-04.md)、[全部开发结果（包含失败）](docs/stages/execution_backup_validation_2026-11-04.json)。本阶段优先排查闭环效果，没有将开发试验当作论文统计对比。

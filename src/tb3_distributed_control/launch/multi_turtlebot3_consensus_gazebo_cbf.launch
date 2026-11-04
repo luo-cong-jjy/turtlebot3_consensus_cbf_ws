@@ -18,6 +18,7 @@
   <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
   <arg name="gazebo_seed" default="" />
   <arg name="progress_hypotheses" default="true" />
+  <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
   <arg name="progress_guidance" default="false" />
   <arg name="prediction_mode" default="cv" />
@@ -52,6 +53,7 @@
   <param name="/cbf/dynamic/ca_jerk_density" value="$(arg ca_jerk_density)" />
   <param name="/cbf/dynamic/ca_acceleration_variance" value="$(arg ca_acceleration_variance)" />
   <param name="/cbf/progress_hypotheses" value="$(arg progress_hypotheses)" />
+  <param name="/cbf/execution_backup" value="$(arg execution_backup)" />
   <param name="/cbf/progress_abstain" value="$(arg progress_abstain)" />
   <param name="/cbf/progress_guidance" value="$(arg progress_guidance)" />
   <param name="/cbf/moving_frame_projection" value="$(arg moving_frame_projection)" />

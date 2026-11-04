@@ -743,6 +743,7 @@ class TurtleBot3CBFController:
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
         self.cfg['progress_hypotheses']=bool(rospy.get_param('/cbf/progress_hypotheses',True))
+        self.cfg['execution_backup']=bool(rospy.get_param('/cbf/execution_backup',False))
         self.cfg['progress_abstain']=bool(rospy.get_param('/cbf/progress_abstain',True))
         self.cfg['progress_guidance']=bool(rospy.get_param('/cbf/progress_guidance',False))
         self.cfg['moving_frame_projection']=bool(rospy.get_param('/cbf/moving_frame_projection',False))

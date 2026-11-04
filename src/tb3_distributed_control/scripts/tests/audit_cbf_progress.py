@@ -31,10 +31,17 @@ def audit(directory):
         record=json.loads(line);decision=record.get('manager',{}).get('progress_decision')
         if decision is not None:decisions.append(decision)
     maximum=0.;selected_valid=0;fallbacks=0;error=None;preview_count=0
+    bound_excess=0.;null_motion_fields=0;tol=2e-6
     for decision in decisions:
         try:
             state=np.array(decision['state']);goals=np.array(decision['goals']);cfg=decision['config']
-            obstacles=decision['obstacles'];index=decision['selected_obstacle'];previous=np.array(decision['previous']);bounds=decision['bounds']
+            obstacles=[dict(o) for o in decision['obstacles']]
+            # The logger writes o.get(...), so absent runtime descriptors become
+            # JSON null. Restore absence in this replay view only; retain raw log.
+            for o in obstacles:
+                if o.get('guidance_motion','absent') is None:
+                    o.pop('guidance_motion');null_motion_fields+=1
+            index=decision['selected_obstacle'];previous=np.array(decision['previous']);bounds=decision['bounds']
             previews={}
             for mode,recorded in decision['previews'].items():
                 result=frozen.progress_preview(state,goals,obstacles,index,mode,cfg,previous,bounds);previews[mode]=result
@@ -44,8 +51,10 @@ def audit(directory):
                 assert result['feasible']==recorded['feasible']
                 assert result['release_time']==recorded['release_time']
                 np.testing.assert_allclose(result['states'],rollout(state,result['controls'],cfg['dt']),atol=1e-12)
-                assert np.max(np.abs(result['controls'][:,1]))<=cfg['omega_max']+1e-12
-                assert result['controls'][:,0].min()>=bounds[0]-1e-12 and result['controls'][:,0].max()<=bounds[1]+1e-12
+                excess=max(0.,np.max(np.abs(result['controls'][:,1]))-cfg['omega_max'],
+                    bounds[0]-result['controls'][:,0].min(),result['controls'][:,0].max()-bounds[1])
+                bound_excess=max(bound_excess,float(excess))
+                assert excess<=tol,'Control bounds exceed original numeric validator tolerance'
                 for hypothesis,value in recorded.get('hypothesis_min_h',{}).items():
                     np.testing.assert_allclose(value,result['hypothesis_min_h'][hypothesis],rtol=0,atol=1e-9)
                 preview_count+=1
@@ -57,6 +66,11 @@ def audit(directory):
                 if incumbent is not None and incumbent['feasible'] and selected!=prior['selected']:
                     advantage=incumbent['cost']-previews[selected]['cost']
                     if decision['decision_time']-prior['switch_time']<.8 or advantage<max(.03,.15*incumbent['cost']):selected=prior['selected']
+                if (cfg.get('progress_side_lock',False) and prior['selected'] in ('ccw','cw')
+                        and incumbent is not None and incumbent['feasible'] and not previews['direct']['feasible']
+                        and (not cfg.get('progress_side_release',False) or cfg.get('progress_local',False)
+                             or incumbent['cost']<=2.*min(p['cost'] for p in valid)+.25)):
+                    selected=prior['selected']
             if 'previous_decision' in decision:assert selected==decision['selected'],'Winner/hysteresis mismatch'
             else:selected=decision['selected']  # Development prototypes did not record prior hysteresis state.
             if selected=='legacy':fallbacks+=1
@@ -74,6 +88,8 @@ def audit(directory):
         legacy_fallbacks=fallbacks if not metadata.get('progress_abstain',False) else 0,
         reference_withdrawals=fallbacks if metadata.get('progress_abstain',False) else 0,
         maximum_numeric_difference=maximum,first_error=error,
+        numeric_bound_tolerance=tol,max_control_bound_excess=bound_excess,
+        normalized_null_motion_fields=null_motion_fields,
         note='Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety.')
     (path/'progress_audit.json').write_text(json.dumps(result,indent=2));return result
 

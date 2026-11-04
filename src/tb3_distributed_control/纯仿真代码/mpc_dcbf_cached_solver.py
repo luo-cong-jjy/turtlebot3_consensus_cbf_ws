@@ -423,6 +423,20 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
         new_theta=theta+dt*omega;heading=np.array([np.cos(new_theta),np.sin(new_theta)])
         speed=np.clip(np.dot(velocity,heading),bounds[0],bounds[1])
         if config['delta_limit']:speed=np.clip(speed,last[0]-config['delta_v'],last[0]+config['delta_v'])
+        if config.get('progress_local',False) and mode in ('ccw','cw'):
+            # Receding-window escape only: filter the primitive against the
+            # original next-node DCBF, without changing its gamma or envelope.
+            sliced=[dict(o,prediction_centers=o['prediction_centers'][j:j+2],
+                prediction_axes=o['prediction_axes'][j:j+2],prediction_angles=o['prediction_angles'][j:j+2]) for o in forecast]
+            v,w=np.meshgrid(np.linspace(*bounds,17),np.linspace(-config['omega_max'],config['omega_max'],17))
+            choices=np.vstack(([speed,omega],last,[0.,0.],np.column_stack((v.ravel(),w.ravel()))))
+            valid,_,angles_next=first_step_mask(states[j],choices,sliced,bounds,last,config)
+            if valid.any():
+                xy_velocity=choices[:,0,None]*np.column_stack((np.cos(angles_next),np.sin(angles_next)))
+                score=(np.sum((xy_velocity-velocity)**2,axis=1)+.002*(choices[:,1]-last[1])**2
+                    +.01*(1-np.cos(angles_next-(theta+dt*omega))))
+                speed,omega=choices[int(np.argmin(np.where(valid,score,np.inf)))]
+                new_theta=theta+dt*omega;heading=np.array([np.cos(new_theta),np.sin(new_theta)])
         controls[j]=[speed,omega];vectors[j]=speed*heading
         states[j+1,:2]=p+dt*vectors[j];states[j+1,2]=new_theta;last=controls[j]
     h=barrier_values(states,forecast,config['margin'])
@@ -437,6 +451,7 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
     n=config['horizon'];gamma=np.array([o.get('gamma',config['gamma']) for o in obstacles])[:,None]
     slack=h[:,1:n+1]-(1-gamma)*h[:,:n]
     feasible=bool(h.min(initial=np.inf)>=-2e-6 and slack.min(initial=np.inf)>=-2e-6)
+    if config.get('progress_local',False) and mode not in ('ccw','cw'):feasible=False
     if hypothesis_h and min(hypothesis_h.values())<-2e-6:feasible=False
     if mode=='yield' and not np.isfinite(release):feasible=False
     error=states[:,:2]-targets;along=error[-1]@direction;lateral=error[-1]@normal_line
@@ -453,6 +468,7 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
 
 def progress_guidance(state,goals,obstacles,config,memory):
     """Compare waiting and both world-frame bypass sides using bounded previews."""
+    memory.pop('progress_plan',None)
     original_obstacles=obstacles
     obstacles=[o for o in obstacles if o.get('name')!='inactive']
     candidates=[];feed=(goals[-1,:2]-goals[0,:2])/(config['horizon']*config['dt'])
@@ -475,9 +491,19 @@ def progress_guidance(state,goals,obstacles,config,memory):
     saved=memory.get('progress_state');reevaluate=(saved is None or saved['name']!=name or now-saved['decision_time']>=.5 or now<saved['decision_time'])
     if reevaluate:
         prior_decision=None if saved is None else dict(saved)
-        begin=time.perf_counter();previews={mode:progress_preview(state,goals,obstacles,index,mode,config,previous,bounds)
+        begin=time.perf_counter();preview_config=config
+        previews={mode:progress_preview(state,goals,obstacles,index,mode,config,previous,bounds)
             for mode in ('direct','yield','ccw','cw')}
         valid=[p for p in previews.values() if p['feasible']]
+        incumbent_side=(saved.get('selected') if saved is not None and saved['name']==name else None)
+        needs_prefix=(not valid or incumbent_side in ('ccw','cw') and not previews[incumbent_side]['feasible'])
+        if needs_prefix and config.get('execution_backup',False):
+            local_config=dict(config,progress_horizon=config['horizon']*config['dt'],progress_local=True)
+            local_previews={mode:progress_preview(state,goals,obstacles,index,mode,local_config,previous,bounds)
+                for mode in ('direct','yield','ccw','cw')}
+            if not valid or incumbent_side in ('ccw','cw') and local_previews[incumbent_side]['feasible']:
+                preview_config=local_config;previews=local_previews
+                valid=[p for p in previews.values() if p['feasible']]
         selected=min(valid,key=lambda p:p['cost'])['mode'] if valid else 'legacy'
         switch_time=now
         if saved is not None and saved['name']==name:
@@ -486,14 +512,24 @@ def progress_guidance(state,goals,obstacles,config,memory):
             if incumbent is not None and incumbent['feasible'] and selected!=saved['selected']:
                 advantage=incumbent['cost']-previews[selected]['cost']
                 if now-switch_time<.8 or advantage<max(.03,.15*incumbent['cost']):selected=saved['selected']
+            # Keep a feasible circulation side while direct recovery is blocked.
+            # A failed long extrapolation alone must not reverse a valid prefix.
+            if (config.get('execution_backup',False) and saved['selected'] in ('ccw','cw')
+                    and incumbent is not None and incumbent['feasible'] and not previews['direct']['feasible']
+                    and (preview_config.get('progress_local',False) or
+                         incumbent['cost']<=2.*min(p['cost'] for p in valid)+.25)):
+                selected=saved['selected']
             if selected!=saved['selected']:switch_time=now
-        saved=dict(name=name,selected=selected,decision_time=now,switch_time=switch_time,
+        saved=dict(name=name,selected=selected,decision_time=now,switch_time=switch_time,local=preview_config.get('progress_local',False),
             decision_id=memory.get('progress_counter',0)+1)
         memory['progress_counter']=saved['decision_id'];memory['progress_state']=saved
         memory['progress_decision']=dict(saved,previous_decision=prior_decision,state=np.asarray(state).tolist(),goals=np.asarray(goals).tolist(),
             previous=previous.tolist(),bounds=list(bounds),selected_obstacle=index,
             config=dict({k:config[k] for k in ('dt','horizon','margin','gamma','omega_max','delta_limit','delta_v','delta_w')},
-                        progress_horizon=config.get('progress_horizon',4.),progress_wait_horizon=config.get('progress_wait_horizon',6.),
+                        progress_horizon=preview_config.get('progress_horizon',4.),progress_wait_horizon=config.get('progress_wait_horizon',6.),
+                        progress_local=preview_config.get('progress_local',False),
+                        progress_side_lock=config.get('execution_backup',False),
+                        progress_side_release=config.get('execution_backup',False),
                         progress_hypotheses=config.get('progress_hypotheses',True),progress_abstain=config.get('progress_abstain',True)),
             obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
                 gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
@@ -502,21 +538,27 @@ def progress_guidance(state,goals,obstacles,config,memory):
             previews={mode:{k:v for k,v in p.items() if k not in ('states','controls','vectors')} for mode,p in previews.items()},
             decision_ms=1000*(time.perf_counter()-begin))
     mode=saved['selected']
-    memory['progress_summary']=dict(mode=mode,decision_id=saved['decision_id'],obstacle=name)
+    memory['progress_summary']=dict(mode=mode,decision_id=saved['decision_id'],obstacle=name,
+        preview_scope='mpc_window' if saved.get('local',False) else 'long')
     if mode=='legacy':
         if config.get('progress_abstain',True):
             memory['progress_summary']['mode']='tracking_only'
             return np.zeros((config['horizon'],2)),0.
         return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
     preview=(previews[mode] if reevaluate else progress_preview(state,goals,obstacles,index,mode,
-        dict(config,progress_horizon=config['horizon']*config['dt']),previous,bounds))
+        dict(config,progress_horizon=config['horizon']*config['dt'],progress_local=saved.get('local',False)),previous,bounds))
     if not preview['feasible']:
         if config.get('progress_abstain',True):
             memory['progress_summary']['mode']='tracking_only_recheck'
             return np.zeros((config['horizon'],2)),0.
         memory['progress_summary']['mode']='legacy_recheck'
         return _legacy_continuous_guidance(state,goals,original_obstacles,config,memory)
-    return preview['vectors'][:config['horizon']],1.
+    n=config['horizon']
+    memory['progress_plan']=dict(controls=preview['controls'][:n].copy(),
+        states=preview['states'][:n+1].copy(),plan_controls=preview['vectors'][:n].copy(),mode=mode)
+    if config.get('execution_backup',False):
+        return preview['vectors'][:n],1.,preview['states'][1:n+1,2].copy()
+    return preview['vectors'][:n],1.
 
 
 def continuous_guidance(state,goals,obstacles,config,memory):
@@ -632,6 +674,10 @@ class CachedMPCProblem:
         objective += quad(r[-1, :]-goal[-1, :2], config['q_plan'])
         objective += quad(x[-1, :2]-r[-1, :], config['q_coupling'])
         op.minimize(objective)
+        self.cost_function=None
+        if config.get('execution_backup',False):
+            self.cost_function=ca.Function('cost_'+str(id(self)),
+                [x,u,r,q,goal,previous,has_previous,guide,self.guide_heading,guide_level],[objective])
         options={'ipopt.max_iter': config['max_iter'], 'ipopt.print_level': 0,
                   'ipopt.acceptable_tol': 1e-3, 'ipopt.acceptable_obj_change_tol': 1e-3,
                   'print_time': 0}
@@ -653,7 +699,7 @@ class CachedMPCProblem:
             self.deadline_callback=IterationDeadline('deadline_'+str(id(self)),op.nx,op.ng,op.np)
             options.update({'ipopt.max_wall_time':config.get('nlp_wall_time',.065),
                 'iteration_callback':self.deadline_callback,
-                'iteration_callback_step':3,
+                'iteration_callback_step':1 if config.get('execution_backup',False) else 3,
                 'ipopt.warm_start_init_point':'yes','ipopt.warm_start_bound_push':1e-6,
                 'ipopt.warm_start_mult_bound_push':1e-6,'ipopt.warm_start_slack_bound_push':1e-6})
         op.solver('ipopt', options)
@@ -670,11 +716,12 @@ class CachedMPCProblem:
         op.set_value(self.previous, np.zeros(2) if previous is None else previous)
         op.set_value(self.has_previous, float(previous is not None))
         op.set_value(self.v_bounds, bounds)
-        vectors, level = guidance if guidance is not None else (np.zeros((self.n, 2)), 0.)
+        vectors, level = guidance[:2] if guidance is not None else (np.zeros((self.n, 2)), 0.)
         op.set_value(self.guide, vectors)
         # atan2(0,0) is harmless as a numerical angle, but its symbolic parameter
         # derivative is undefined even when multiplied by an inactive weight.
-        op.set_value(self.guide_heading, np.arctan2(vectors[:, 1], vectors[:, 0]))
+        headings=guidance[2] if guidance is not None and len(guidance)>2 else np.arctan2(vectors[:, 1], vectors[:, 0])
+        op.set_value(self.guide_heading,headings)
         op.set_value(self.guide_level, level)
         if obstacles:
             op.set_value(self.barrier_gamma, np.array([o.get('gamma',cfg['gamma']) for o in obstacles]))
@@ -803,6 +850,46 @@ class MPCSolverManager:
         self.last_records = {}
         self.builds = 0
 
+    def _screen_backup(self,problem,state,goals,obstacles,bounds,previous,plan,guess,guidance,deadline):
+        """Prepare a checked FIRST command; repetition is not a full-window claim."""
+        cfg=self.config;n=cfg['horizon'];dt=cfg['dt']
+        choices=[guess[0],previous,np.zeros(2)]
+        v,w=np.meshgrid(np.linspace(*bounds,33),np.linspace(-cfg['omega_max'],cfg['omega_max'],33))
+        choices=np.vstack((choices,np.column_stack((v.ravel(),w.ravel()))))
+        if time.perf_counter()>=deadline:return None,0,0
+        valid,positions,angles=first_step_mask(state,choices,obstacles,bounds,previous,cfg)
+        errors_xy=positions-goals[1,:2]
+        heading=(angles-goals[1,2]+np.pi)%(2*np.pi)-np.pi
+        velocities=choices[:,0,None]*np.column_stack((np.cos(angles),np.sin(angles)))
+        guide_angle=(guidance[2][0] if len(guidance)>2 else np.arctan2(guidance[0][0,1],guidance[0][0,0]))
+        scores=(np.sum(errors_xy**2*np.asarray(cfg['q_state'][:2]),axis=1)+cfg['q_state'][2]*heading**2
+            +np.sum(choices**2*np.asarray(cfg['r_control']),axis=1)
+            +np.sum((choices-previous)**2*np.asarray(cfg['r_delta']),axis=1)
+            +guidance[1]*cfg.get('guide_velocity_weight',600.)*np.sum((velocities-guidance[0][0])**2,axis=1)
+            +guidance[1]*cfg.get('guide_heading_weight',2.)*(1-np.cos(angles-guide_angle)))
+        for index in np.argsort(np.where(valid,scores,np.inf)):
+            if not valid[index] or time.perf_counter()>=deadline:break
+            command=choices[index]
+            short=dict(controls=command[None,:],states=rollout(state,command[None,:],dt),plan_controls=np.zeros((1,2)))
+            if not problem.validate(short,state,obstacles,bounds,previous,one_step=True):continue
+            u=np.tile(command,(n,1))
+            return dict(controls=u,states=rollout(state,u,dt),plan_controls=plan.copy(),cost=float(scores[index]),
+                status='validated_one_step',seed='prepared_control',converged=False,
+                validated_steps=1,min_slack=short['min_slack'],min_h=short['min_h']),len(choices),int(valid.sum())
+        return None,len(choices),int(valid.sum())
+
+    def _full_backup(self,problem,state,goals,obstacles,bounds,previous,controls,plan,guidance,source):
+        """Use the original validator and symbolic MPC cost, not preview scores."""
+        candidate=dict(controls=np.array(controls,copy=True),plan_controls=np.array(plan,copy=True),
+            states=rollout(state,controls,self.config['dt']),status='validated_full_backup',
+            seed=source,converged=False,validated_steps=self.config['horizon'])
+        if not problem.validate(candidate,state,obstacles,bounds,previous):return None
+        vectors,level=guidance[:2]
+        headings=guidance[2] if len(guidance)>2 else np.arctan2(vectors[:,1],vectors[:,0])
+        r=np.vstack((state[:2],state[:2]+self.config['dt']*np.cumsum(plan,axis=0)))
+        candidate['cost']=float(problem.cost_function(candidate['states'],controls,r,plan,goals,previous,1.,vectors,headings,level))
+        return candidate if np.isfinite(candidate['cost']) else None
+
     def solve(self, state, goals, obstacles, bounds, last_solution, label,
               deadline=None, applied_previous=None, seed_shift=1, cycle_token=None):
         if self.config.get('realtime',False):
@@ -825,7 +912,6 @@ class MPCSolverManager:
         memory['positions'].append(state[:2].copy())
         memory['cooldown']=max(0,memory['cooldown']-1)
         if cfg.get('progress_guidance',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
-        guidance=continuous_guidance(state,goals,obstacles,cfg,memory)
         signature=tuple((o.get('name',str(i)),o.get('gamma',cfg['gamma'])) for i,o in enumerate(obstacles))
         usable=last is not None and np.shape(last.get('controls'))==(n,2)
         shift=min(n,max(1,int(shift)))
@@ -844,8 +930,27 @@ class MPCSolverManager:
         guess[:,1]=np.clip(guess[:,1],-cfg['omega_max'],cfg['omega_max'])
         plan=np.clip(plan,-cfg['plan_v_max'],cfg['plan_v_max'])
         seed='shifted' if usable else 'tracking';side=None
+        prepared=None;full_backup=None;prepare_ms=0.;checked=0;screen_valid=0
+        execution_backup=cfg.get('execution_backup',False)
+        if execution_backup:
+            prepare_begin=time.perf_counter()
+            # Do this before reference preview or NLP can spend the remaining budget.
+            prepared,checked,screen_valid=self._screen_backup(problem,state,goals,obstacles,bounds,
+                previous,plan,guess,(np.zeros((n,2)),0.),command_deadline)
+            prepare_ms=1000*(time.perf_counter()-prepare_begin)
+        guidance=continuous_guidance(state,goals,obstacles,cfg,memory)
+        if execution_backup and time.perf_counter()<deadline-.005:
+            prepare_begin=time.perf_counter()
+            proposals=[(seed,guess,plan)]
+            preview=memory.get('progress_plan')
+            if preview is not None:proposals.append(('progress_prefix',preview['controls'],preview['plan_controls']))
+            for source,u,q in proposals:
+                if time.perf_counter()>=deadline-.005:break
+                candidate=self._full_backup(problem,state,goals,obstacles,bounds,previous,u,q,guidance,source)
+                if candidate is not None and (full_backup is None or candidate['cost']<full_backup['cost']):full_backup=candidate
+            prepare_ms+=1000*(time.perf_counter()-prepare_begin)
         pending=memory.setdefault('pending_turns',[])
-        if self.recovery and pending:
+        if self.recovery and pending and full_backup is None:
             side=pending.pop(0);guess=np.tile([min(.12,bounds[1]),side*min(1.2,cfg['omega_max'])],(n,1))
             seed='turn_left' if side>0 else 'turn_right'
         dual=None
@@ -854,18 +959,26 @@ class MPCSolverManager:
                 and np.linalg.norm(state[:2]-last['states'][0,:2])<.25):
             dual=np.asarray(last['lam_g']).copy()
             for _ in range(shift):dual=dual[problem.dual_shift]
+        if full_backup is not None:
+            guess=full_backup['controls'].copy();plan=full_backup['plan_controls'].copy()
+            if full_backup['seed']!=seed:dual=None
+            seed=full_backup['seed']
         trace=[];best=None;errors=[]
         # Exactly one NLP per period. Alternative seeds are carried to later
         # periods rather than serially consuming this period's control budget.
-        if time.perf_counter()<deadline-cfg.get('fallback_reserve',.010)-.005:
+        reserve=max(cfg.get('fallback_reserve',.010),.020 if execution_backup else 0.)
+        if time.perf_counter()<deadline-reserve-.005:
             try:
                 best=problem.solve(state,goals,obstacles,bounds,previous,guess,plan,guidance,
-                    deadline=deadline-cfg.get('fallback_reserve',.010),dual_guess=dual)
+                    deadline=deadline-reserve,dual_guess=dual)
                 best['seed']=seed
             except RuntimeError as exc:errors.append(str(exc).splitlines()[-1])
             trace.append(dict(problem.last_attempt,seed=seed))
         else:errors.append('No remaining NLP budget')
+        if full_backup is not None and (best is None or full_backup['cost']<best['cost']):best=full_backup
+        if best is None and prepared is not None:best=prepared
         full_candidate=best is not None
+        if execution_backup:full_candidate=best is not None and best['validated_steps']==n
         converged=bool(full_candidate and best.get('converged',False))
         current_h=barrier_values(np.tile(state,(n+1,1)),obstacles,cfg['margin'])
         near=bool(current_h.size and current_h[:,0].min()<.08)
@@ -879,8 +992,8 @@ class MPCSolverManager:
             memory['cooldown']=max(1,int(1.5/dt))
         if best is not None and side is not None and not quiet:
             memory['preferred']=side;pending.clear()
-        fallback_begin=time.perf_counter();checked=0;screen_valid=0
-        if best is None:
+        fallback_begin=time.perf_counter()
+        if best is None and not execution_backup:
             choices=[guess[0],previous,np.zeros(2)]
             if trace and 'iterate_control' in trace[-1]:choices.insert(0,np.asarray(trace[-1]['iterate_control']))
             v,w=np.meshgrid(np.linspace(*bounds,33),np.linspace(-cfg['omega_max'],cfg['omega_max'],33))
@@ -910,7 +1023,8 @@ class MPCSolverManager:
                 break
         fallback_ms=1000*(time.perf_counter()-fallback_begin)
         result_status=('no_validated_control' if best is None else
-                       'converged' if converged else 'feasible_iterate' if full_candidate else 'validated_one_step')
+                       'converged' if converged else 'validated_full_backup' if best.get('status')=='validated_full_backup'
+                       else 'feasible_iterate' if full_candidate else 'validated_one_step')
         record=dict(cycle_token=token,attempts=len(trace),failed_attempts=sum(not t.get('feasible',False) for t in trace),
             success=converged,accepted_candidate=best is not None,status=result_status,
             recovery_triggered=bool(recovery or side is not None),recovery_improved=False,
@@ -921,6 +1035,11 @@ class MPCSolverManager:
             guide_obstacle=memory.get('guide_index'),errors=errors,attempt_trace=trace,
             fallback_ms=fallback_ms,fallback_checked=checked,fallback_screen_valid=screen_valid,dual_warm=dual is not None,
             budget_expired=time.perf_counter()>deadline,pending_turns=list(pending))
+        if execution_backup:
+            record.update(execution_backup=True,backup_prepare_ms=prepare_ms,
+                backup_prepared=prepared is not None,full_backup_prepared=full_backup is not None,
+                accepted_source=best.get('seed') if best is not None else None,
+                accepted_validated_steps=best.get('validated_steps',0) if best is not None else 0)
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         self.histories.setdefault(label,[]).append(record);self.last_records[label]=record

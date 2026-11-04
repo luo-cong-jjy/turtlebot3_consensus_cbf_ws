@@ -5,7 +5,7 @@ import sys
 import time
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
 import numpy as np
 
 PACKAGE=Path(__file__).resolve().parents[2]
@@ -21,6 +21,86 @@ def config(**extra):
 
 
 class RealtimeChecks(unittest.TestCase):
+    def test_prepared_backup_exists_before_nlp_and_survives_a_failed_attempt(self):
+        cfg=config(execution_backup=True);manager=MPCSolverManager(cfg)
+        problem=CachedMPCProblem(cfg,1,False)
+        state=np.zeros(3);goals=np.tile([.1,0.,0.],(4,1))
+        obstacle=dict(name='approaching',center=np.array([.35,0.]),a=.15,b=.15,theta=0.,
+            prediction_centers=np.column_stack((.35-.04*np.arange(4),np.zeros(4))))
+        zero=dict(controls=np.zeros((1,2)),states=np.zeros((2,3)),plan_controls=np.zeros((1,2)))
+        self.assertFalse(problem.validate(zero,state,[obstacle],(-.22,.22),np.zeros(2),one_step=True))
+        calls=[];validate=problem.validate
+        def checked(*args,**kwargs):
+            result=validate(*args,**kwargs)
+            if result:calls.append('validated')
+            return result
+        problem.validate=checked
+        def failure(*args,**kwargs):
+            self.assertIn('validated',calls)
+            calls.append('solve');raise RuntimeError('forced native failure')
+        problem.solve=Mock(side_effect=failure)
+        manager.problems[(1,False)]=problem
+        result=manager.solve(state,goals,[obstacle],(-.22,.22),None,'r')
+        self.assertEqual(problem.solve.call_count,1)
+        self.assertEqual(result['validated_steps'],1)
+        self.assertLess(result['controls'][0,0],0.)
+        self.assertFalse(result['success'])
+        record=manager.last_records['r']
+        self.assertTrue(record['backup_prepared'])
+        self.assertEqual(record['accepted_source'],'prepared_control')
+        self.assertTrue(validate(dict(controls=result['controls'][:1],states=result['states'][:2],
+            plan_controls=np.zeros((1,2))),state,[obstacle],(-.22,.22),np.zeros(2),one_step=True))
+
+    def test_full_backup_is_revalidated_after_obstacle_changes_and_has_exact_objective(self):
+        cfg=config(execution_backup=True);manager=MPCSolverManager(cfg)
+        problem=CachedMPCProblem(cfg,0,False);state=np.zeros(3)
+        goals=np.tile([.04,0.,0.],(4,1));u=np.tile([.1,.2],(3,1));q=np.tile([.08,.01],(3,1))
+        guidance=(np.tile([.1,0.],(3,1)),1.,np.array([.02,.04,.06]))
+        result=problem.solve(state,goals,[],(-.22,.22),np.zeros(2),u,q,guidance)
+        candidate=manager._full_backup(problem,state,goals,[],(-.22,.22),np.zeros(2),
+            result['controls'],result['plan_controls'],guidance,'shifted')
+        self.assertIsNotNone(candidate)
+        self.assertAlmostEqual(candidate['cost'],result['cost'],places=7)
+        blocked=dict(center=np.zeros(2),a=.15,b=.15,theta=0.)
+        self.assertIsNone(manager._full_backup(problem,state,goals,[blocked],(-.22,.22),np.zeros(2),
+            result['controls'],result['plan_controls'],guidance,'shifted'))
+
+    def test_feasible_preview_initializes_nlp_and_is_returned_on_failure(self):
+        cfg=config(execution_backup=True,progress_guidance=True);manager=MPCSolverManager(cfg)
+        problem=CachedMPCProblem(cfg,0,False);state=np.zeros(3)
+        u=np.tile([-.1,.2],(3,1));states=rollout(state,u,.1)
+        q=np.diff(states[:,:2],axis=0)/.1
+        def preview(state,goals,obs,cfg,memory):
+            memory['progress_plan']=dict(controls=u,plan_controls=q,states=states,mode='cw')
+            return q,1.,states[1:,2]
+        def failure(*args,**kwargs):
+            np.testing.assert_allclose(args[5],u)
+            np.testing.assert_allclose(args[6],q)
+            self.assertIsNone(kwargs['dual_guess'])
+            raise RuntimeError('forced native failure')
+        problem.solve=Mock(side_effect=failure);manager.problems[(0,False)]=problem
+        with patch('mpc_dcbf_cached_solver.continuous_guidance',side_effect=preview):
+            result=manager.solve(state,states,[],(-.22,.22),None,'r')
+        np.testing.assert_allclose(result['controls'],u)
+        self.assertEqual(result['validated_steps'],3)
+        self.assertFalse(result['success'])
+        self.assertEqual(manager.last_records['r']['status'],'validated_full_backup')
+
+    def test_execution_backup_expired_budget_does_not_validate_or_solve(self):
+        manager=MPCSolverManager(config(execution_backup=True))
+        problem=SimpleNamespace(opti=SimpleNamespace(ng=0),solve=Mock(),validate=Mock())
+        manager.problems[(0,False)]=problem
+        with self.assertRaises(RuntimeError):
+            manager.solve(np.zeros(3),np.zeros((4,3)),[],(-.22,.22),None,'r',deadline=time.perf_counter()-1.)
+        problem.solve.assert_not_called();problem.validate.assert_not_called()
+
+    def test_preview_body_heading_is_passed_separately_from_reverse_velocity(self):
+        problem=CachedMPCProblem(config(execution_backup=True),0,False)
+        state=np.zeros(3);u=np.tile([-.1,0.],(3,1));goals=rollout(state,u,.1)
+        guidance=(np.tile([-.1,0.],(3,1)),1.,np.zeros(3))
+        problem.solve(state,goals,[],(-.22,.22),np.zeros(2),u,guidance[0],guidance)
+        np.testing.assert_allclose(problem.opti.value(problem.guide_heading),0.)
+
     def test_iteration_deadline_stops_cleanly_and_candidate_is_revalidated(self):
         cfg=config();problem=CachedMPCProblem(cfg,0,False)
         state=np.zeros(3);goals=np.tile(state,(4,1))
