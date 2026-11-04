@@ -1,0 +1,3052 @@
+{
+  "stage": "Batched numerical geometry and budgeted references",
+  "parent_commit": "cef3a33c60ef3cff8c92e0800f3d493ad94e9681",
+  "tag": "experiment/bounded-preview-2026-11-04",
+  "unit_tests_passed": 107,
+  "default_prediction": "cv",
+  "default_execution_backup": false,
+  "default_infeasible_escape": false,
+  "final_solver_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+  "development_runs": 14,
+  "final_v3_runs": 6,
+  "final_v3_passed": 5,
+  "benchmark": {
+    "samples": [
+      {
+        "directory": "development_decelerating_crossing_211_r1_local_v3",
+        "decision": 1,
+        "obstacles": 1,
+        "mode": "ccw",
+        "old_ms": 2.8742310005327454,
+        "new_ms": 2.4272029995699995,
+        "max_difference": 0.0
+      },
+      {
+        "directory": "development_mixed_211_r5_local_v3",
+        "decision": 1,
+        "obstacles": 6,
+        "mode": "ccw",
+        "old_ms": 5.914714000027743,
+        "new_ms": 3.3353979997627903,
+        "max_difference": 0.0
+      },
+      {
+        "directory": "development_mixed_239_r5_local_v3",
+        "decision": 1,
+        "obstacles": 6,
+        "mode": "ccw",
+        "old_ms": 6.0292120006124605,
+        "new_ms": 3.3831769997050287,
+        "max_difference": 0.0
+      },
+      {
+        "directory": "development_overtaking_211_r1_local_v3",
+        "decision": 1,
+        "obstacles": 1,
+        "mode": "ccw",
+        "old_ms": 2.993527999933576,
+        "new_ms": 2.44020499940234,
+        "max_difference": 0.0
+      },
+      {
+        "directory": "development_stop_go_crossing_211_r1_local_v3",
+        "decision": 1,
+        "obstacles": 1,
+        "mode": "ccw",
+        "old_ms": 2.9209109998191707,
+        "new_ms": 2.4684310001248377,
+        "max_difference": 0.0
+      }
+    ],
+    "max_difference": 0.0,
+    "old_source_sha256": "4e88743230cac72290490e93a3193ae3fc3f739323077298660d9523dd35490f",
+    "new_source_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+    "note": "Same logged numerical inputs; 3 offline calls per implementation, medians. Not a closed-loop or multi-process timing comparison."
+  },
+  "runs": [
+    {
+      "directory": "development_decelerating_crossing_211_r1_escape_v2",
+      "version": "v2",
+      "role": "development",
+      "scenario": "decelerating_crossing",
+      "robots": 1,
+      "seed": 211,
+      "scenario_acceptance_passed": false,
+      "dynamic_proxy_clearance": 0.12440583843346653,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.4011977075324683,
+          "rows": 320,
+          "last_time": 31.995999999999995,
+          "statuses": {
+            "ok": 306,
+            "feasible_iterate": 14
+          },
+          "timing_p95_ms": 80.31480124996051,
+          "timing_max_ms": 99.79581300012796,
+          "final_error": 0.4011977075324683,
+          "dynamic_cycles": 142,
+          "max_estimated_speed": 0.21000692517185346
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_0_solver_trace": {
+          "rows": 320,
+          "missing_manager_records": 0,
+          "preview_samples": 320,
+          "preview_ms_p95": 18.843267050306178,
+          "preview_ms_max": 25.174719999995432,
+          "fully_aborted_previews": 7,
+          "partial_decisions": 0,
+          "decisions": 36,
+          "manager_statuses": {
+            "converged": 306,
+            "feasible_iterate": 12,
+            "validated_full_backup": 2
+          },
+          "command_wall_ms_max": 99.4848810005351,
+          "cycle_end_ms_max": 116.17313800070406,
+          "applied_escape_cycles": 0
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 320,
+              "prior_plan_samples_audited": 272,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 319
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.016580123151526526,
+              "max_plan_execution_error": 0.0395091342502272,
+              "max_nominal_error_during_plan_samples": 1.308866339376625
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+          "decisions": 36,
+          "winner_checks": 36,
+          "previews_reconstructed": 144,
+          "selected_valid": 32,
+          "no_valid_previews": 4,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 4,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 0.0,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 0,
+          "explicit_nonfeasible_cycles_verified": 0,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_decelerating_crossing_211_r1_local_v3",
+      "version": "v3",
+      "role": "development",
+      "scenario": "decelerating_crossing",
+      "robots": 1,
+      "seed": 211,
+      "scenario_acceptance_passed": false,
+      "dynamic_proxy_clearance": 0.14494314790576507,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.3163217206296024,
+          "rows": 320,
+          "last_time": 31.997,
+          "statuses": {
+            "late_fallback_stop": 4,
+            "feasible_iterate": 18,
+            "ok": 298
+          },
+          "timing_p95_ms": 83.2061063999845,
+          "timing_max_ms": 114.50295700069546,
+          "final_error": 0.3163217206296024,
+          "dynamic_cycles": 119,
+          "max_estimated_speed": 0.22767341575248548
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_0_solver_trace": {
+          "rows": 320,
+          "missing_manager_records": 0,
+          "preview_samples": 320,
+          "preview_ms_p95": 19.705088450382394,
+          "preview_ms_max": 40.14339500008646,
+          "fully_aborted_previews": 3,
+          "partial_decisions": 6,
+          "decisions": 36,
+          "manager_statuses": {
+            "converged": 298,
+            "feasible_iterate": 17,
+            "validated_full_backup": 5
+          },
+          "command_wall_ms_max": 114.25029000020004,
+          "cycle_end_ms_max": 122.73632399956114,
+          "applied_escape_cycles": 0
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 320,
+              "prior_plan_samples_audited": 306,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 319
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.016799755226420895,
+              "max_plan_execution_error": 0.043645070288731325,
+              "max_nominal_error_during_plan_samples": 1.2291482158653892
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+          "decisions": 36,
+          "winner_checks": 36,
+          "previews_reconstructed": 66,
+          "selected_valid": 36,
+          "no_valid_previews": 0,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 0,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.982488613502483e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 0,
+          "explicit_nonfeasible_cycles_verified": 0,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_decelerating_crossing_211_r1_v1",
+      "version": "v1",
+      "role": "development",
+      "scenario": "decelerating_crossing",
+      "robots": 1,
+      "seed": 211,
+      "scenario_acceptance_passed": false,
+      "dynamic_proxy_clearance": 0.12930106044572354,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.33453719184534325,
+          "rows": 321,
+          "last_time": 32.038999999999994,
+          "statuses": {
+            "feasible_iterate": 11,
+            "ok": 310
+          },
+          "timing_p95_ms": 77.24471399978938,
+          "timing_max_ms": 90.83554500011815,
+          "final_error": 0.3274512940110898,
+          "dynamic_cycles": 140,
+          "max_estimated_speed": 0.2065513869420255
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "6d063ee200aaea839e9338d53f8c401511ac9f55ec779b8b913b6259022b8f12",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "b32252f2394b07f52ab9430c962503a809a1755a1280f9ad428f2008230f04b4",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "277198db82b62c10aa66569be63b8ace01aa008156664ac3a34166d3f4498765",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "049c53768a8c13767719121b01740ef359db3911a6c6d6de8bbe5640bfce6956",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "a93a5ee1e3570c02ba523666ee3aaa7d3aefe1d0afb903cdfdcc2b27e7c16c49",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "0cc05aa7689a296af6740d66f46da8b3b258668ca2233d64d48f9100113dbb64",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "ef0715abe8433ab8fc08e45fcd85a89f4b0dbd72c9fdbb0c208318e442de436b"
+      },
+      "execution": {
+        "tb3_0_solver_trace": {
+          "rows": 321,
+          "missing_manager_records": 0,
+          "preview_samples": 321,
+          "preview_ms_p95": 17.76606899966282,
+          "preview_ms_max": 25.385591000485874,
+          "fully_aborted_previews": 6,
+          "partial_decisions": 0,
+          "decisions": 35,
+          "manager_statuses": {
+            "converged": 310,
+            "feasible_iterate": 10,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 90.65271799954644,
+          "cycle_end_ms_max": 91.32447199954186,
+          "applied_escape_cycles": 0
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 321,
+              "prior_plan_samples_audited": 295,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 319
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.01840300192879111,
+              "max_plan_execution_error": 0.04645559009102791,
+              "max_nominal_error_during_plan_samples": 1.16907141796638
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "277198db82b62c10aa66569be63b8ace01aa008156664ac3a34166d3f4498765",
+          "decisions": 35,
+          "winner_checks": 35,
+          "previews_reconstructed": 140,
+          "selected_valid": 32,
+          "no_valid_previews": 3,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 3,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.94597826320387e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 0,
+          "explicit_nonfeasible_cycles_verified": 0,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_mixed_211_r5_escape_v2",
+      "version": "v2",
+      "role": "development",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 211,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.08753269615378445,
+      "peer_proxy_clearance": 0.032171118292992185,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.000887730693821436,
+          "rows": 402,
+          "last_time": 40.147999999999996,
+          "statuses": {
+            "validated_one_step": 8,
+            "feasible_iterate": 28,
+            "late_fallback_stop": 4,
+            "ok": 351,
+            "best_effort_escape": 11
+          },
+          "timing_p95_ms": 84.13688609985002,
+          "timing_max_ms": 132.18007300019963,
+          "final_error": 0.0007360065486863269,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.5569070627548238
+        },
+        "1": {
+          "window_final_error": 0.00295522123354382,
+          "rows": 402,
+          "last_time": 40.167,
+          "statuses": {
+            "validated_one_step": 1,
+            "feasible_iterate": 25,
+            "late_fallback_stop": 2,
+            "ok": 357,
+            "best_effort_escape": 17
+          },
+          "timing_p95_ms": 83.47061334980025,
+          "timing_max_ms": 125.0894929999049,
+          "final_error": 0.0035440610015146793,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.20130379229958062
+        },
+        "2": {
+          "window_final_error": 0.0034585442463921268,
+          "rows": 401,
+          "last_time": 40.093,
+          "statuses": {
+            "validated_one_step": 5,
+            "feasible_iterate": 23,
+            "late_fallback_stop": 2,
+            "ok": 367,
+            "best_effort_escape": 4
+          },
+          "timing_p95_ms": 81.64297099938267,
+          "timing_max_ms": 127.67925300067873,
+          "final_error": 0.0035999391595631256,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.18167920314343547
+        },
+        "3": {
+          "window_final_error": 0.000838148388797082,
+          "rows": 401,
+          "last_time": 40.111999999999995,
+          "statuses": {
+            "ok": 379,
+            "feasible_iterate": 22
+          },
+          "timing_p95_ms": 78.55275200017786,
+          "timing_max_ms": 92.80245599984482,
+          "final_error": 0.0009747215673643246,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.37362201776695625
+        },
+        "4": {
+          "window_final_error": 0.0021877203997587684,
+          "rows": 402,
+          "last_time": 40.131,
+          "statuses": {
+            "ok": 384,
+            "feasible_iterate": 18
+          },
+          "timing_p95_ms": 76.46263380015625,
+          "timing_max_ms": 94.85149899956014,
+          "final_error": 0.002000378701603694,
+          "dynamic_cycles": 391,
+          "max_estimated_speed": 0.19822053474655502
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_2_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 25.356395000017073,
+          "preview_ms_max": 26.37581799990585,
+          "fully_aborted_previews": 74,
+          "partial_decisions": 0,
+          "decisions": 24,
+          "manager_statuses": {
+            "converged": 367,
+            "feasible_iterate": 23,
+            "validated_one_step": 5,
+            "best_effort_escape": 6
+          },
+          "command_wall_ms_max": 127.13086500025383,
+          "cycle_end_ms_max": 131.2851150005372,
+          "applied_escape_cycles": 4
+        },
+        "tb3_3_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 25.165600999571325,
+          "preview_ms_max": 25.72864300054789,
+          "fully_aborted_previews": 33,
+          "partial_decisions": 0,
+          "decisions": 26,
+          "manager_statuses": {
+            "converged": 379,
+            "feasible_iterate": 21,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 91.85322399935103,
+          "cycle_end_ms_max": 100.11228099938307,
+          "applied_escape_cycles": 0
+        },
+        "tb3_4_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.20966690012756,
+          "preview_ms_max": 26.073127999552526,
+          "fully_aborted_previews": 37,
+          "partial_decisions": 0,
+          "decisions": 25,
+          "manager_statuses": {
+            "feasible_iterate": 17,
+            "converged": 384,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 94.59015799984627,
+          "cycle_end_ms_max": 99.69721600009507,
+          "applied_escape_cycles": 0
+        },
+        "tb3_1_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.43767160027528,
+          "preview_ms_max": 27.75318200019683,
+          "fully_aborted_previews": 50,
+          "partial_decisions": 0,
+          "decisions": 40,
+          "manager_statuses": {
+            "converged": 357,
+            "feasible_iterate": 25,
+            "validated_one_step": 2,
+            "best_effort_escape": 18
+          },
+          "command_wall_ms_max": 122.18145800034108,
+          "cycle_end_ms_max": 125.43633299992507,
+          "applied_escape_cycles": 17
+        },
+        "tb3_0_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.338578700120706,
+          "preview_ms_max": 26.660268000341603,
+          "fully_aborted_previews": 62,
+          "partial_decisions": 0,
+          "decisions": 29,
+          "manager_statuses": {
+            "feasible_iterate": 29,
+            "converged": 351,
+            "validated_one_step": 9,
+            "best_effort_escape": 13
+          },
+          "command_wall_ms_max": 130.34780799989676,
+          "cycle_end_ms_max": 132.97013500050525,
+          "applied_escape_cycles": 11
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 402,
+              "prior_plan_samples_audited": 376,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.3516313314998691e-11,
+              "max_heading_analytic_residual": 2.3007984406575588e-09,
+              "mean_plan_execution_error": 0.0070690682189502255,
+              "max_plan_execution_error": 0.04992516957121572,
+              "max_nominal_error_during_plan_samples": 0.41569789441656657
+            },
+            "1": {
+              "rows": 402,
+              "prior_plan_samples_audited": 359,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.3632322679327248e-11,
+              "max_heading_analytic_residual": 1.9741781542848003e-09,
+              "mean_plan_execution_error": 0.006268247727080448,
+              "max_plan_execution_error": 0.03128461516612951,
+              "max_nominal_error_during_plan_samples": 0.4520106741551244
+            },
+            "2": {
+              "rows": 401,
+              "prior_plan_samples_audited": 354,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.0981001327270891e-11,
+              "max_heading_analytic_residual": 5.54485946047123e-09,
+              "mean_plan_execution_error": 0.010962039837678671,
+              "max_plan_execution_error": 0.04198964664146798,
+              "max_nominal_error_during_plan_samples": 0.5351590812153088
+            },
+            "3": {
+              "rows": 401,
+              "prior_plan_samples_audited": 399,
+              "reference_quality_counts": {
+                "1": 400,
+                "2": 1
+              },
+              "max_nominal_analytic_residual": 3.69470976078353e-12,
+              "max_heading_analytic_residual": 6.378676253859794e-09,
+              "mean_plan_execution_error": 0.007937870653091423,
+              "max_plan_execution_error": 0.04612831844401897,
+              "max_nominal_error_during_plan_samples": 0.5070550990063576
+            },
+            "4": {
+              "rows": 402,
+              "prior_plan_samples_audited": 388,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.280446584256175e-11,
+              "max_heading_analytic_residual": 6.573805499954233e-09,
+              "mean_plan_execution_error": 0.006628591486898462,
+              "max_plan_execution_error": 0.03309698344730029,
+              "max_nominal_error_during_plan_samples": 0.5460403177463022
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+          "decisions": 29,
+          "winner_checks": 29,
+          "previews_reconstructed": 116,
+          "selected_valid": 25,
+          "no_valid_previews": 4,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 4,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.928413063908792e-09,
+          "normalized_null_motion_fields": 116,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 32,
+          "explicit_nonfeasible_cycles_verified": 32,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_mixed_211_r5_local_v3",
+      "version": "v3",
+      "role": "development",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 211,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.16732357640164242,
+      "peer_proxy_clearance": 0.10056778217727053,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.004553513094478254,
+          "rows": 400,
+          "last_time": 40.008,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "feasible_iterate": 8,
+            "ok": 390,
+            "best_effort_escape": 1
+          },
+          "timing_p95_ms": 66.13091480007822,
+          "timing_max_ms": 110.38871800064953,
+          "final_error": 0.004553513094478254,
+          "dynamic_cycles": 395,
+          "max_estimated_speed": 0.19765146329342495
+        },
+        "1": {
+          "window_final_error": 0.0024816834317073085,
+          "rows": 401,
+          "last_time": 40.031,
+          "statuses": {
+            "validated_one_step": 1,
+            "feasible_iterate": 2,
+            "ok": 397,
+            "solver_failed_stop": 1
+          },
+          "timing_p95_ms": 60.6811050001852,
+          "timing_max_ms": 119.41431099967303,
+          "final_error": 0.0026994698077088216,
+          "dynamic_cycles": 395,
+          "max_estimated_speed": 0.20258814808748757
+        },
+        "2": {
+          "window_final_error": 0.0009330990547084465,
+          "rows": 401,
+          "last_time": 40.052,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "validated_one_step": 2,
+            "feasible_iterate": 4,
+            "ok": 394
+          },
+          "timing_p95_ms": 70.93899400024384,
+          "timing_max_ms": 112.24176999985502,
+          "final_error": 0.000856470740375172,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.8440155500813986
+        },
+        "3": {
+          "window_final_error": 0.003422611452588051,
+          "rows": 400,
+          "last_time": 39.972,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "feasible_iterate": 4,
+            "ok": 395
+          },
+          "timing_p95_ms": 65.6130034493344,
+          "timing_max_ms": 127.45762899976398,
+          "final_error": 0.003422611452588051,
+          "dynamic_cycles": 395,
+          "max_estimated_speed": 0.20904019220442605
+        },
+        "4": {
+          "window_final_error": 0.0008264809701774528,
+          "rows": 400,
+          "last_time": 39.986,
+          "statuses": {
+            "ok": 392,
+            "validated_one_step": 1,
+            "feasible_iterate": 7
+          },
+          "timing_p95_ms": 61.34177060016549,
+          "timing_max_ms": 98.26259300007223,
+          "final_error": 0.0008264809701774528,
+          "dynamic_cycles": 391,
+          "max_estimated_speed": 0.20395583959604965
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_2_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 10.420276000331796,
+          "preview_ms_max": 31.366309000077308,
+          "fully_aborted_previews": 3,
+          "partial_decisions": 0,
+          "decisions": 37,
+          "manager_statuses": {
+            "converged": 394,
+            "feasible_iterate": 4,
+            "validated_full_backup": 1,
+            "validated_one_step": 2
+          },
+          "command_wall_ms_max": 111.58466399956524,
+          "cycle_end_ms_max": 113.01603999982035,
+          "applied_escape_cycles": 0
+        },
+        "tb3_3_solver_trace": {
+          "rows": 400,
+          "missing_manager_records": 0,
+          "preview_samples": 400,
+          "preview_ms_p95": 11.750942500839301,
+          "preview_ms_max": 36.64534900053695,
+          "fully_aborted_previews": 2,
+          "partial_decisions": 0,
+          "decisions": 37,
+          "manager_statuses": {
+            "converged": 395,
+            "validated_full_backup": 3,
+            "feasible_iterate": 2
+          },
+          "command_wall_ms_max": 117.66925099982473,
+          "cycle_end_ms_max": 128.94102999962342,
+          "applied_escape_cycles": 0
+        },
+        "tb3_4_solver_trace": {
+          "rows": 400,
+          "missing_manager_records": 0,
+          "preview_samples": 400,
+          "preview_ms_p95": 11.671265550512542,
+          "preview_ms_max": 26.60795500014501,
+          "fully_aborted_previews": 2,
+          "partial_decisions": 1,
+          "decisions": 32,
+          "manager_statuses": {
+            "feasible_iterate": 4,
+            "converged": 392,
+            "validated_full_backup": 3,
+            "validated_one_step": 1
+          },
+          "command_wall_ms_max": 97.81699299946922,
+          "cycle_end_ms_max": 109.10487199998897,
+          "applied_escape_cycles": 0
+        },
+        "tb3_1_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 11.878365000484337,
+          "preview_ms_max": 18.440218000250752,
+          "fully_aborted_previews": 2,
+          "partial_decisions": 0,
+          "decisions": 50,
+          "manager_statuses": {
+            "converged": 397,
+            "feasible_iterate": 1,
+            "no_validated_control": 1,
+            "validated_one_step": 1,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 113.90707999998995,
+          "cycle_end_ms_max": 120.148154999697,
+          "applied_escape_cycles": 0
+        },
+        "tb3_0_solver_trace": {
+          "rows": 400,
+          "missing_manager_records": 0,
+          "preview_samples": 400,
+          "preview_ms_p95": 10.984487399582571,
+          "preview_ms_max": 17.17542599999433,
+          "fully_aborted_previews": 2,
+          "partial_decisions": 0,
+          "decisions": 39,
+          "manager_statuses": {
+            "converged": 390,
+            "feasible_iterate": 6,
+            "best_effort_escape": 1,
+            "validated_full_backup": 3
+          },
+          "command_wall_ms_max": 110.23559800014482,
+          "cycle_end_ms_max": 112.06357500032027,
+          "applied_escape_cycles": 1
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 383,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 7.799039084567759e-12,
+              "max_heading_analytic_residual": 7.093348797226895e-09,
+              "mean_plan_execution_error": 0.006843276822352574,
+              "max_plan_execution_error": 0.04224292072546746,
+              "max_nominal_error_during_plan_samples": 0.40104263140321655
+            },
+            "1": {
+              "rows": 401,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.1279263849792952e-11,
+              "max_heading_analytic_residual": 6.120842721557551e-09,
+              "mean_plan_execution_error": 0.0044693163119317305,
+              "max_plan_execution_error": 0.03128462373043636,
+              "max_nominal_error_during_plan_samples": 0.4488361861910922
+            },
+            "2": {
+              "rows": 401,
+              "prior_plan_samples_audited": 397,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.4208342086123184e-11,
+              "max_heading_analytic_residual": 1.7887871184285586e-09,
+              "mean_plan_execution_error": 0.01397734445959565,
+              "max_plan_execution_error": 0.04664442739040583,
+              "max_nominal_error_during_plan_samples": 0.5444273121124648
+            },
+            "3": {
+              "rows": 400,
+              "prior_plan_samples_audited": 392,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.4275719410773517e-11,
+              "max_heading_analytic_residual": 1.628633894412701e-09,
+              "mean_plan_execution_error": 0.011260286108811341,
+              "max_plan_execution_error": 0.04613954463105899,
+              "max_nominal_error_during_plan_samples": 0.49087863899774065
+            },
+            "4": {
+              "rows": 400,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 6.082125359012427e-12,
+              "max_heading_analytic_residual": 7.207628049954451e-09,
+              "mean_plan_execution_error": 0.008876593859778239,
+              "max_plan_execution_error": 0.037194986730308355,
+              "max_nominal_error_during_plan_samples": 0.4058766902724141
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+          "decisions": 39,
+          "winner_checks": 39,
+          "previews_reconstructed": 78,
+          "selected_valid": 34,
+          "no_valid_previews": 5,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 5,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.940728962209988e-09,
+          "normalized_null_motion_fields": 156,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 1,
+          "explicit_nonfeasible_cycles_verified": 1,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_mixed_211_r5_v1",
+      "version": "v1",
+      "role": "development",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 211,
+      "scenario_acceptance_passed": false,
+      "dynamic_proxy_clearance": -0.030902201902995197,
+      "peer_proxy_clearance": 0.1005614225175212,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0045618998394070355,
+          "rows": 402,
+          "last_time": 40.10999999999999,
+          "statuses": {
+            "solver_failed_stop": 31,
+            "feasible_iterate": 5,
+            "ok": 366
+          },
+          "timing_p95_ms": 87.12537314981999,
+          "timing_max_ms": 108.40726100013853,
+          "final_error": 0.004931342377740533,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.3861692510833681
+        },
+        "1": {
+          "window_final_error": 0.0031097764731503807,
+          "rows": 402,
+          "last_time": 40.132,
+          "statuses": {
+            "feasible_iterate": 5,
+            "ok": 397
+          },
+          "timing_p95_ms": 62.83036604959306,
+          "timing_max_ms": 101.42974500013224,
+          "final_error": 0.0029905401692751584,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.20562281851985878
+        },
+        "2": {
+          "window_final_error": 0.002975086691858715,
+          "rows": 402,
+          "last_time": 40.156,
+          "statuses": {
+            "validated_one_step": 1,
+            "feasible_iterate": 22,
+            "ok": 379
+          },
+          "timing_p95_ms": 75.80600784990565,
+          "timing_max_ms": 93.79136099960306,
+          "final_error": 0.0018176086775878353,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.26878422867674984
+        },
+        "3": {
+          "window_final_error": 0.005616106953691189,
+          "rows": 401,
+          "last_time": 40.07399999999999,
+          "statuses": {
+            "feasible_iterate": 4,
+            "ok": 397
+          },
+          "timing_p95_ms": 61.664191000090796,
+          "timing_max_ms": 91.56001599967567,
+          "final_error": 0.004106066188135392,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.23200692092635472
+        },
+        "4": {
+          "window_final_error": 0.0026276760856867175,
+          "rows": 401,
+          "last_time": 40.09799999999999,
+          "statuses": {
+            "late_solution_stop": 1,
+            "feasible_iterate": 4,
+            "late_fallback_stop": 1,
+            "ok": 395
+          },
+          "timing_p95_ms": 64.90295399999013,
+          "timing_max_ms": 104.05570999955671,
+          "final_error": 0.0028153458072211735,
+          "dynamic_cycles": 391,
+          "max_estimated_speed": 0.19858629240585
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "6d063ee200aaea839e9338d53f8c401511ac9f55ec779b8b913b6259022b8f12",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "b32252f2394b07f52ab9430c962503a809a1755a1280f9ad428f2008230f04b4",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "277198db82b62c10aa66569be63b8ace01aa008156664ac3a34166d3f4498765",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "049c53768a8c13767719121b01740ef359db3911a6c6d6de8bbe5640bfce6956",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "a93a5ee1e3570c02ba523666ee3aaa7d3aefe1d0afb903cdfdcc2b27e7c16c49",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "0cc05aa7689a296af6740d66f46da8b3b258668ca2233d64d48f9100113dbb64",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "ef0715abe8433ab8fc08e45fcd85a89f4b0dbd72c9fdbb0c208318e442de436b"
+      },
+      "execution": {
+        "tb3_2_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.252937799587016,
+          "preview_ms_max": 26.523766999162035,
+          "fully_aborted_previews": 33,
+          "partial_decisions": 0,
+          "decisions": 32,
+          "manager_statuses": {
+            "converged": 379,
+            "feasible_iterate": 20,
+            "validated_full_backup": 2,
+            "validated_one_step": 1
+          },
+          "command_wall_ms_max": 92.43585299918777,
+          "cycle_end_ms_max": 94.73950999927183,
+          "applied_escape_cycles": 0
+        },
+        "tb3_3_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 16.114727999593015,
+          "preview_ms_max": 25.544424000145227,
+          "fully_aborted_previews": 3,
+          "partial_decisions": 0,
+          "decisions": 35,
+          "manager_statuses": {
+            "converged": 397,
+            "feasible_iterate": 4
+          },
+          "command_wall_ms_max": 90.92765799960034,
+          "cycle_end_ms_max": 99.34462299952429,
+          "applied_escape_cycles": 0
+        },
+        "tb3_4_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 19.723434000297857,
+          "preview_ms_max": 25.874028000544058,
+          "fully_aborted_previews": 11,
+          "partial_decisions": 0,
+          "decisions": 30,
+          "manager_statuses": {
+            "feasible_iterate": 4,
+            "converged": 396,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 102.8672149996055,
+          "cycle_end_ms_max": 118.9175499994235,
+          "applied_escape_cycles": 0
+        },
+        "tb3_1_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 24.82082314973013,
+          "preview_ms_max": 26.126228000066476,
+          "fully_aborted_previews": 19,
+          "partial_decisions": 0,
+          "decisions": 45,
+          "manager_statuses": {
+            "converged": 397,
+            "feasible_iterate": 3,
+            "validated_full_backup": 2
+          },
+          "command_wall_ms_max": 98.71292499974516,
+          "cycle_end_ms_max": 102.1383600000263,
+          "applied_escape_cycles": 0
+        },
+        "tb3_0_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 24.9158445498324,
+          "preview_ms_max": 26.53861299950222,
+          "fully_aborted_previews": 20,
+          "partial_decisions": 0,
+          "decisions": 38,
+          "manager_statuses": {
+            "converged": 366,
+            "feasible_iterate": 4,
+            "no_validated_control": 31,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 107.15738999988389,
+          "cycle_end_ms_max": 110.63988000023528,
+          "applied_escape_cycles": 0
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 402,
+              "prior_plan_samples_audited": 352,
+              "reference_quality_counts": {
+                "0": 1,
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.394735986188376e-12,
+              "max_heading_analytic_residual": 6.999010482289236e-09,
+              "mean_plan_execution_error": 0.004664934968444504,
+              "max_plan_execution_error": 0.028541446640161852,
+              "max_nominal_error_during_plan_samples": 0.3842755441390258
+            },
+            "1": {
+              "rows": 402,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 2.9989418323070898e-12,
+              "max_heading_analytic_residual": 6.061779300736703e-09,
+              "mean_plan_execution_error": 0.004135294132331636,
+              "max_plan_execution_error": 0.03071033532377437,
+              "max_nominal_error_during_plan_samples": 0.45556116915463213
+            },
+            "2": {
+              "rows": 402,
+              "prior_plan_samples_audited": 399,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.526814305751124e-11,
+              "max_heading_analytic_residual": 3.0685674001773577e-09,
+              "mean_plan_execution_error": 0.014153817511069184,
+              "max_plan_execution_error": 0.04796471377614566,
+              "max_nominal_error_during_plan_samples": 0.5905709565365537
+            },
+            "3": {
+              "rows": 401,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.4648007494044412e-11,
+              "max_heading_analytic_residual": 7.116343958557536e-09,
+              "mean_plan_execution_error": 0.008572269563727765,
+              "max_plan_execution_error": 0.045841125241234605,
+              "max_nominal_error_during_plan_samples": 0.49087534845687225
+            },
+            "4": {
+              "rows": 401,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.394735986188376e-12,
+              "max_heading_analytic_residual": 6.999010482289236e-09,
+              "mean_plan_execution_error": 0.009015981012213046,
+              "max_plan_execution_error": 0.0396848213087521,
+              "max_nominal_error_during_plan_samples": 0.4902270197008058
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "277198db82b62c10aa66569be63b8ace01aa008156664ac3a34166d3f4498765",
+          "decisions": 38,
+          "winner_checks": 38,
+          "previews_reconstructed": 152,
+          "selected_valid": 29,
+          "no_valid_previews": 9,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 9,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.921112265054433e-09,
+          "normalized_null_motion_fields": 152,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 0,
+          "explicit_nonfeasible_cycles_verified": 0,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_mixed_239_r5_local_v3",
+      "version": "v3",
+      "role": "development",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 239,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.11951696293151626,
+      "peer_proxy_clearance": 0.06217416471308557,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0007172802287395537,
+          "rows": 401,
+          "last_time": 40.075,
+          "statuses": {
+            "best_effort_escape": 11,
+            "late_fallback_stop": 3,
+            "feasible_iterate": 8,
+            "ok": 372,
+            "validated_one_step": 7
+          },
+          "timing_p95_ms": 82.11299699996744,
+          "timing_max_ms": 125.66835599955084,
+          "final_error": 0.0029615376944987838,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.831026329722849
+        },
+        "1": {
+          "window_final_error": 0.002752956184701276,
+          "rows": 401,
+          "last_time": 40.096000000000004,
+          "statuses": {
+            "validated_one_step": 1,
+            "late_fallback_stop": 2,
+            "feasible_iterate": 4,
+            "ok": 394
+          },
+          "timing_p95_ms": 64.97742699957598,
+          "timing_max_ms": 119.93565900047543,
+          "final_error": 0.003098860809219776,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.20014052295099466
+        },
+        "2": {
+          "window_final_error": 0.0019304893772762533,
+          "rows": 402,
+          "last_time": 40.122,
+          "statuses": {
+            "late_fallback_stop": 3,
+            "feasible_iterate": 7,
+            "ok": 392
+          },
+          "timing_p95_ms": 67.78636169947276,
+          "timing_max_ms": 133.30627200048184,
+          "final_error": 0.0021591026607526024,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.22568579769502295
+        },
+        "3": {
+          "window_final_error": 0.003236001500178702,
+          "rows": 402,
+          "last_time": 40.137,
+          "statuses": {
+            "solver_failed_stop": 1,
+            "late_fallback_stop": 1,
+            "feasible_iterate": 4,
+            "ok": 396
+          },
+          "timing_p95_ms": 58.61911314996178,
+          "timing_max_ms": 119.10286100010126,
+          "final_error": 0.003796538136847575,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 1.0926375643774227
+        },
+        "4": {
+          "window_final_error": 0.0019565519949396185,
+          "rows": 402,
+          "last_time": 40.16300000000001,
+          "statuses": {
+            "ok": 393,
+            "late_solution_stop": 1,
+            "feasible_iterate": 8
+          },
+          "timing_p95_ms": 69.95712369998728,
+          "timing_max_ms": 104.15047199967375,
+          "final_error": 0.0019646923056641,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.21576042094379724
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_2_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 10.111136600062308,
+          "preview_ms_max": 14.312434000203211,
+          "fully_aborted_previews": 1,
+          "partial_decisions": 0,
+          "decisions": 39,
+          "manager_statuses": {
+            "converged": 392,
+            "feasible_iterate": 9,
+            "validated_one_step": 1
+          },
+          "command_wall_ms_max": 117.4293439999019,
+          "cycle_end_ms_max": 136.6736600002696,
+          "applied_escape_cycles": 0
+        },
+        "tb3_3_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 10.018314500484848,
+          "preview_ms_max": 15.36294099969382,
+          "fully_aborted_previews": 0,
+          "partial_decisions": 0,
+          "decisions": 32,
+          "manager_statuses": {
+            "converged": 396,
+            "feasible_iterate": 5,
+            "no_validated_control": 1
+          },
+          "command_wall_ms_max": 115.27330299941241,
+          "cycle_end_ms_max": 119.58373099969322,
+          "applied_escape_cycles": 0
+        },
+        "tb3_4_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 11.079123299487037,
+          "preview_ms_max": 16.364240999791946,
+          "fully_aborted_previews": 0,
+          "partial_decisions": 0,
+          "decisions": 32,
+          "manager_statuses": {
+            "feasible_iterate": 7,
+            "converged": 394,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 103.20761799994216,
+          "cycle_end_ms_max": 105.56712099969445,
+          "applied_escape_cycles": 0
+        },
+        "tb3_1_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 12.066358999618387,
+          "preview_ms_max": 27.610289999756787,
+          "fully_aborted_previews": 2,
+          "partial_decisions": 1,
+          "decisions": 47,
+          "manager_statuses": {
+            "converged": 394,
+            "feasible_iterate": 5,
+            "validated_full_backup": 1,
+            "validated_one_step": 1
+          },
+          "command_wall_ms_max": 119.71600000015314,
+          "cycle_end_ms_max": 123.01844800003892,
+          "applied_escape_cycles": 0
+        },
+        "tb3_0_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 9.606600000552135,
+          "preview_ms_max": 15.931877000184613,
+          "fully_aborted_previews": 0,
+          "partial_decisions": 0,
+          "decisions": 41,
+          "manager_statuses": {
+            "converged": 372,
+            "feasible_iterate": 9,
+            "best_effort_escape": 11,
+            "validated_one_step": 7,
+            "validated_full_backup": 2
+          },
+          "command_wall_ms_max": 121.78318299993407,
+          "cycle_end_ms_max": 132.97947400042176,
+          "applied_escape_cycles": 11
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 358,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.2791394769027163e-11,
+              "max_heading_analytic_residual": 5.871660935241607e-09,
+              "mean_plan_execution_error": 0.008247744575587204,
+              "max_plan_execution_error": 0.04664548844394776,
+              "max_nominal_error_during_plan_samples": 0.4269464391382043
+            },
+            "1": {
+              "rows": 401,
+              "prior_plan_samples_audited": 391,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 9.781166064486726e-12,
+              "max_heading_analytic_residual": 6.7010852422555445e-09,
+              "mean_plan_execution_error": 0.006494179590457924,
+              "max_plan_execution_error": 0.031110584245821426,
+              "max_nominal_error_during_plan_samples": 0.4557138823587687
+            },
+            "2": {
+              "rows": 402,
+              "prior_plan_samples_audited": 397,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 6.5218294582045686e-12,
+              "max_heading_analytic_residual": 5.753762133409168e-09,
+              "mean_plan_execution_error": 0.014072308624273961,
+              "max_plan_execution_error": 0.04128496269589964,
+              "max_nominal_error_during_plan_samples": 0.5048522428002579
+            },
+            "3": {
+              "rows": 402,
+              "prior_plan_samples_audited": 393,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 6.402874007876089e-12,
+              "max_heading_analytic_residual": 5.4722271158880176e-09,
+              "mean_plan_execution_error": 0.012003441293175874,
+              "max_plan_execution_error": 0.04612741463907768,
+              "max_nominal_error_during_plan_samples": 0.4860342266778978
+            },
+            "4": {
+              "rows": 402,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.3786311646173482e-11,
+              "max_heading_analytic_residual": 1.7476065039545574e-09,
+              "mean_plan_execution_error": 0.008617661985542526,
+              "max_plan_execution_error": 0.03932426268237958,
+              "max_nominal_error_during_plan_samples": 0.40483435632089
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+          "decisions": 41,
+          "winner_checks": 41,
+          "previews_reconstructed": 82,
+          "selected_valid": 33,
+          "no_valid_previews": 8,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 8,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.902223513380548e-09,
+          "normalized_null_motion_fields": 164,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 11,
+          "explicit_nonfeasible_cycles_verified": 11,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_overtaking_211_r1_escape_v2",
+      "version": "v2",
+      "role": "development",
+      "scenario": "overtaking",
+      "robots": 1,
+      "seed": 211,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.11966399442763986,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0026513686077477587,
+          "rows": 400,
+          "last_time": 39.995999999999995,
+          "statuses": {
+            "validated_one_step": 3,
+            "late_fallback_stop": 3,
+            "feasible_iterate": 9,
+            "ok": 381,
+            "best_effort_escape": 4
+          },
+          "timing_p95_ms": 78.37558880023607,
+          "timing_max_ms": 107.39139599991177,
+          "final_error": 0.0026513686077477587,
+          "dynamic_cycles": 372,
+          "max_estimated_speed": 0.09325929140009304
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_0_solver_trace": {
+          "rows": 400,
+          "missing_manager_records": 0,
+          "preview_samples": 400,
+          "preview_ms_p95": 25.06138765011201,
+          "preview_ms_max": 29.46127399991383,
+          "fully_aborted_previews": 26,
+          "partial_decisions": 0,
+          "decisions": 40,
+          "manager_statuses": {
+            "converged": 381,
+            "feasible_iterate": 9,
+            "validated_one_step": 5,
+            "best_effort_escape": 4,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 107.08385299949441,
+          "cycle_end_ms_max": 111.04422700009309,
+          "applied_escape_cycles": 4
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 387,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.01119312620978033,
+              "max_plan_execution_error": 0.03776102209055238,
+              "max_nominal_error_during_plan_samples": 0.5872596622913072
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+          "decisions": 40,
+          "winner_checks": 40,
+          "previews_reconstructed": 160,
+          "selected_valid": 38,
+          "no_valid_previews": 2,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 2,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 0.0,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 4,
+          "explicit_nonfeasible_cycles_verified": 4,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_overtaking_211_r1_local_v3",
+      "version": "v3",
+      "role": "development",
+      "scenario": "overtaking",
+      "robots": 1,
+      "seed": 211,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.16046019159018282,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0016528672738518968,
+          "rows": 401,
+          "last_time": 40.057,
+          "statuses": {
+            "ok": 383,
+            "feasible_iterate": 17,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 82.03100499940774,
+          "timing_max_ms": 102.10791999998037,
+          "final_error": 0.0016018665228240555,
+          "dynamic_cycles": 358,
+          "max_estimated_speed": 0.10647731486403592
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_0_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 17.5980289996005,
+          "preview_ms_max": 26.02090100026544,
+          "fully_aborted_previews": 1,
+          "partial_decisions": 6,
+          "decisions": 47,
+          "manager_statuses": {
+            "converged": 383,
+            "validated_one_step": 1,
+            "feasible_iterate": 16,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 101.90633099955448,
+          "cycle_end_ms_max": 105.74199299935572,
+          "applied_escape_cycles": 0
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.00953172814853022,
+              "max_plan_execution_error": 0.03584437949246874,
+              "max_nominal_error_during_plan_samples": 0.502186812393387
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+          "decisions": 47,
+          "winner_checks": 47,
+          "previews_reconstructed": 88,
+          "selected_valid": 46,
+          "no_valid_previews": 1,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 1,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.800343675481216e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 0,
+          "explicit_nonfeasible_cycles_verified": 0,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_stop_go_crossing_211_r1_escape_v2",
+      "version": "v2",
+      "role": "development",
+      "scenario": "stop_go_crossing",
+      "robots": 1,
+      "seed": 211,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.15850087057424367,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0008653662029939731,
+          "rows": 400,
+          "last_time": 39.98299999999999,
+          "statuses": {
+            "feasible_iterate": 4,
+            "best_effort_escape": 4,
+            "validated_one_step": 3,
+            "ok": 389
+          },
+          "timing_p95_ms": 75.35775275014201,
+          "timing_max_ms": 86.99855700069747,
+          "final_error": 0.0008653662029939731,
+          "dynamic_cycles": 281,
+          "max_estimated_speed": 0.1705282926372194
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_0_solver_trace": {
+          "rows": 400,
+          "missing_manager_records": 0,
+          "preview_samples": 400,
+          "preview_ms_p95": 22.118212299938023,
+          "preview_ms_max": 25.396952999471978,
+          "fully_aborted_previews": 13,
+          "partial_decisions": 0,
+          "decisions": 24,
+          "manager_statuses": {
+            "converged": 389,
+            "feasible_iterate": 3,
+            "best_effort_escape": 4,
+            "validated_one_step": 3,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 86.83743000074173,
+          "cycle_end_ms_max": 90.84643000005599,
+          "applied_escape_cycles": 4
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 392,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.008256699485310324,
+              "max_plan_execution_error": 0.04399828626710707,
+              "max_nominal_error_during_plan_samples": 0.7084342201397485
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+          "decisions": 24,
+          "winner_checks": 24,
+          "previews_reconstructed": 96,
+          "selected_valid": 21,
+          "no_valid_previews": 3,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 3,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 0.0,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 4,
+          "explicit_nonfeasible_cycles_verified": 4,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "development_stop_go_crossing_211_r1_local_v3",
+      "version": "v3",
+      "role": "development",
+      "scenario": "stop_go_crossing",
+      "robots": 1,
+      "seed": 211,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.15465203037720526,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.15958674653957197,
+          "rows": 401,
+          "last_time": 40.02,
+          "statuses": {
+            "late_fallback_stop": 3,
+            "ok": 383,
+            "feasible_iterate": 15
+          },
+          "timing_p95_ms": 81.30998200067552,
+          "timing_max_ms": 104.3272649994833,
+          "final_error": 0.1526594130417751,
+          "dynamic_cycles": 305,
+          "max_estimated_speed": 0.15399879785561008
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_0_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 16.435956999885093,
+          "preview_ms_max": 33.30534599990642,
+          "fully_aborted_previews": 1,
+          "partial_decisions": 4,
+          "decisions": 31,
+          "manager_statuses": {
+            "converged": 383,
+            "feasible_iterate": 15,
+            "validated_full_backup": 3
+          },
+          "command_wall_ms_max": 103.95049499948072,
+          "cycle_end_ms_max": 114.3515750000006,
+          "applied_escape_cycles": 0
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 396,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.011965650053095656,
+              "max_plan_execution_error": 0.03938102003634569,
+              "max_nominal_error_during_plan_samples": 1.2497163260802355
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+          "decisions": 31,
+          "winner_checks": 31,
+          "previews_reconstructed": 58,
+          "selected_valid": 28,
+          "no_valid_previews": 3,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 3,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 2.696444934002784e-08,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 0,
+          "explicit_nonfeasible_cycles_verified": 0,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "repeat_mixed_211_r5_escape_v2",
+      "version": "v2",
+      "role": "repeat",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 211,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.16267404690867193,
+      "peer_proxy_clearance": 0.10055829542559142,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0012100608214789825,
+          "rows": 401,
+          "last_time": 40.086999999999996,
+          "statuses": {
+            "best_effort_escape": 9,
+            "late_fallback_stop": 1,
+            "ok": 357,
+            "validated_one_step": 6,
+            "stale_data": 1,
+            "feasible_iterate": 27
+          },
+          "timing_p95_ms": 80.9707399994295,
+          "timing_max_ms": 104.08684300000459,
+          "final_error": 0.0013740210786216804,
+          "dynamic_cycles": 390,
+          "max_estimated_speed": 1.0118523867509004
+        },
+        "1": {
+          "window_final_error": 0.004644998960621636,
+          "rows": 401,
+          "last_time": 40.107000000000006,
+          "statuses": {
+            "ok": 392,
+            "validated_one_step": 1,
+            "feasible_iterate": 8
+          },
+          "timing_p95_ms": 70.01477900030295,
+          "timing_max_ms": 89.96980000028998,
+          "final_error": 0.004563273316923324,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.21259736073695637
+        },
+        "2": {
+          "window_final_error": 0.002339819989514312,
+          "rows": 402,
+          "last_time": 40.132,
+          "statuses": {
+            "ok": 379,
+            "validated_one_step": 1,
+            "best_effort_escape": 5,
+            "feasible_iterate": 17
+          },
+          "timing_p95_ms": 75.77892950021123,
+          "timing_max_ms": 93.11138700013544,
+          "final_error": 0.002543271410891053,
+          "dynamic_cycles": 398,
+          "max_estimated_speed": 0.17123712434632754
+        },
+        "3": {
+          "window_final_error": 0.001013832950431946,
+          "rows": 402,
+          "last_time": 40.154,
+          "statuses": {
+            "ok": 397,
+            "validated_one_step": 1,
+            "feasible_iterate": 4
+          },
+          "timing_p95_ms": 63.328519399829005,
+          "timing_max_ms": 80.83713199994236,
+          "final_error": 0.0012500199881843544,
+          "dynamic_cycles": 397,
+          "max_estimated_speed": 0.28622950413965165
+        },
+        "4": {
+          "window_final_error": 0.003402745336859313,
+          "rows": 402,
+          "last_time": 40.172000000000004,
+          "statuses": {
+            "ok": 400,
+            "feasible_iterate": 2
+          },
+          "timing_p95_ms": 62.865209100073095,
+          "timing_max_ms": 82.02663799966103,
+          "final_error": 0.0038789809133567116,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.8501858642798549
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_2_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.218178199565955,
+          "preview_ms_max": 26.3159509995603,
+          "fully_aborted_previews": 38,
+          "partial_decisions": 0,
+          "decisions": 31,
+          "manager_statuses": {
+            "converged": 379,
+            "feasible_iterate": 16,
+            "best_effort_escape": 5,
+            "validated_one_step": 1,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 92.84437599944795,
+          "cycle_end_ms_max": 99.66668299966841,
+          "applied_escape_cycles": 5
+        },
+        "tb3_3_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 14.078414350069579,
+          "preview_ms_max": 25.659218999862787,
+          "fully_aborted_previews": 12,
+          "partial_decisions": 0,
+          "decisions": 35,
+          "manager_statuses": {
+            "converged": 397,
+            "feasible_iterate": 4,
+            "validated_one_step": 1
+          },
+          "command_wall_ms_max": 80.53677099997003,
+          "cycle_end_ms_max": 81.45482700001594,
+          "applied_escape_cycles": 0
+        },
+        "tb3_4_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 17.295024600025496,
+          "preview_ms_max": 27.280848000373226,
+          "fully_aborted_previews": 6,
+          "partial_decisions": 0,
+          "decisions": 32,
+          "manager_statuses": {
+            "feasible_iterate": 2,
+            "converged": 400
+          },
+          "command_wall_ms_max": 81.66141000037896,
+          "cycle_end_ms_max": 85.08683400032169,
+          "applied_escape_cycles": 0
+        },
+        "tb3_1_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 25.068404999728955,
+          "preview_ms_max": 25.761160999536514,
+          "fully_aborted_previews": 21,
+          "partial_decisions": 0,
+          "decisions": 45,
+          "manager_statuses": {
+            "validated_one_step": 1,
+            "converged": 392,
+            "feasible_iterate": 8
+          },
+          "command_wall_ms_max": 87.21622399934859,
+          "cycle_end_ms_max": 94.83948999968561,
+          "applied_escape_cycles": 0
+        },
+        "tb3_0_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 1,
+          "preview_samples": 400,
+          "preview_ms_p95": 25.355609049665873,
+          "preview_ms_max": 31.00191400062613,
+          "fully_aborted_previews": 65,
+          "partial_decisions": 0,
+          "decisions": 26,
+          "manager_statuses": {
+            "converged": 357,
+            "feasible_iterate": 27,
+            "best_effort_escape": 10,
+            "validated_one_step": 6,
+            "no_manager_record": 1
+          },
+          "command_wall_ms_max": 103.95845400034887,
+          "cycle_end_ms_max": 104.34449100011989,
+          "applied_escape_cycles": 9
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 382,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 6.673424247542988e-12,
+              "max_heading_analytic_residual": 6.994840262564139e-09,
+              "mean_plan_execution_error": 0.007875899084356736,
+              "max_plan_execution_error": 0.047881922072200545,
+              "max_nominal_error_during_plan_samples": 0.4049692128076409
+            },
+            "1": {
+              "rows": 401,
+              "prior_plan_samples_audited": 382,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 7.059599331230957e-12,
+              "max_heading_analytic_residual": 6.966852428291759e-09,
+              "mean_plan_execution_error": 0.004487836478401186,
+              "max_plan_execution_error": 0.029471687887727967,
+              "max_nominal_error_during_plan_samples": 0.44816329235953806
+            },
+            "2": {
+              "rows": 402,
+              "prior_plan_samples_audited": 391,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 3.809120724658742e-12,
+              "max_heading_analytic_residual": 6.619764292281616e-09,
+              "mean_plan_execution_error": 0.011070947363700135,
+              "max_plan_execution_error": 0.05316458595539027,
+              "max_nominal_error_during_plan_samples": 0.5290313028685429
+            },
+            "3": {
+              "rows": 402,
+              "prior_plan_samples_audited": 400,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.3329975196755148e-11,
+              "max_heading_analytic_residual": 1.2538099447567674e-09,
+              "mean_plan_execution_error": 0.008063856272445786,
+              "max_plan_execution_error": 0.04572183084260339,
+              "max_nominal_error_during_plan_samples": 0.4928304551753156
+            },
+            "4": {
+              "rows": 402,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.326643441715993e-11,
+              "max_heading_analytic_residual": 1.5211363280087653e-09,
+              "mean_plan_execution_error": 0.0062802945470221815,
+              "max_plan_execution_error": 0.03952951159493259,
+              "max_nominal_error_during_plan_samples": 0.4955105488623181
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+          "decisions": 26,
+          "winner_checks": 26,
+          "previews_reconstructed": 104,
+          "selected_valid": 22,
+          "no_valid_previews": 4,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 4,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.809421330775336e-09,
+          "normalized_null_motion_fields": 104,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 14,
+          "explicit_nonfeasible_cycles_verified": 14,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "repeat_mixed_239_r5_local_v3",
+      "version": "v3",
+      "role": "repeat",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 239,
+      "scenario_acceptance_passed": true,
+      "dynamic_proxy_clearance": 0.1362452140353828,
+      "peer_proxy_clearance": 0.0166323388554811,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.004911674076559013,
+          "rows": 402,
+          "last_time": 40.17100000000001,
+          "statuses": {
+            "ok": 365,
+            "validated_one_step": 7,
+            "best_effort_escape": 23,
+            "feasible_iterate": 7
+          },
+          "timing_p95_ms": 84.04466709994267,
+          "timing_max_ms": 95.60535800028447,
+          "final_error": 0.005080810864935102,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 1.0318686578395329
+        },
+        "1": {
+          "window_final_error": 0.0030294495036508164,
+          "rows": 401,
+          "last_time": 40.093999999999994,
+          "statuses": {
+            "ok": 393,
+            "validated_one_step": 1,
+            "best_effort_escape": 2,
+            "feasible_iterate": 5
+          },
+          "timing_p95_ms": 68.03659200068068,
+          "timing_max_ms": 94.82721599943034,
+          "final_error": 0.0028945776360641334,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.20344847344744682
+        },
+        "2": {
+          "window_final_error": 0.00092579244762695,
+          "rows": 402,
+          "last_time": 40.114000000000004,
+          "statuses": {
+            "feasible_iterate": 3,
+            "ok": 385,
+            "validated_one_step": 1,
+            "best_effort_escape": 12,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 69.80770579998533,
+          "timing_max_ms": 108.20015300032537,
+          "final_error": 0.0009447031696071232,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.27369616728864865
+        },
+        "3": {
+          "window_final_error": 0.0034461779100015354,
+          "rows": 402,
+          "last_time": 40.135000000000005,
+          "statuses": {
+            "ok": 401,
+            "feasible_iterate": 1
+          },
+          "timing_p95_ms": 57.82892349925532,
+          "timing_max_ms": 88.2361949998085,
+          "final_error": 0.004031130583814436,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.2729547327759953
+        },
+        "4": {
+          "window_final_error": 0.0015180085122392004,
+          "rows": 402,
+          "last_time": 40.156000000000006,
+          "statuses": {
+            "ok": 400,
+            "feasible_iterate": 2
+          },
+          "timing_p95_ms": 61.62205280061244,
+          "timing_max_ms": 86.5084389997719,
+          "final_error": 0.0018473617051316964,
+          "dynamic_cycles": 392,
+          "max_estimated_speed": 0.19159231023864703
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_2_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 10.27350720019058,
+          "preview_ms_max": 22.35910200033686,
+          "fully_aborted_previews": 1,
+          "partial_decisions": 0,
+          "decisions": 38,
+          "manager_statuses": {
+            "converged": 385,
+            "feasible_iterate": 2,
+            "best_effort_escape": 12,
+            "validated_one_step": 1,
+            "validated_full_backup": 2
+          },
+          "command_wall_ms_max": 107.43283600004361,
+          "cycle_end_ms_max": 109.25981100081117,
+          "applied_escape_cycles": 12
+        },
+        "tb3_3_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 10.123764350510099,
+          "preview_ms_max": 16.728947999581578,
+          "fully_aborted_previews": 0,
+          "partial_decisions": 0,
+          "decisions": 36,
+          "manager_statuses": {
+            "converged": 401,
+            "validated_full_backup": 1
+          },
+          "command_wall_ms_max": 87.22619999934977,
+          "cycle_end_ms_max": 89.51626999987639,
+          "applied_escape_cycles": 0
+        },
+        "tb3_4_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 9.778251649822776,
+          "preview_ms_max": 17.357622999952582,
+          "fully_aborted_previews": 0,
+          "partial_decisions": 0,
+          "decisions": 33,
+          "manager_statuses": {
+            "feasible_iterate": 2,
+            "converged": 400
+          },
+          "command_wall_ms_max": 85.95244299976912,
+          "cycle_end_ms_max": 86.9919779997872,
+          "applied_escape_cycles": 0
+        },
+        "tb3_1_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 12.730351999380218,
+          "preview_ms_max": 19.506438999997044,
+          "fully_aborted_previews": 1,
+          "partial_decisions": 0,
+          "decisions": 50,
+          "manager_statuses": {
+            "converged": 393,
+            "feasible_iterate": 5,
+            "best_effort_escape": 2,
+            "validated_one_step": 1
+          },
+          "command_wall_ms_max": 93.60324399949604,
+          "cycle_end_ms_max": 97.34762599964597,
+          "applied_escape_cycles": 2
+        },
+        "tb3_0_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 11.416610849255449,
+          "preview_ms_max": 13.803183999698376,
+          "fully_aborted_previews": 1,
+          "partial_decisions": 0,
+          "decisions": 48,
+          "manager_statuses": {
+            "converged": 365,
+            "feasible_iterate": 7,
+            "best_effort_escape": 23,
+            "validated_one_step": 7
+          },
+          "command_wall_ms_max": 95.47148299952823,
+          "cycle_end_ms_max": 95.8245949996126,
+          "applied_escape_cycles": 23
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 402,
+              "prior_plan_samples_audited": 352,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.2227551126612267e-11,
+              "max_heading_analytic_residual": 3.994041097854506e-09,
+              "mean_plan_execution_error": 0.006451953919368502,
+              "max_plan_execution_error": 0.04694319712471059,
+              "max_nominal_error_during_plan_samples": 0.39636946407973483
+            },
+            "1": {
+              "rows": 401,
+              "prior_plan_samples_audited": 394,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 9.023944375932643e-12,
+              "max_heading_analytic_residual": 6.4930074650249026e-09,
+              "mean_plan_execution_error": 0.009798965178074034,
+              "max_plan_execution_error": 0.04115493347201244,
+              "max_nominal_error_during_plan_samples": 0.4554935587535428
+            },
+            "2": {
+              "rows": 402,
+              "prior_plan_samples_audited": 387,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.4105253455088764e-12,
+              "max_heading_analytic_residual": 4.853695223516752e-09,
+              "mean_plan_execution_error": 0.013584013014087924,
+              "max_plan_execution_error": 0.05015135428589756,
+              "max_nominal_error_during_plan_samples": 0.5112596375774975
+            },
+            "3": {
+              "rows": 402,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.2596176448331226e-11,
+              "max_heading_analytic_residual": 5.205809561203978e-09,
+              "mean_plan_execution_error": 0.01081861633282967,
+              "max_plan_execution_error": 0.04599462935052708,
+              "max_nominal_error_during_plan_samples": 0.48594672834701064
+            },
+            "4": {
+              "rows": 402,
+              "prior_plan_samples_audited": 401,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.296167157868739e-11,
+              "max_heading_analytic_residual": 2.7531006363545885e-09,
+              "mean_plan_execution_error": 0.008823503847776911,
+              "max_plan_execution_error": 0.038055200107594486,
+              "max_nominal_error_during_plan_samples": 0.4122398492604406
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "a73d4ed349f60887406abb468acc990e1e1bc45eacb0384a90f8fab6af17dfb8",
+          "decisions": 48,
+          "winner_checks": 48,
+          "previews_reconstructed": 96,
+          "selected_valid": 39,
+          "no_valid_previews": 9,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 9,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.938764783390397e-09,
+          "normalized_null_motion_fields": 192,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 37,
+          "explicit_nonfeasible_cycles_verified": 37,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    },
+    {
+      "directory": "transfer_mixed_239_r5_escape_v2",
+      "version": "v2",
+      "role": "transfer",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 239,
+      "scenario_acceptance_passed": false,
+      "dynamic_proxy_clearance": -0.02792689756111344,
+      "peer_proxy_clearance": -0.02292129646331975,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0006177345872490176,
+          "rows": 402,
+          "last_time": 40.15,
+          "statuses": {
+            "ok": 277,
+            "validated_one_step": 8,
+            "feasible_iterate": 64,
+            "best_effort_escape": 33,
+            "late_fallback_stop": 20
+          },
+          "timing_p95_ms": 100.03060904923585,
+          "timing_max_ms": 148.268146999726,
+          "final_error": 0.0006757761922613824,
+          "dynamic_cycles": 398,
+          "max_estimated_speed": 0.43419045549958585
+        },
+        "1": {
+          "window_final_error": 0.0036877746123741145,
+          "rows": 401,
+          "last_time": 40.071999999999996,
+          "statuses": {
+            "ok": 240,
+            "validated_one_step": 43,
+            "feasible_iterate": 65,
+            "late_solution_stop": 1,
+            "best_effort_escape": 46,
+            "late_fallback_stop": 6
+          },
+          "timing_p95_ms": 97.27076700073667,
+          "timing_max_ms": 143.56895799937774,
+          "final_error": 0.0037722633139974115,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.19687111246463018
+        },
+        "2": {
+          "window_final_error": 0.0016144208614530847,
+          "rows": 401,
+          "last_time": 40.092999999999996,
+          "statuses": {
+            "ok": 308,
+            "validated_one_step": 11,
+            "feasible_iterate": 77,
+            "best_effort_escape": 4,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 93.99080499952106,
+          "timing_max_ms": 102.9513510002289,
+          "final_error": 0.0018953927765163834,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.35504712683049516
+        },
+        "3": {
+          "window_final_error": 0.004584806925507908,
+          "rows": 402,
+          "last_time": 40.114,
+          "statuses": {
+            "ok": 330,
+            "validated_one_step": 2,
+            "feasible_iterate": 67,
+            "late_fallback_stop": 3
+          },
+          "timing_p95_ms": 94.53654795020157,
+          "timing_max_ms": 109.8228860000745,
+          "final_error": 0.004973207469548795,
+          "dynamic_cycles": 398,
+          "max_estimated_speed": 0.37914600208812443
+        },
+        "4": {
+          "window_final_error": 0.0017261179231367935,
+          "rows": 402,
+          "last_time": 40.13299999999999,
+          "statuses": {
+            "ok": 345,
+            "validated_one_step": 4,
+            "feasible_iterate": 52,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 91.15188535042762,
+          "timing_max_ms": 128.30910699995002,
+          "final_error": 0.0024490114122604225,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.1777646044077706
+        }
+      },
+      "no_truth_input": true,
+      "seed_configured": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "execution": {
+        "tb3_2_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 25.76543099985429,
+          "preview_ms_max": 30.11296400018182,
+          "fully_aborted_previews": 105,
+          "partial_decisions": 0,
+          "decisions": 17,
+          "manager_statuses": {
+            "converged": 308,
+            "feasible_iterate": 76,
+            "validated_one_step": 11,
+            "best_effort_escape": 4,
+            "validated_full_backup": 2
+          },
+          "command_wall_ms_max": 102.13811399989936,
+          "cycle_end_ms_max": 112.77900799996132,
+          "applied_escape_cycles": 4
+        },
+        "tb3_3_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.473281349786703,
+          "preview_ms_max": 28.135589999692456,
+          "fully_aborted_previews": 90,
+          "partial_decisions": 0,
+          "decisions": 19,
+          "manager_statuses": {
+            "converged": 330,
+            "feasible_iterate": 62,
+            "validated_full_backup": 8,
+            "validated_one_step": 2
+          },
+          "command_wall_ms_max": 105.9634149996782,
+          "cycle_end_ms_max": 119.1883070005133,
+          "applied_escape_cycles": 0
+        },
+        "tb3_4_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.301550300355302,
+          "preview_ms_max": 27.40634299971134,
+          "fully_aborted_previews": 64,
+          "partial_decisions": 0,
+          "decisions": 19,
+          "manager_statuses": {
+            "feasible_iterate": 50,
+            "converged": 345,
+            "validated_full_backup": 3,
+            "validated_one_step": 4
+          },
+          "command_wall_ms_max": 124.29750699993747,
+          "cycle_end_ms_max": 134.43688699953782,
+          "applied_escape_cycles": 0
+        },
+        "tb3_1_solver_trace": {
+          "rows": 401,
+          "missing_manager_records": 0,
+          "preview_samples": 401,
+          "preview_ms_p95": 25.894876000165823,
+          "preview_ms_max": 29.28430900010426,
+          "fully_aborted_previews": 189,
+          "partial_decisions": 0,
+          "decisions": 12,
+          "manager_statuses": {
+            "converged": 241,
+            "feasible_iterate": 64,
+            "validated_full_backup": 3,
+            "validated_one_step": 43,
+            "best_effort_escape": 50
+          },
+          "command_wall_ms_max": 142.52562999990914,
+          "cycle_end_ms_max": 143.98449700001947,
+          "applied_escape_cycles": 46
+        },
+        "tb3_0_solver_trace": {
+          "rows": 402,
+          "missing_manager_records": 0,
+          "preview_samples": 402,
+          "preview_ms_p95": 25.84249250007815,
+          "preview_ms_max": 31.230010999934166,
+          "fully_aborted_previews": 123,
+          "partial_decisions": 0,
+          "decisions": 10,
+          "manager_statuses": {
+            "converged": 277,
+            "feasible_iterate": 56,
+            "validated_full_backup": 9,
+            "validated_one_step": 11,
+            "best_effort_escape": 49
+          },
+          "command_wall_ms_max": 147.05476200015255,
+          "cycle_end_ms_max": 149.83648500037816,
+          "applied_escape_cycles": 33
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 402,
+              "prior_plan_samples_audited": 317,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.4835834665063678e-11,
+              "max_heading_analytic_residual": 3.1309460579720394e-09,
+              "mean_plan_execution_error": 0.004608485307920848,
+              "max_plan_execution_error": 0.0326169398177894,
+              "max_nominal_error_during_plan_samples": 0.4379388672551517
+            },
+            "1": {
+              "rows": 401,
+              "prior_plan_samples_audited": 241,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.4835834665063678e-11,
+              "max_heading_analytic_residual": 5.3015134504619255e-09,
+              "mean_plan_execution_error": 0.0143933888365242,
+              "max_plan_execution_error": 0.05480314787725899,
+              "max_nominal_error_during_plan_samples": 1.2445879278926364
+            },
+            "2": {
+              "rows": 401,
+              "prior_plan_samples_audited": 360,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 6.682618779823979e-12,
+              "max_heading_analytic_residual": 7.516671951535159e-09,
+              "mean_plan_execution_error": 0.011807109597450426,
+              "max_plan_execution_error": 0.04470882156143515,
+              "max_nominal_error_during_plan_samples": 0.5035360158084446
+            },
+            "3": {
+              "rows": 402,
+              "prior_plan_samples_audited": 309,
+              "reference_quality_counts": {
+                "0": 1,
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.1400277412513809e-11,
+              "max_heading_analytic_residual": 7.504181498418916e-09,
+              "mean_plan_execution_error": 0.006745514330537393,
+              "max_plan_execution_error": 0.04371451285024503,
+              "max_nominal_error_during_plan_samples": 0.47404315876564995
+            },
+            "4": {
+              "rows": 402,
+              "prior_plan_samples_audited": 355,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.1592410419449962e-11,
+              "max_heading_analytic_residual": 7.3312147463866495e-09,
+              "mean_plan_execution_error": 0.005799357229449124,
+              "max_plan_execution_error": 0.03682441643926158,
+              "max_nominal_error_during_plan_samples": 0.3782455151049973
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "86dfc582b31d9a463f08a260c270e11ebd08b87482db34d4243ccab50f21c738",
+          "decisions": 10,
+          "winner_checks": 10,
+          "previews_reconstructed": 40,
+          "selected_valid": 10,
+          "no_valid_previews": 0,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 0,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 0.0,
+          "normalized_null_motion_fields": 40,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "applied_escape_cycles": 83,
+          "explicit_nonfeasible_cycles_verified": 83,
+          "errors": [],
+          "note": "Checks input bounds and honest escape/plan labels, not continuous physical safety or full independent barrier reconstruction."
+        }
+      }
+    }
+  ],
+  "note": "Seen development scenarios. All failures retained. Scenario acceptance is not full DCBF satisfaction; escape has validated_steps=0. Metric audit all robots; reference audit robot 0 only."
+}

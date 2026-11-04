@@ -8,6 +8,7 @@
   <arg name="output_dir" default="" />
   <arg name="gazebo_seed" default="" />
   <arg name="progress_hypotheses" default="true" />
+  <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
   <arg name="progress_guidance" default="false" />
@@ -33,6 +34,7 @@
     <arg name="stage_velocity_guidance" value="$(arg stage_velocity_guidance)" />
     <arg name="gazebo_seed" value="$(arg gazebo_seed)" />
     <arg name="progress_hypotheses" value="$(arg progress_hypotheses)" />
+    <arg name="infeasible_escape" value="$(arg infeasible_escape)" />
     <arg name="execution_backup" value="$(arg execution_backup)" />
     <arg name="progress_abstain" value="$(arg progress_abstain)" />
     <arg name="progress_guidance" value="$(arg progress_guidance)" />

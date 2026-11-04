@@ -6,12 +6,26 @@ inputs, not refitted here. The nominal target and hard safety constraints are
 unchanged. Optional tangential guidance adds soft velocity/heading costs.
 """
 import time
-from collections import deque
+from collections import deque,namedtuple
+import math
 
 import casadi as ca
 import numpy as np
 
 from mpc_dcbf_static_obstacles import obstacle_axes
+
+
+def _clip_scalar(value,lower,upper):
+    return value if math.isnan(value) else min(upper,max(lower,value))
+
+
+class PreviewBudgetExceeded(RuntimeError):
+    pass
+
+
+def _check_preview_budget(config):
+    limit=config.get('_preview_deadline')
+    if limit is not None and time.perf_counter()>=limit:raise PreviewBudgetExceeded('Reference preview budget exhausted')
 
 
 def rollout(state, controls, dt):
@@ -36,23 +50,52 @@ def obstacle_angles(obstacle, count):
     return angles[:count]
 
 
+BarrierBatch=namedtuple('BarrierBatch','centers axes cosine sine gamma')
+
+
+def obstacle_batch(obstacles,count,gamma=.3):
+    """Pack one immutable snapshot; never retain a cache across sensor updates."""
+    centers=[];axes=[];angles=[]
+    for o in obstacles:
+        c=np.asarray(o.get('prediction_centers',o['center']),float)
+        a=np.asarray(o.get('prediction_axes',[o['a'],o['b']]),float)
+        if c.ndim==1:c=np.broadcast_to(c,(count,2))
+        if a.ndim==1:a=np.broadcast_to(a,(count,2))
+        if len(c)<count or len(a)<count:raise IndexError('Obstacle prediction stage outside the MPC window')
+        centers.append(c[:count]);axes.append(a[:count]);angles.append(obstacle_angles(o,count))
+    angles=np.asarray(angles).reshape(len(obstacles),count)
+    return BarrierBatch(np.asarray(centers).reshape(len(obstacles),count,2),
+        np.asarray(axes).reshape(len(obstacles),count,2),np.cos(angles),np.sin(angles),
+        np.array([o.get('gamma',gamma) for o in obstacles]))
+
+
+def _batch_values(positions,batch,margin,start=0):
+    stop=start+len(positions);delta=np.asarray(positions)[None,:,:]-batch.centers[:,start:stop]
+    c,s=batch.cosine[:,start:stop],batch.sine[:,start:stop]
+    local=np.stack((c*delta[:,:,0]+s*delta[:,:,1],-s*delta[:,:,0]+c*delta[:,:,1]),axis=-1)
+    axes=batch.axes[:,start:stop]
+    return axes[:,:,1]*(np.sqrt(np.sum((local/axes)**2,axis=-1)+1e-12)-1)-margin
+
+
 def barrier_values(states, obstacles, margin):
-    """One envelope per state node, standard CCW obstacle angles."""
-    values = []
-    for obstacle in obstacles:
-        axes = np.array([obstacle_axes(obstacle, j) for j in range(len(states))])
-        centers = obstacle.get('prediction_centers', obstacle['center'])
-        if np.ndim(centers)==2:centers=np.asarray(centers)[:len(states)]
-        delta = states[:, :2]-np.asarray(centers)
-        angles = obstacle_angles(obstacle, len(states))
-        c, s = np.cos(angles), np.sin(angles)
-        local = np.column_stack((c*delta[:, 0]+s*delta[:, 1],
-                                 -s*delta[:, 0]+c*delta[:, 1]))
-        values.append(axes[:, 1]*(np.sqrt(np.sum((local/axes)**2, axis=1)+1e-12)-1)-margin)
-    return np.asarray(values).reshape(len(obstacles),len(states))
+    """Same stage-wise ellipse formula, broadcast over obstacles and nodes."""
+    batch=obstacle_batch(obstacles,len(states))
+    return _batch_values(np.asarray(states)[:,:2],batch,margin)
 
 
-def first_step_mask(state, commands, obstacles, bounds, previous, config):
+def first_step_values(state,commands,batch,margin,dt,stage=0):
+    angle=state[2]+dt*commands[:,1]
+    positions=state[:2]+dt*commands[:,0,None]*np.column_stack((np.cos(angle),np.sin(angle)))
+    h0=_batch_values(np.asarray(state)[None,:2],batch,margin,stage)[:,0]
+    j=stage+1;delta=positions[None,:,:]-batch.centers[:,j,None,:]
+    c,s=batch.cosine[:,j,None],batch.sine[:,j,None]
+    local=np.stack((c*delta[:,:,0]+s*delta[:,:,1],-s*delta[:,:,0]+c*delta[:,:,1]),axis=-1)
+    axes=batch.axes[:,j,None,:]
+    h1=axes[:,:,1]*(np.sqrt(np.sum((local/axes)**2,axis=-1)+1e-12)-1)-margin
+    return h0,h1,positions,angle
+
+
+def first_step_mask(state, commands, obstacles, bounds, previous, config,batch=None,stage=0):
     """Vectorized screening of the SAME first-step bounds and D-CBF tests.
 
     Screening is followed by CachedMPCProblem.validate before any command can
@@ -66,17 +109,11 @@ def first_step_mask(state, commands, obstacles, bounds, previous, config):
     if config['delta_limit'] and previous is not None:
         valid&=np.all(np.abs(u-previous)<=np.array([config['delta_v'],config['delta_w']])+tol,axis=1)
     if obstacles:
-        h0=barrier_values(np.asarray(state)[None,:],obstacles,config['margin'])[:,0]
+        if batch is None:batch=obstacle_batch(obstacles,stage+2,config['gamma'])
+        h0,h1,positions,angle=first_step_values(state,u,batch,config['margin'],dt,stage)
         initially_safe=h0.min()>=-tol
-        for k,obs in enumerate(obstacles):
-            a,b=obstacle_axes(obs,1)
-            theta=obstacle_angles(obs,2)[1];c,s=np.cos(theta),np.sin(theta)
-            center=np.asarray(obs.get('prediction_centers',[obs['center'],obs['center']]))[1]
-            delta=positions-center
-            local=np.column_stack((c*delta[:,0]+s*delta[:,1],-s*delta[:,0]+c*delta[:,1]))
-            h1=b*(np.sqrt(np.sum((local/[a,b])**2,axis=1)+1e-12)-1)-config['margin']
-            valid&=(h1-(1-obs.get('gamma',config['gamma']))*h0[k]>=-tol)
-            if initially_safe:valid&=h1>=-tol
+        valid&=np.all(h1-(1-batch.gamma[:,None])*h0[:,None]>=-tol,axis=0)
+        if initially_safe:valid&=np.all(h1>=-tol,axis=0)
     return valid,positions,angle
 
 
@@ -364,6 +401,7 @@ def progress_targets(goals,times,dt):
 
 def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds):
     """A bounded unicycle reference primitive; never an applied command."""
+    _check_preview_budget(config)
     dt=config['dt'];steps=max(config['horizon'],int(round(config.get('progress_horizon',4.)/dt)))
     times=np.arange(steps+1)*dt;targets=progress_targets(goals,times,dt)
     feeds=np.diff(targets,axis=0)/dt;feed=feeds[0]
@@ -390,7 +428,14 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
         if j<len(future) and future[-1]-future[j]>=.5:release=float(future[j])
     states=np.empty((steps+1,3));states[0]=state;controls=np.zeros((steps,2));vectors=np.zeros((steps,2))
     velocity=previous[0]*np.array([np.cos(state[2]),np.sin(state[2])]);last=np.array(previous,copy=True)
+    local_filter=config.get('progress_local',False) and mode in ('ccw','cw')
+    if local_filter:
+        packed=obstacle_batch(forecast,steps+1,config['gamma'])
+        v,w=np.meshgrid(np.linspace(*bounds,17),np.linspace(-config['omega_max'],config['omega_max'],17))
+        choices=np.empty((3+v.size,2));choices[3:]=np.column_stack((v.ravel(),w.ravel()))
+    vmax=max(abs(bounds[0]),abs(bounds[1]));omega_max=config['omega_max']
     for j in range(steps):
+        _check_preview_budget(config)
         p=states[j,:2];theta=states[j,2]
         desired=feeds[j]+1.2*(targets[j]-p)
         if mode=='yield' and times[j]<release:desired=np.zeros(2)
@@ -408,9 +453,9 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
                 k=int(np.argmin(np.where(blocked,h,np.inf)))
                 normal=rotation@(local[k]/np.array([a*a,b*b]));normal/=max(np.linalg.norm(normal),1e-12)
                 tangent=(1 if mode=='ccw' else -1)*np.array([-normal[1],normal[0]])
-                flow=.20*tangent+np.clip(.8*(.06-h[k]),-.08,.12)*normal
-                level=float(np.clip((.4-h[k])/.25,0.,1.));desired=(1-level)*desired+level*flow
-        desired*=min(1.,max(abs(bounds[0]),abs(bounds[1]))/max(np.linalg.norm(desired),1e-12))
+                flow=.20*tangent+_clip_scalar(.8*(.06-h[k]),-.08,.12)*normal
+                level=_clip_scalar((.4-h[k])/.25,0.,1.);desired=(1-level)*desired+level*flow
+        desired*=min(1.,vmax/max(np.linalg.norm(desired),1e-12))
         velocity+=.25*(desired-velocity)
         if np.linalg.norm(velocity)<1e-8:angle=theta;sign=1.
         else:
@@ -418,19 +463,16 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
             sign=-1. if abs(delta)>np.pi/2 and bounds[0]<0 else 1.
             if sign<0:angle+=np.pi
         error=np.arctan2(np.sin(angle-theta),np.cos(angle-theta))
-        omega=np.clip(error/dt,-config['omega_max'],config['omega_max'])
-        if config['delta_limit']:omega=np.clip(omega,last[1]-config['delta_w'],last[1]+config['delta_w'])
+        omega=_clip_scalar(error/dt,-omega_max,omega_max)
+        if config['delta_limit']:omega=_clip_scalar(omega,last[1]-config['delta_w'],last[1]+config['delta_w'])
         new_theta=theta+dt*omega;heading=np.array([np.cos(new_theta),np.sin(new_theta)])
-        speed=np.clip(np.dot(velocity,heading),bounds[0],bounds[1])
-        if config['delta_limit']:speed=np.clip(speed,last[0]-config['delta_v'],last[0]+config['delta_v'])
-        if config.get('progress_local',False) and mode in ('ccw','cw'):
+        speed=_clip_scalar(np.dot(velocity,heading),bounds[0],bounds[1])
+        if config['delta_limit']:speed=_clip_scalar(speed,last[0]-config['delta_v'],last[0]+config['delta_v'])
+        if local_filter:
             # Receding-window escape only: filter the primitive against the
             # original next-node DCBF, without changing its gamma or envelope.
-            sliced=[dict(o,prediction_centers=o['prediction_centers'][j:j+2],
-                prediction_axes=o['prediction_axes'][j:j+2],prediction_angles=o['prediction_angles'][j:j+2]) for o in forecast]
-            v,w=np.meshgrid(np.linspace(*bounds,17),np.linspace(-config['omega_max'],config['omega_max'],17))
-            choices=np.vstack(([speed,omega],last,[0.,0.],np.column_stack((v.ravel(),w.ravel()))))
-            valid,_,angles_next=first_step_mask(states[j],choices,sliced,bounds,last,config)
+            choices[0]=[speed,omega];choices[1]=last;choices[2]=0.
+            valid,_,angles_next=first_step_mask(states[j],choices,forecast,bounds,last,config,batch=packed,stage=j)
             if valid.any():
                 xy_velocity=choices[:,0,None]*np.column_stack((np.cos(angles_next),np.sin(angles_next)))
                 score=(np.sum((xy_velocity-velocity)**2,axis=1)+.002*(choices[:,1]-last[1])**2
@@ -440,6 +482,7 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
         controls[j]=[speed,omega];vectors[j]=speed*heading
         states[j+1,:2]=p+dt*vectors[j];states[j+1,2]=new_theta;last=controls[j]
     h=barrier_values(states,forecast,config['margin'])
+    _check_preview_budget(config)
     hypothesis_h={}
     for i,original in enumerate(obstacles):
         motion=original.get('guidance_motion',{})
@@ -492,12 +535,25 @@ def progress_guidance(state,goals,obstacles,config,memory):
     if reevaluate:
         prior_decision=None if saved is None else dict(saved)
         begin=time.perf_counter();preview_config=config
-        previews={mode:progress_preview(state,goals,obstacles,index,mode,config,previous,bounds)
-            for mode in ('direct','yield','ccw','cw')}
+        local_first=config.get('bounded_local_reference',False)
+        search_complete=True
+        if local_first:
+            preview_config=dict(config,progress_horizon=config['horizon']*config['dt'],progress_local=True)
+            incumbent=saved.get('selected') if saved is not None and saved['name']==name else None
+            order=[incumbent] if incumbent in ('ccw','cw') else []
+            order+=[m for m in ('ccw','cw') if m not in order]
+            previews={}
+            for mode in order:
+                try:previews[mode]=progress_preview(state,goals,obstacles,index,mode,preview_config,previous,bounds)
+                except PreviewBudgetExceeded:search_complete=False;break
+            if not previews:raise PreviewBudgetExceeded('No complete short reference within budget')
+        else:
+            previews={mode:progress_preview(state,goals,obstacles,index,mode,config,previous,bounds)
+                for mode in ('direct','yield','ccw','cw')}
         valid=[p for p in previews.values() if p['feasible']]
         incumbent_side=(saved.get('selected') if saved is not None and saved['name']==name else None)
         needs_prefix=(not valid or incumbent_side in ('ccw','cw') and not previews[incumbent_side]['feasible'])
-        if needs_prefix and config.get('execution_backup',False):
+        if needs_prefix and config.get('execution_backup',False) and not local_first:
             local_config=dict(config,progress_horizon=config['horizon']*config['dt'],progress_local=True)
             local_previews={mode:progress_preview(state,goals,obstacles,index,mode,local_config,previous,bounds)
                 for mode in ('direct','yield','ccw','cw')}
@@ -515,13 +571,13 @@ def progress_guidance(state,goals,obstacles,config,memory):
             # Keep a feasible circulation side while direct recovery is blocked.
             # A failed long extrapolation alone must not reverse a valid prefix.
             if (config.get('execution_backup',False) and saved['selected'] in ('ccw','cw')
-                    and incumbent is not None and incumbent['feasible'] and not previews['direct']['feasible']
+                    and incumbent is not None and incumbent['feasible'] and not previews.get('direct',{}).get('feasible',False)
                     and (preview_config.get('progress_local',False) or
                          incumbent['cost']<=2.*min(p['cost'] for p in valid)+.25)):
                 selected=saved['selected']
             if selected!=saved['selected']:switch_time=now
         saved=dict(name=name,selected=selected,decision_time=now,switch_time=switch_time,local=preview_config.get('progress_local',False),
-            decision_id=memory.get('progress_counter',0)+1)
+            decision_id=memory.get('progress_counter',0)+1,search_complete=search_complete)
         memory['progress_counter']=saved['decision_id'];memory['progress_state']=saved
         memory['progress_decision']=dict(saved,previous_decision=prior_decision,state=np.asarray(state).tolist(),goals=np.asarray(goals).tolist(),
             previous=previous.tolist(),bounds=list(bounds),selected_obstacle=index,
@@ -530,16 +586,17 @@ def progress_guidance(state,goals,obstacles,config,memory):
                         progress_local=preview_config.get('progress_local',False),
                         progress_side_lock=config.get('execution_backup',False),
                         progress_side_release=config.get('execution_backup',False),
+                        bounded_local_reference=local_first,
                         progress_hypotheses=config.get('progress_hypotheses',True),progress_abstain=config.get('progress_abstain',True)),
             obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
                 gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
                 prediction_axes=np.array([obstacle_axes(o,j) for j in range(config['horizon']+1)]).tolist(),
-                prediction_angles=obstacle_angles(o,config['horizon']+1).tolist(),guidance_motion=o.get('guidance_motion')) for o in obstacles],
+                prediction_angles=obstacle_angles(o,config['horizon']+1).tolist(),peer=bool(o.get('peer',False)),guidance_motion=o.get('guidance_motion')) for o in obstacles],
             previews={mode:{k:v for k,v in p.items() if k not in ('states','controls','vectors')} for mode,p in previews.items()},
             decision_ms=1000*(time.perf_counter()-begin))
     mode=saved['selected']
     memory['progress_summary']=dict(mode=mode,decision_id=saved['decision_id'],obstacle=name,
-        preview_scope='mpc_window' if saved.get('local',False) else 'long')
+        preview_scope='mpc_window' if saved.get('local',False) else 'long',search_complete=saved.get('search_complete',True))
     if mode=='legacy':
         if config.get('progress_abstain',True):
             memory['progress_summary']['mode']='tracking_only'
@@ -876,6 +933,29 @@ class MPCSolverManager:
             return dict(controls=u,states=rollout(state,u,dt),plan_controls=plan.copy(),cost=float(scores[index]),
                 status='validated_one_step',seed='prepared_control',converged=False,
                 validated_steps=1,min_slack=short['min_slack'],min_h=short['min_h']),len(choices),int(valid.sum())
+        if cfg.get('infeasible_escape',False) and not valid.any() and obstacles and time.perf_counter()<deadline:
+            # This is explicitly NOT a feasible DCBF solution. Keep input bounds,
+            # protect currently safe barriers that zero can keep safe, and require an
+            # improvement over the zero-command worst residual before using it.
+            packed=obstacle_batch(obstacles,2,cfg['gamma'])
+            h0,h1,_,_=first_step_values(state,choices,packed,cfg['margin'],dt)
+            _,zero_h,_,_=first_step_values(state,np.zeros((1,2)),packed,cfg['margin'],dt)
+            input_valid,_,_=first_step_mask(state,choices,[],bounds,previous,cfg)
+            protected=(h0>=-2e-6)&(zero_h[:,0]>=-2e-6)
+            input_valid&=np.all(h1[protected]>=-2e-6,axis=0)
+            residual=np.min(h1-(1-packed.gamma[:,None])*h0[:,None],axis=0)
+            zero_residual=float(np.min(zero_h[:,0]-(1-packed.gamma)*h0))
+            if input_valid.any():
+                value=float(np.max(residual[input_valid]))
+                eligible=input_valid&(residual>=value-1e-9)
+                index=int(np.argmin(np.where(eligible,scores,np.inf)))
+                if value>zero_residual+2e-6:
+                    u=np.tile(choices[index],(n,1))
+                    return dict(controls=u,states=rollout(state,u,dt),plan_controls=plan.copy(),cost=float(scores[index]),
+                        status='best_effort_escape',seed='escape_control',converged=False,validated_steps=0,
+                        min_slack=float(residual[index]),min_h=float(min(h0.min(),h1[:,index].min())),
+                        escape_zero_min_slack=zero_residual,escape_next_h=h1[:,index].tolist(),
+                        escape_initial_h=h0.tolist()),len(choices),0
         return None,len(choices),int(valid.sum())
 
     def _full_backup(self,problem,state,goals,obstacles,bounds,previous,controls,plan,guidance,source):
@@ -938,7 +1018,15 @@ class MPCSolverManager:
             prepared,checked,screen_valid=self._screen_backup(problem,state,goals,obstacles,bounds,
                 previous,plan,guess,(np.zeros((n,2)),0.),command_deadline)
             prepare_ms=1000*(time.perf_counter()-prepare_begin)
-        guidance=continuous_guidance(state,goals,obstacles,cfg,memory)
+        preview_begin=time.perf_counter();preview_budget_hit=False
+        preview_config=(dict(cfg,bounded_local_reference=cfg.get('bounded_local_reference',True),_preview_deadline=min(deadline-.030,
+            preview_begin+cfg.get('progress_wall_time',.025))) if execution_backup else cfg)
+        try:guidance=continuous_guidance(state,goals,obstacles,preview_config,memory)
+        except PreviewBudgetExceeded:
+            memory.pop('progress_plan',None)
+            memory['progress_summary']=dict(mode='budget_deferred',decision_id=memory.get('progress_counter',0))
+            guidance=np.zeros((n,2)),0.;preview_budget_hit=True
+        preview_ms=1000*(time.perf_counter()-preview_begin)
         if execution_backup and time.perf_counter()<deadline-.005:
             prepare_begin=time.perf_counter()
             proposals=[(seed,guess,plan)]
@@ -1022,7 +1110,7 @@ class MPCSolverManager:
                     validated_steps=1,min_slack=short['min_slack'],min_h=short['min_h'])
                 break
         fallback_ms=1000*(time.perf_counter()-fallback_begin)
-        result_status=('no_validated_control' if best is None else
+        result_status=('no_validated_control' if best is None else 'best_effort_escape' if best.get('status')=='best_effort_escape' else
                        'converged' if converged else 'validated_full_backup' if best.get('status')=='validated_full_backup'
                        else 'feasible_iterate' if full_candidate else 'validated_one_step')
         record=dict(cycle_token=token,attempts=len(trace),failed_attempts=sum(not t.get('feasible',False) for t in trace),
@@ -1037,9 +1125,16 @@ class MPCSolverManager:
             budget_expired=time.perf_counter()>deadline,pending_turns=list(pending))
         if execution_backup:
             record.update(execution_backup=True,backup_prepare_ms=prepare_ms,
-                backup_prepared=prepared is not None,full_backup_prepared=full_backup is not None,
+                preview_ms=preview_ms,preview_budget_hit=preview_budget_hit,
+                preview_budget_ms=1000*cfg.get('progress_wall_time',.025),
+                backup_prepared=prepared is not None and prepared.get('validated_steps',0)>0,
+                escape_prepared=prepared is not None and prepared.get('status')=='best_effort_escape',
+                full_backup_prepared=full_backup is not None,
                 accepted_source=best.get('seed') if best is not None else None,
                 accepted_validated_steps=best.get('validated_steps',0) if best is not None else 0)
+            if best is not None and best.get('status')=='best_effort_escape':
+                record.update(escape_zero_min_slack=best['escape_zero_min_slack'],
+                    escape_initial_h=best['escape_initial_h'],escape_next_h=best['escape_next_h'])
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         self.histories.setdefault(label,[]).append(record);self.last_records[label]=record

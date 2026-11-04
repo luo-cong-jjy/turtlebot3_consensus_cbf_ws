@@ -743,6 +743,7 @@ class TurtleBot3CBFController:
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
         self.cfg['progress_hypotheses']=bool(rospy.get_param('/cbf/progress_hypotheses',True))
+        self.cfg['infeasible_escape']=bool(rospy.get_param('/cbf/infeasible_escape',False))
         self.cfg['execution_backup']=bool(rospy.get_param('/cbf/execution_backup',False))
         self.cfg['progress_abstain']=bool(rospy.get_param('/cbf/progress_abstain',True))
         self.cfg['progress_guidance']=bool(rospy.get_param('/cbf/progress_guidance',False))
@@ -755,6 +756,8 @@ class TurtleBot3CBFController:
         self.cfg['fallback_reserve']=.010
         self.cfg['dual_warm_start']=bool(rospy.get_param('/cbf/dual_warm_start',True))
         self.cfg['stagger_callbacks']=bool(rospy.get_param('/cbf/stagger_callbacks',True))
+        if self.cfg['infeasible_escape'] and not (self.cfg['execution_backup'] and self.cfg['realtime']):
+            raise ValueError('infeasible_escape requires realtime_solver and execution_backup')
         if not .005 < self.cfg['nlp_wall_time'] < self.control_budget <= .2:
             raise ValueError('Expected 5ms < NLP budget < control budget <= 200ms')
         self.dt=self.cfg["dt"];self.n=self.cfg["horizon"]
@@ -1467,7 +1470,8 @@ class TurtleBot3CBFController:
                 deadline=begin+self.control_budget-.003 if self.cfg['realtime'] else None,
                 applied_previous=self.applied_control.copy(),seed_shift=shift,cycle_token=self.cycle_id)
             control=solution['controls'][0].copy()
-            if not solution['success']:
+            if solution.get('status')=='best_effort_escape':status='best_effort_escape'
+            elif not solution['success']:
                 status=('feasible_iterate' if solution.get('validated_steps',0)==self.n
                         else 'validated_one_step') if self.cfg['realtime'] else 'validated_fallback'
             else:status='ok'

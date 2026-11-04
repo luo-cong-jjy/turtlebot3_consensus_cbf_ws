@@ -11,7 +11,7 @@ import numpy as np
 PACKAGE=Path(__file__).resolve().parents[2]
 sys.path[:0]=[str(PACKAGE/'scripts'),str(PACKAGE/'纯仿真代码')]
 from cbf_mpc_core import default_config,peer_obstacle
-from mpc_dcbf_cached_solver import CachedMPCProblem,MPCSolverManager,barrier_values,rollout,first_step_mask
+from mpc_dcbf_cached_solver import CachedMPCProblem,MPCSolverManager,barrier_values,rollout,first_step_mask,PreviewBudgetExceeded
 
 
 def config(**extra):
@@ -21,6 +21,61 @@ def config(**extra):
 
 
 class RealtimeChecks(unittest.TestCase):
+    def test_infeasible_escape_improves_residual_without_claiming_cbf_feasibility(self):
+        cfg=config(execution_backup=True,infeasible_escape=True);manager=MPCSolverManager(cfg)
+        problem=CachedMPCProblem(cfg,1,False);problem.solve=Mock(side_effect=RuntimeError('forced'))
+        manager.problems[(1,False)]=problem
+        obs=dict(center=np.array([.25,0.]),a=.15,b=.15,theta=0.,name='closing',
+            prediction_centers=np.column_stack((.25-.05*np.arange(4),np.zeros(4))))
+        state=np.zeros(3);result=manager.solve(state,np.zeros((4,3)),[obs],(-.22,.22),None,'r')
+        self.assertEqual(result['status'],'best_effort_escape')
+        self.assertEqual(result['validated_steps'],0)
+        self.assertFalse(result['success'])
+        self.assertLess(result['controls'][0,0],0.)
+        self.assertLess(result['min_slack'],0.)
+        self.assertGreater(result['min_slack'],result['escape_zero_min_slack']+2e-6)
+        self.assertFalse(problem.validate(result,state,[obs],(-.22,.22),np.zeros(2),one_step=True))
+        self.assertTrue(manager.last_records['r']['escape_prepared'])
+        self.assertFalse(manager.last_records['r']['backup_prepared'])
+
+    def test_escape_protects_other_barriers_that_zero_keeps_safe(self):
+        cfg=config(execution_backup=True,infeasible_escape=True);manager=MPCSolverManager(cfg)
+        problem=CachedMPCProblem(cfg,2,False);problem.solve=Mock(side_effect=RuntimeError('forced'))
+        manager.problems[(2,False)]=problem
+        front=dict(center=np.array([.25,0.]),a=.15,b=.15,theta=0.,name='closing',
+            prediction_centers=np.column_stack((.25-.05*np.arange(4),np.zeros(4))))
+        behind=dict(center=np.array([-.275,0.]),a=.15,b=.15,theta=0.,name='behind')
+        result=manager.solve(np.zeros(3),np.zeros((4,3)),[front,behind],(-.22,.22),None,'r')
+        self.assertEqual(result['validated_steps'],0)
+        self.assertGreaterEqual(result['escape_next_h'][1],-2e-6)
+        self.assertTrue(np.all(np.abs(result['controls'])<=np.array([.22,2.84])+2e-6))
+
+    def test_escape_does_not_return_an_action_that_cannot_improve_over_zero(self):
+        cfg=config(execution_backup=True,infeasible_escape=True);manager=MPCSolverManager(cfg)
+        problem=CachedMPCProblem(cfg,4,False);problem.solve=Mock(side_effect=RuntimeError('forced'))
+        manager.problems[(4,False)]=problem;obstacles=[]
+        for i,direction in enumerate([[1.,0.],[-1.,0.],[0.,1.],[0.,-1.]]):
+            direction=np.array(direction);centers=(.25-.05*np.arange(4))[:,None]*direction
+            obstacles.append(dict(name=str(i),center=centers[0],prediction_centers=centers,a=.15,b=.15,theta=0.))
+        with self.assertRaises(RuntimeError):manager.solve(np.zeros(3),np.zeros((4,3)),obstacles,(-.22,.22),None,'r')
+        self.assertFalse(manager.last_records['r']['escape_prepared'])
+
+    def test_preview_budget_exhaustion_withdraws_partial_guidance_and_keeps_checked_backup(self):
+        cfg=config(execution_backup=True,progress_guidance=True);manager=MPCSolverManager(cfg)
+        problem=CachedMPCProblem(cfg,0,False)
+        problem.solve=Mock(side_effect=RuntimeError('forced NLP failure'))
+        manager.problems[(0,False)]=problem
+        def interrupted(state,goals,obs,config,memory):
+            memory['progress_plan']={'stale_partial':True}
+            raise PreviewBudgetExceeded()
+        with patch('mpc_dcbf_cached_solver.continuous_guidance',side_effect=interrupted):
+            result=manager.solve(np.zeros(3),np.zeros((4,3)),[],(-.22,.22),None,'r')
+        self.assertTrue(manager.last_records['r']['preview_budget_hit'])
+        self.assertTrue(manager.last_records['r']['backup_prepared'])
+        self.assertNotIn('progress_plan',manager.robot_memory['r'])
+        self.assertEqual(problem.solve.call_args.args[7][1],0.)
+        self.assertTrue(problem.validate(result,np.zeros(3),[],(-.22,.22),np.zeros(2)))
+
     def test_prepared_backup_exists_before_nlp_and_survives_a_failed_attempt(self):
         cfg=config(execution_backup=True);manager=MPCSolverManager(cfg)
         problem=CachedMPCProblem(cfg,1,False)

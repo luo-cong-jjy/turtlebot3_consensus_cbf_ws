@@ -67,7 +67,7 @@ def audit(directory):
                     advantage=incumbent['cost']-previews[selected]['cost']
                     if decision['decision_time']-prior['switch_time']<.8 or advantage<max(.03,.15*incumbent['cost']):selected=prior['selected']
                 if (cfg.get('progress_side_lock',False) and prior['selected'] in ('ccw','cw')
-                        and incumbent is not None and incumbent['feasible'] and not previews['direct']['feasible']
+                        and incumbent is not None and incumbent['feasible'] and not previews.get('direct',{}).get('feasible',False)
                         and (not cfg.get('progress_side_release',False) or cfg.get('progress_local',False)
                              or incumbent['cost']<=2.*min(p['cost'] for p in valid)+.25)):
                     selected=prior['selected']
