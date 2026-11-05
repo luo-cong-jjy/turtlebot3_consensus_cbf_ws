@@ -743,6 +743,7 @@ class TurtleBot3CBFController:
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
         self.cfg['progress_hypotheses']=bool(rospy.get_param('/cbf/progress_hypotheses',True))
+        self.cfg['predictive_bypass']=bool(rospy.get_param('/cbf/predictive_bypass',False))
         self.cfg['infeasible_escape']=bool(rospy.get_param('/cbf/infeasible_escape',False))
         self.cfg['execution_backup']=bool(rospy.get_param('/cbf/execution_backup',False))
         self.cfg['progress_abstain']=bool(rospy.get_param('/cbf/progress_abstain',True))
@@ -756,6 +757,8 @@ class TurtleBot3CBFController:
         self.cfg['fallback_reserve']=.010
         self.cfg['dual_warm_start']=bool(rospy.get_param('/cbf/dual_warm_start',True))
         self.cfg['stagger_callbacks']=bool(rospy.get_param('/cbf/stagger_callbacks',True))
+        if self.cfg['predictive_bypass'] and not (self.cfg['progress_guidance'] and self.cfg['execution_backup'] and self.cfg['realtime']):
+            raise ValueError('predictive_bypass requires progress_guidance, execution_backup and realtime_solver')
         if self.cfg['infeasible_escape'] and not (self.cfg['execution_backup'] and self.cfg['realtime']):
             raise ValueError('infeasible_escape requires realtime_solver and execution_backup')
         if not .005 < self.cfg['nlp_wall_time'] < self.control_budget <= .2:

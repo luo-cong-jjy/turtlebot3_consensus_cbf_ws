@@ -21,6 +21,16 @@ def config(**extra):
 
 
 class RealtimeChecks(unittest.TestCase):
+    def test_predictive_candidate_requires_explicit_opt_in(self):
+        for enabled in (False,True):
+            cfg=config(execution_backup=True,progress_guidance=True,predictive_bypass=enabled)
+            manager=MPCSolverManager(cfg)
+            with patch('mpc_dcbf_cached_solver.continuous_guidance',return_value=(np.zeros((3,2)),0.)) as guide:
+                manager.solve(np.zeros(3),np.zeros((4,3)),[],(-.22,.22),None,'r')
+            actual=guide.call_args.args[3]
+            for name in ('predictive_obstruction','active_side_lock','relative_avoidance_flow'):
+                self.assertEqual(actual[name],enabled)
+
     def test_infeasible_escape_improves_residual_without_claiming_cbf_feasibility(self):
         cfg=config(execution_backup=True,infeasible_escape=True);manager=MPCSolverManager(cfg)
         problem=CachedMPCProblem(cfg,1,False);problem.solve=Mock(side_effect=RuntimeError('forced'))

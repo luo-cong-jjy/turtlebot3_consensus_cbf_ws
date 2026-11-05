@@ -101,6 +101,18 @@ def finite_error_summary(values):
         final_abs=float(abs(values[-1])) if len(values) and np.isfinite(values[-1]) else np.nan)
 
 
+def task_error_summary(values,times,end,dt):
+    """Keep means, but never call a truncated stream the task endpoint."""
+    result=finite_error_summary(values)
+    last=float(times[-1]) if len(times) else np.nan
+    age=float(end)-last if end is not None else np.nan
+    available=bool(np.isfinite(age) and -1e-9<=age<=1.5*dt+1e-9) if end is not None else None
+    result.update(final_sample_time=last,requested_end_time=end,endpoint_measurement_age=age,
+        endpoint_measurement_available=available,endpoint_max_age=1.5*dt)
+    if available is False:result['final']=result['final_abs']=np.nan
+    return result
+
+
 def create_run_directory(package, requested=''):
     timestamp=datetime.now(timezone(timedelta(hours=8))).strftime('%Y-%m-%d-%H-%M-%S')
     if requested:
@@ -193,7 +205,8 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
             if not np.isfinite(t) or t<=last_stamp+1e-9:fresh[j]=False
             elif fresh[j]:last_stamp=t
         window=time_window&fresh
-        position_summary=finite_error_summary(errors[window])
+        endpoint_args=(eval_times[window],metadata.get('total_time'),metadata.get('control_dt',.1))
+        position_summary=task_error_summary(errors[window],*endpoint_args)
         quality=np.asarray(robot['reference_quality'])[window]
         statistics[str(i)]=dict(rows=len(data),statuses=statuses,mean_position_error=position_summary['mean'],
             max_position_error=position_summary['max_abs'],final_position_error=position_summary['final'],
@@ -201,9 +214,9 @@ def export_results(directory, robot_rows=None, leader_rows=None, geometry_stats=
             excluded_measurement_rows=int(np.sum(time_window&~fresh)),
             reference_quality_counts={label:int(np.sum(quality==code)) for code,label in
                 ((0,'unavailable'),(1,'interpolated'),(2,'bounded_extrapolation'),(3,'exact'))},
-            position_error_summary=position_summary,heading_error_summary=finite_error_summary(np.asarray(robot['thetae'])[window]),
-            plan_execution_summary=finite_error_summary(np.hypot(robot['plan_execution_error_x'],robot['plan_execution_error_y'])[window]),
-            observer_error_summary=finite_error_summary(np.hypot(robot['observer_error_x'],robot['observer_error_y'])[window]),
+            position_error_summary=position_summary,heading_error_summary=task_error_summary(np.asarray(robot['thetae'])[window],*endpoint_args),
+            plan_execution_summary=task_error_summary(np.hypot(robot['plan_execution_error_x'],robot['plan_execution_error_y'])[window],*endpoint_args),
+            observer_error_summary=task_error_summary(np.hypot(robot['observer_error_x'],robot['observer_error_y'])[window],*endpoint_args),
             mean_computation_ms=float(milliseconds.mean()),median_computation_ms=float(np.median(milliseconds)),
             std_computation_ms=float(milliseconds.std()),min_computation_ms=float(milliseconds.min()),
             max_computation_ms=float(milliseconds.max()),overruns=int(np.sum(milliseconds>period_ms)),
@@ -569,6 +582,8 @@ class ExperimentRecorder:
             reliability_parameters=dict(dict(reliability_horizon=1.,score_tau=.5,weight_tau=.3,score_floor=.015,switch_ratio=.8,switch_hold=.6),
                 **rospy.get_param('/cbf/dynamic/reliability',{})),
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
+            predictive_bypass=rospy.get_param('/cbf/predictive_bypass',False),
+            endpoint_contract='fresh_measurement_within_1.5_control_dt',
             infeasible_escape=rospy.get_param('/cbf/infeasible_escape',False),
             progress_budget_ms=1000*rospy.get_param('/cbf/mpc/progress_wall_time',.025),
             numeric_backend='batched_stage_arrays',

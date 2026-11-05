@@ -12,10 +12,20 @@ import numpy as np
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from cbf_experiment_results import (create_run_directory,export_results,update_geometry_ranges,
-    ORIGINAL_CHARTS,aligned_centroid,formation_snapshots)
+    ORIGINAL_CHARTS,aligned_centroid,formation_snapshots,task_error_summary)
 
 
 class RecordingChecks(unittest.TestCase):
+    def test_truncated_stream_has_no_fabricated_task_endpoint(self):
+        value=task_error_summary([.5,.1],[0.,9.],40.,.1)
+        self.assertFalse(value['endpoint_measurement_available'])
+        self.assertTrue(np.isnan(value['final']))
+        self.assertAlmostEqual(value['mean'],.3)
+        self.assertEqual(value['final_sample_time'],9.)
+        fresh=task_error_summary([.5,.1],[0.,39.95],40.,.1)
+        self.assertTrue(fresh['endpoint_measurement_available']);self.assertEqual(fresh['final'],.1)
+        missing=task_error_summary([.5,np.nan],[0.,39.95],40.,.1)
+        self.assertTrue(np.isnan(missing['final']))
     def test_unique_default_directory_and_existing_explicit_data_are_preserved(self):
         with tempfile.TemporaryDirectory() as temporary:
             first,_=create_run_directory(temporary)

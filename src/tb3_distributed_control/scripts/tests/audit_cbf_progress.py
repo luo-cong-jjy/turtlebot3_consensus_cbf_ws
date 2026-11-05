@@ -63,16 +63,21 @@ def audit(directory):
             prior=decision.get('previous_decision')
             if prior is not None and prior['name']==decision['name']:
                 incumbent=previews.get(prior['selected'])
-                if incumbent is not None and incumbent['feasible'] and selected!=prior['selected']:
+                can_hold=not cfg.get('active_side_lock',False) or prior.get('side_committed',False)
+                if can_hold and incumbent is not None and incumbent['feasible'] and selected!=prior['selected']:
                     advantage=incumbent['cost']-previews[selected]['cost']
                     if decision['decision_time']-prior['switch_time']<.8 or advantage<max(.03,.15*incumbent['cost']):selected=prior['selected']
-                if (cfg.get('progress_side_lock',False) and prior['selected'] in ('ccw','cw')
+                if (can_hold and cfg.get('progress_side_lock',False) and prior['selected'] in ('ccw','cw')
                         and incumbent is not None and incumbent['feasible'] and not previews.get('direct',{}).get('feasible',False)
                         and (not cfg.get('progress_side_release',False) or cfg.get('progress_local',False)
                              or incumbent['cost']<=2.*min(p['cost'] for p in valid)+.25)):
                     selected=prior['selected']
             if 'previous_decision' in decision:assert selected==decision['selected'],'Winner/hysteresis mismatch'
             else:selected=decision['selected']  # Development prototypes did not record prior hysteresis state.
+            if cfg.get('active_side_lock',False):
+                active=previews.get(selected,{}).get('circulation_active',False)
+                keep=bool(prior is not None and prior['name']==decision['name'] and prior.get('side_committed',False) and prior['selected']==selected)
+                assert decision['side_committed']==bool(active and (decision['search_complete'] or keep)),'Side commit mismatch'
             if selected=='legacy':fallbacks+=1
             else:
                 assert previews[selected]['feasible'];selected_valid+=1

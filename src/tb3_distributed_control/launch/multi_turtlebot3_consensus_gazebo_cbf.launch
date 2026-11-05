@@ -18,6 +18,7 @@
   <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
   <arg name="gazebo_seed" default="" />
   <arg name="progress_hypotheses" default="true" />
+  <arg name="predictive_bypass" default="false" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
@@ -54,6 +55,7 @@
   <param name="/cbf/dynamic/ca_jerk_density" value="$(arg ca_jerk_density)" />
   <param name="/cbf/dynamic/ca_acceleration_variance" value="$(arg ca_acceleration_variance)" />
   <param name="/cbf/progress_hypotheses" value="$(arg progress_hypotheses)" />
+  <param name="/cbf/predictive_bypass" value="$(arg predictive_bypass)" />
   <param name="/cbf/infeasible_escape" value="$(arg infeasible_escape)" />
   <param name="/cbf/execution_backup" value="$(arg execution_backup)" />
   <param name="/cbf/progress_abstain" value="$(arg progress_abstain)" />

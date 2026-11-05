@@ -399,6 +399,28 @@ def progress_targets(goals,times,dt):
     return result
 
 
+def relative_obstruction(position,aim,centers,axes,angles,times,margin,speed_limit):
+    """Sample relative approach, including objects closing from behind.
+
+    This straight robot ray / held long axes is a soft trigger, not an
+    additional hard prediction horizon or a collision-free trajectory proof.
+    """
+    velocity=(np.asarray(aim)-position)/times[-1]
+    velocity*=min(1.,speed_limit/max(np.linalg.norm(velocity),1e-12))
+    robot=np.asarray(position)+times[:,None]*velocity
+    delta=robot[None,:,:]-centers;c,s=np.cos(angles),np.sin(angles)
+    local=np.stack((c*delta[:,:,0]+s*delta[:,:,1],-s*delta[:,:,0]+c*delta[:,:,1]),axis=-1)
+    expanded=axes*(1.+(margin+.04)/axes[:,1])[:,None]
+    radius=np.linalg.norm(local/expanded,axis=-1)
+    future=radius[:,1:].min(axis=1)
+    return (future<1.)&(future<radius[:,0]-1e-6)
+
+
+def bypass_velocity(tangent,normal,h,frame_velocity=None):
+    relative=.20*tangent+_clip_scalar(.8*(.06-h),-.08,.12)*normal
+    return relative if frame_velocity is None else relative+frame_velocity
+
+
 def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds):
     """A bounded unicycle reference primitive; never an applied command."""
     _check_preview_budget(config)
@@ -414,6 +436,17 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
             alternative=dict(obstacles[selected],guidance_motion=dict(stamp=motion['stamp'],weights=[1.],models=[model]))
             hypothesis_centers.append(progress_centers(alternative,times,dt))
     hypothesis_centers=np.asarray(hypothesis_centers)
+    predictive=config.get('predictive_obstruction',False)
+    if predictive:
+        ahead=max(1,int(round(config.get('obstruction_horizon',2.)/dt)))
+        ahead_times=np.arange(ahead+1)*dt;extended=np.arange(steps+ahead+1)*dt
+        look_centers=[progress_centers(obstacles[selected],extended,dt)]
+        if config.get('progress_hypotheses',True):
+            for model in motion.get('models',[]):
+                alternative=dict(obstacles[selected],guidance_motion=dict(stamp=motion['stamp'],weights=[1.],models=[model]))
+                look_centers.append(progress_centers(alternative,extended,dt))
+        look_centers=np.asarray(look_centers);held=np.minimum(np.arange(steps+ahead+1),len(axes)-1)
+        look_axes=axes[held];look_angles=angles[held]
     direction=feed/max(np.linalg.norm(feed),1e-12);normal_line=np.array([-direction[1],direction[0]])
     release=float('inf')
     if mode=='yield':
@@ -443,6 +476,7 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
         v,w=np.meshgrid(np.linspace(*bounds,17),np.linspace(-config['omega_max'],config['omega_max'],17))
         choices=np.empty((3+v.size,2));choices[3:]=np.column_stack((v.ravel(),w.ravel()))
     vmax=max(abs(bounds[0]),abs(bounds[1]));omega_max=config['omega_max']
+    circulation_active=False
     for j in range(steps):
         _check_preview_budget(config)
         p=states[j,:2];theta=states[j,2]
@@ -458,12 +492,18 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
             line=end-start;dot=np.sum(start*line,axis=1)
             fraction=np.clip(-dot/np.maximum(np.sum(line*line,axis=1),1e-12),0.,1.)
             blocked=(np.linalg.norm(start+fraction[:,None]*line,axis=1)<1.)&((fraction>1e-6)|(dot<0))
+            if predictive:
+                blocked=relative_obstruction(p,aim,look_centers[:,j:j+ahead+1],look_axes[j:j+ahead+1],
+                    look_angles[j:j+ahead+1],ahead_times,config['margin'],vmax)
             if blocked.any():
                 k=int(np.argmin(np.where(blocked,h,np.inf)))
                 normal=rotation@(local[k]/np.array([a*a,b*b]));normal/=max(np.linalg.norm(normal),1e-12)
                 tangent=(1 if mode=='ccw' else -1)*np.array([-normal[1],normal[0]])
-                flow=.20*tangent+_clip_scalar(.8*(.06-h[k]),-.08,.12)*normal
+                frame_velocity=((hypothesis_centers[k,j+1]-hypothesis_centers[k,j])/dt
+                    if config.get('relative_avoidance_flow',False) else None)
+                flow=bypass_velocity(tangent,normal,h[k],frame_velocity)
                 level=_clip_scalar((.4-h[k])/.25,0.,1.);desired=(1-level)*desired+level*flow
+                if j<config['horizon'] and level>1e-6:circulation_active=True
         desired*=min(1.,vmax/max(np.linalg.norm(desired),1e-12))
         velocity+=.25*(desired-velocity)
         if np.linalg.norm(velocity)<1e-8:angle=theta;sign=1.
@@ -519,6 +559,7 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
     return dict(mode=mode,feasible=feasible,cost=cost,min_h=float(h.min(initial=np.inf)),
         min_slack=float(slack.min(initial=np.inf)),release_time=release if np.isfinite(release) else None,
         hypothesis_min_h=hypothesis_h,
+        circulation_active=circulation_active,
         terminal_error=float(np.linalg.norm(error[-1])),estimated_recovery=float(recovery),
         states=states,controls=controls,vectors=vectors)
 
@@ -554,6 +595,8 @@ def progress_guidance(state,goals,obstacles,config,memory):
         if local_first:
             preview_config=dict(config,progress_horizon=config['horizon']*config['dt'],progress_local=True)
             incumbent=saved.get('selected') if saved is not None and saved['name']==name else None
+            if config.get('active_side_lock',False) and (saved is None or not saved.get('side_committed',False)):
+                incumbent=('ccw','cw')[memory.get('progress_counter',0)%2]
             order=[incumbent] if incumbent in ('ccw','cw') else []
             order+=[m for m in ('ccw','cw') if m not in order]
             previews={}
@@ -566,7 +609,7 @@ def progress_guidance(state,goals,obstacles,config,memory):
                 for mode in ('direct','yield','ccw','cw')}
         valid=[p for p in previews.values() if p['feasible']]
         incumbent_side=(saved.get('selected') if saved is not None and saved['name']==name else None)
-        needs_prefix=(not valid or incumbent_side in ('ccw','cw') and not previews[incumbent_side]['feasible'])
+        needs_prefix=(not valid or incumbent_side in ('ccw','cw') and not previews.get(incumbent_side,{}).get('feasible',False))
         if needs_prefix and config.get('execution_backup',False) and not local_first:
             local_config=dict(config,progress_horizon=config['horizon']*config['dt'],progress_local=True)
             local_previews={mode:progress_preview(state,goals,obstacles,index,mode,local_config,previous,bounds)
@@ -579,19 +622,22 @@ def progress_guidance(state,goals,obstacles,config,memory):
         if saved is not None and saved['name']==name:
             incumbent=previews.get(saved['selected'])
             switch_time=saved['switch_time']
-            if incumbent is not None and incumbent['feasible'] and selected!=saved['selected']:
+            can_hold=not config.get('active_side_lock',False) or saved.get('side_committed',False)
+            if can_hold and incumbent is not None and incumbent['feasible'] and selected!=saved['selected']:
                 advantage=incumbent['cost']-previews[selected]['cost']
                 if now-switch_time<.8 or advantage<max(.03,.15*incumbent['cost']):selected=saved['selected']
             # Keep a feasible circulation side while direct recovery is blocked.
             # A failed long extrapolation alone must not reverse a valid prefix.
-            if (config.get('execution_backup',False) and saved['selected'] in ('ccw','cw')
+            if (can_hold and config.get('execution_backup',False) and saved['selected'] in ('ccw','cw')
                     and incumbent is not None and incumbent['feasible'] and not previews.get('direct',{}).get('feasible',False)
                     and (preview_config.get('progress_local',False) or
                          incumbent['cost']<=2.*min(p['cost'] for p in valid)+.25)):
                 selected=saved['selected']
             if selected!=saved['selected']:switch_time=now
+        keep_commit=bool(saved is not None and saved['name']==name and saved.get('side_committed',False) and saved['selected']==selected)
         saved=dict(name=name,selected=selected,decision_time=now,switch_time=switch_time,local=preview_config.get('progress_local',False),
-            decision_id=memory.get('progress_counter',0)+1,search_complete=search_complete)
+            decision_id=memory.get('progress_counter',0)+1,search_complete=search_complete,
+            side_committed=bool(previews.get(selected,{}).get('circulation_active',False) and (search_complete or keep_commit)) if config.get('active_side_lock',False) else True)
         memory['progress_counter']=saved['decision_id'];memory['progress_state']=saved
         memory['progress_decision']=dict(saved,previous_decision=prior_decision,state=np.asarray(state).tolist(),goals=np.asarray(goals).tolist(),
             previous=previous.tolist(),bounds=list(bounds),selected_obstacle=index,
@@ -602,6 +648,9 @@ def progress_guidance(state,goals,obstacles,config,memory):
                         progress_side_release=config.get('execution_backup',False),
                         bounded_local_reference=local_first,
                         align_reference_hypotheses=config.get('align_reference_hypotheses',False),
+                        predictive_obstruction=config.get('predictive_obstruction',False),
+                        obstruction_horizon=config.get('obstruction_horizon',2.),active_side_lock=config.get('active_side_lock',False),
+                        relative_avoidance_flow=config.get('relative_avoidance_flow',False),
                         progress_hypotheses=config.get('progress_hypotheses',True),progress_abstain=config.get('progress_abstain',True)),
             obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
                 gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
@@ -1035,7 +1084,10 @@ class MPCSolverManager:
             prepare_ms=1000*(time.perf_counter()-prepare_begin)
         preview_begin=time.perf_counter();preview_budget_hit=False
         preview_config=(dict(cfg,bounded_local_reference=cfg.get('bounded_local_reference',True),
-            align_reference_hypotheses=cfg.get('align_reference_hypotheses',True),_preview_deadline=min(deadline-.030,
+            align_reference_hypotheses=cfg.get('align_reference_hypotheses',True),
+            predictive_obstruction=cfg.get('predictive_obstruction',cfg.get('predictive_bypass',False)),
+            active_side_lock=cfg.get('active_side_lock',cfg.get('predictive_bypass',False)),
+            relative_avoidance_flow=cfg.get('relative_avoidance_flow',cfg.get('predictive_bypass',False)),_preview_deadline=min(deadline-.030,
             preview_begin+cfg.get('progress_wall_time',.025))) if execution_backup else cfg)
         try:guidance=continuous_guidance(state,goals,obstacles,preview_config,memory)
         except PreviewBudgetExceeded:
