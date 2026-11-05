@@ -429,8 +429,17 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
     states=np.empty((steps+1,3));states[0]=state;controls=np.zeros((steps,2));vectors=np.zeros((steps,2))
     velocity=previous[0]*np.array([np.cos(state[2]),np.sin(state[2])]);last=np.array(previous,copy=True)
     local_filter=config.get('progress_local',False) and mode in ('ccw','cw')
+    aligned_hypotheses=[]
     if local_filter:
         packed=obstacle_batch(forecast,steps+1,config['gamma'])
+        if config.get('align_reference_hypotheses',False) and config.get('progress_hypotheses',True):
+            for i,original in enumerate(obstacles):
+                if original.get('peer',False):continue
+                motion=original.get('guidance_motion') or {}
+                for model in motion.get('models',[]):
+                    alternative=dict(original,guidance_motion=dict(stamp=motion['stamp'],weights=[1.],models=[model]))
+                    aligned_hypotheses.append(dict(forecast[i],prediction_centers=progress_centers(alternative,times,dt)))
+        hypothesis_batch=obstacle_batch(aligned_hypotheses,steps+1) if aligned_hypotheses else None
         v,w=np.meshgrid(np.linspace(*bounds,17),np.linspace(-config['omega_max'],config['omega_max'],17))
         choices=np.empty((3+v.size,2));choices[3:]=np.column_stack((v.ravel(),w.ravel()))
     vmax=max(abs(bounds[0]),abs(bounds[1]));omega_max=config['omega_max']
@@ -473,6 +482,11 @@ def progress_preview(state,goals,obstacles,selected,mode,config,previous,bounds)
             # original next-node DCBF, without changing its gamma or envelope.
             choices[0]=[speed,omega];choices[1]=last;choices[2]=0.
             valid,_,angles_next=first_step_mask(states[j],choices,forecast,bounds,last,config,batch=packed,stage=j)
+            if hypothesis_batch is not None:
+                # Match the existing post-check h>=0 for each retained mean.
+                # This does not add hypothetical-model DCBFs to the MPC.
+                _,next_h,_,_=first_step_values(states[j],choices,hypothesis_batch,config['margin'],dt,stage=j)
+                valid&=np.all(next_h>=-2e-6,axis=0)
             if valid.any():
                 xy_velocity=choices[:,0,None]*np.column_stack((np.cos(angles_next),np.sin(angles_next)))
                 score=(np.sum((xy_velocity-velocity)**2,axis=1)+.002*(choices[:,1]-last[1])**2
@@ -587,6 +601,7 @@ def progress_guidance(state,goals,obstacles,config,memory):
                         progress_side_lock=config.get('execution_backup',False),
                         progress_side_release=config.get('execution_backup',False),
                         bounded_local_reference=local_first,
+                        align_reference_hypotheses=config.get('align_reference_hypotheses',False),
                         progress_hypotheses=config.get('progress_hypotheses',True),progress_abstain=config.get('progress_abstain',True)),
             obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
                 gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
@@ -1019,7 +1034,8 @@ class MPCSolverManager:
                 previous,plan,guess,(np.zeros((n,2)),0.),command_deadline)
             prepare_ms=1000*(time.perf_counter()-prepare_begin)
         preview_begin=time.perf_counter();preview_budget_hit=False
-        preview_config=(dict(cfg,bounded_local_reference=cfg.get('bounded_local_reference',True),_preview_deadline=min(deadline-.030,
+        preview_config=(dict(cfg,bounded_local_reference=cfg.get('bounded_local_reference',True),
+            align_reference_hypotheses=cfg.get('align_reference_hypotheses',True),_preview_deadline=min(deadline-.030,
             preview_begin+cfg.get('progress_wall_time',.025))) if execution_backup else cfg)
         try:guidance=continuous_guidance(state,goals,obstacles,preview_config,memory)
         except PreviewBudgetExceeded:

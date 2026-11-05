@@ -1,0 +1,1296 @@
+{
+  "stage": "Reference generation and retained-model acceptance consistency 2026-11-05",
+  "parent_commit": "977fdabc6faaa3fb0f46efba7d5613f4bfb78107",
+  "tag": "experiment/reference-consistency-2026-11-05",
+  "unit_tests_passed": 113,
+  "default_prediction": "cv",
+  "default_research_switches_off": true,
+  "final_solver_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+  "attempts": 10,
+  "completed_runs": 9,
+  "passed": 8,
+  "startup_failures": 1,
+  "runs": [
+    {
+      "directory": "development_accelerating_crossing_101_r1_escape_off",
+      "role": "development",
+      "scenario": "accelerating_crossing",
+      "robots": 1,
+      "seed": 101,
+      "infeasible_escape_enabled": false,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.140474200624971,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.004929576804768561,
+          "rows": 320,
+          "last_time": 31.997000000000007,
+          "statuses": {
+            "ok": 313,
+            "feasible_iterate": 7
+          },
+          "timing_p95_ms": 72.67979080061197,
+          "timing_max_ms": 91.9754429924069,
+          "final_error": 0.004929576804768561,
+          "dynamic_cycles": 197,
+          "max_estimated_speed": 0.22001225653244247
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 320,
+              "prior_plan_samples_audited": 298,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 319
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009923202587694186,
+              "max_plan_execution_error": 0.050350920536967825,
+              "max_nominal_error_during_plan_samples": 0.730543171543737
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 22,
+          "winner_checks": 22,
+          "previews_reconstructed": 43,
+          "selected_valid": 19,
+          "no_valid_previews": 3,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 3,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.941028583648759e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 22,
+      "circulation_flips": 0
+    },
+    {
+      "directory": "development_decelerating_crossing_211_r1_v1",
+      "role": "development",
+      "scenario": "decelerating_crossing",
+      "robots": 1,
+      "seed": 211,
+      "infeasible_escape_enabled": true,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.1546780171720975,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0013091664820870253,
+          "rows": 320,
+          "last_time": 31.955,
+          "statuses": {
+            "late_fallback_stop": 4,
+            "ok": 295,
+            "feasible_iterate": 21
+          },
+          "timing_p95_ms": 84.8323569582135,
+          "timing_max_ms": 112.5093409937108,
+          "final_error": 0.0013091664820870253,
+          "dynamic_cycles": 139,
+          "max_estimated_speed": 0.2146156374430539
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 320,
+              "prior_plan_samples_audited": 313,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 319
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009257358443281509,
+              "max_plan_execution_error": 0.03951672755776655,
+              "max_nominal_error_during_plan_samples": 0.6138264683072626
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 27,
+          "winner_checks": 27,
+          "previews_reconstructed": 48,
+          "selected_valid": 27,
+          "no_valid_previews": 0,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 0,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.94748569627113e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 27,
+      "circulation_flips": 0
+    },
+    {
+      "directory": "development_decelerating_crossing_239_r1_escape_off",
+      "role": "development",
+      "scenario": "decelerating_crossing",
+      "robots": 1,
+      "seed": 239,
+      "infeasible_escape_enabled": false,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.15609301821540839,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.003313950134772942,
+          "rows": 320,
+          "last_time": 31.999000000000002,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "feasible_iterate": 12,
+            "ok": 307
+          },
+          "timing_p95_ms": 78.82546394539531,
+          "timing_max_ms": 105.21376300312113,
+          "final_error": 0.003313950134772942,
+          "dynamic_cycles": 144,
+          "max_estimated_speed": 0.2196336954611625
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 320,
+              "prior_plan_samples_audited": 306,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 319
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.008255176703735474,
+              "max_plan_execution_error": 0.04252541603783186,
+              "max_nominal_error_during_plan_samples": 0.5311979972035593
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 27,
+          "winner_checks": 27,
+          "previews_reconstructed": 51,
+          "selected_valid": 27,
+          "no_valid_previews": 0,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 0,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.805515621685856e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 27,
+      "circulation_flips": 0
+    },
+    {
+      "directory": "development_mixed_211_r5_escape_off",
+      "role": "development",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 211,
+      "infeasible_escape_enabled": false,
+      "completed": false,
+      "scenario_acceptance_passed": false,
+      "failure": "Sensor/MPC/scenario readiness timeout",
+      "dynamic_proxy_clearance": null,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {},
+      "no_truth_input": false,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "applicable": false,
+        "reason": "Sensor/MPC/scenario readiness timeout"
+      },
+      "logged_decisions_all_robots": 0,
+      "circulation_flips": 0,
+      "failure_classification": {
+        "classification": "startup_failure",
+        "evidence": "Gazebo Spawn service failed twice; no leader start, no controller task rows, no truth samples. Original evaluation remains failed.",
+        "retry_directory": "infrastructure_retry_mixed_211_r5_escape_off",
+        "source_and_parameters_unchanged": true
+      }
+    },
+    {
+      "directory": "development_mixed_239_r5_v1",
+      "role": "development",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 239,
+      "infeasible_escape_enabled": true,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.17314543845211217,
+      "peer_proxy_clearance": 0.07007070432057066,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0010590476938501924,
+          "rows": 402,
+          "last_time": 40.14900000000001,
+          "statuses": {
+            "ok": 400,
+            "feasible_iterate": 2
+          },
+          "timing_p95_ms": 66.31472804729128,
+          "timing_max_ms": 85.00525700219441,
+          "final_error": 0.0011517109374675088,
+          "dynamic_cycles": 395,
+          "max_estimated_speed": 0.25750525894729015
+        },
+        "1": {
+          "window_final_error": 0.003923035112204406,
+          "rows": 402,
+          "last_time": 40.166999999999994,
+          "statuses": {
+            "ok": 401,
+            "feasible_iterate": 1
+          },
+          "timing_p95_ms": 57.440178848628406,
+          "timing_max_ms": 83.84753500286024,
+          "final_error": 0.004215544880572944,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.7380099228475797
+        },
+        "2": {
+          "window_final_error": 0.001948187061134123,
+          "rows": 401,
+          "last_time": 40.089000000000006,
+          "statuses": {
+            "ok": 399,
+            "validated_one_step": 1,
+            "feasible_iterate": 1
+          },
+          "timing_p95_ms": 59.88498899387196,
+          "timing_max_ms": 83.95030901010614,
+          "final_error": 0.0020780505752937225,
+          "dynamic_cycles": 392,
+          "max_estimated_speed": 0.6158307300572564
+        },
+        "3": {
+          "window_final_error": 0.0006994311919321375,
+          "rows": 401,
+          "last_time": 40.112,
+          "statuses": {
+            "ok": 401
+          },
+          "timing_p95_ms": 55.52105398965068,
+          "timing_max_ms": 74.87325998954475,
+          "final_error": 0.0006501927433619055,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.3356767246522848
+        },
+        "4": {
+          "window_final_error": 0.00258826828163347,
+          "rows": 402,
+          "last_time": 40.13100000000001,
+          "statuses": {
+            "ok": 401,
+            "feasible_iterate": 1
+          },
+          "timing_p95_ms": 57.71509485057322,
+          "timing_max_ms": 80.00911000999622,
+          "final_error": 0.0025262035095298127,
+          "dynamic_cycles": 392,
+          "max_estimated_speed": 0.2262230214307015
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 402,
+              "prior_plan_samples_audited": 401,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.264780820563887e-11,
+              "max_heading_analytic_residual": 3.261188874503773e-09,
+              "mean_plan_execution_error": 0.00757034330665884,
+              "max_plan_execution_error": 0.03789163919107832,
+              "max_nominal_error_during_plan_samples": 0.38925834623400607
+            },
+            "1": {
+              "rows": 402,
+              "prior_plan_samples_audited": 399,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.2262560695870107e-11,
+              "max_heading_analytic_residual": 3.994841568655261e-09,
+              "mean_plan_execution_error": 0.0050338515682532715,
+              "max_plan_execution_error": 0.03184174712685161,
+              "max_nominal_error_during_plan_samples": 0.48268151995943726
+            },
+            "2": {
+              "rows": 401,
+              "prior_plan_samples_audited": 399,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 9.061470339668441e-12,
+              "max_heading_analytic_residual": 6.5086134259928485e-09,
+              "mean_plan_execution_error": 0.011875239029796631,
+              "max_plan_execution_error": 0.03813611407303649,
+              "max_nominal_error_during_plan_samples": 0.5145562568404458
+            },
+            "3": {
+              "rows": 401,
+              "prior_plan_samples_audited": 400,
+              "reference_quality_counts": {
+                "1": 400,
+                "2": 1
+              },
+              "max_nominal_analytic_residual": 1.7051786442413492e-12,
+              "max_heading_analytic_residual": 5.13593256812328e-09,
+              "mean_plan_execution_error": 0.011016101414552946,
+              "max_plan_execution_error": 0.045078467231333776,
+              "max_nominal_error_during_plan_samples": 0.4961960862954152
+            },
+            "4": {
+              "rows": 402,
+              "prior_plan_samples_audited": 401,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 2.0186231228845675e-12,
+              "max_heading_analytic_residual": 5.5233484452799075e-09,
+              "mean_plan_execution_error": 0.0088046235455047,
+              "max_plan_execution_error": 0.03963375297438182,
+              "max_nominal_error_during_plan_samples": 0.4030782870132242
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 42,
+          "winner_checks": 42,
+          "previews_reconstructed": 84,
+          "selected_valid": 41,
+          "no_valid_previews": 1,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 1,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.819975832492389e-09,
+          "normalized_null_motion_fields": 168,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 195,
+      "circulation_flips": 0
+    },
+    {
+      "directory": "development_overtaking_211_r1_escape_off",
+      "role": "development",
+      "scenario": "overtaking",
+      "robots": 1,
+      "seed": 211,
+      "infeasible_escape_enabled": false,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.13349457585615299,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0009491705970661525,
+          "rows": 400,
+          "last_time": 39.93299999999999,
+          "statuses": {
+            "validated_one_step": 2,
+            "feasible_iterate": 23,
+            "late_fallback_stop": 3,
+            "ok": 371,
+            "solver_failed_stop": 1
+          },
+          "timing_p95_ms": 82.22130660360561,
+          "timing_max_ms": 106.02680999727454,
+          "final_error": 0.0009491705970661525,
+          "dynamic_cycles": 379,
+          "max_estimated_speed": 0.10437644381463294
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 356,
+              "reference_quality_counts": {
+                "0": 1,
+                "2": 1,
+                "1": 398
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.013335599262455575,
+              "max_plan_execution_error": 0.0470355817978622,
+              "max_nominal_error_during_plan_samples": 0.5125376619079067
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 47,
+          "winner_checks": 47,
+          "previews_reconstructed": 89,
+          "selected_valid": 46,
+          "no_valid_previews": 1,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 1,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.877372419975217e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 47,
+      "circulation_flips": 0
+    },
+    {
+      "directory": "development_stop_go_crossing_211_r1_escape_off",
+      "role": "development",
+      "scenario": "stop_go_crossing",
+      "robots": 1,
+      "seed": 211,
+      "infeasible_escape_enabled": false,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.1417218690945823,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0004803074455280867,
+          "rows": 400,
+          "last_time": 39.99700000000001,
+          "statuses": {
+            "late_fallback_stop": 2,
+            "ok": 373,
+            "validated_one_step": 2,
+            "feasible_iterate": 23
+          },
+          "timing_p95_ms": 82.14173806118193,
+          "timing_max_ms": 119.65707800118253,
+          "final_error": 0.0004803074455280867,
+          "dynamic_cycles": 288,
+          "max_estimated_speed": 0.18185681467761514
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.006667219206635336,
+              "max_plan_execution_error": 0.04449268114424892,
+              "max_nominal_error_during_plan_samples": 0.6027257308723473
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 24,
+          "winner_checks": 24,
+          "previews_reconstructed": 41,
+          "selected_valid": 23,
+          "no_valid_previews": 1,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 1,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.931215211311795e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 24,
+      "circulation_flips": 2
+    },
+    {
+      "directory": "infrastructure_retry_mixed_211_r5_escape_off",
+      "role": "infrastructure",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 211,
+      "infeasible_escape_enabled": false,
+      "completed": true,
+      "scenario_acceptance_passed": false,
+      "failure": null,
+      "dynamic_proxy_clearance": -0.05226054353323695,
+      "peer_proxy_clearance": 0.05819817064425087,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0015615556115895308,
+          "rows": 401,
+          "last_time": 40.10999999999999,
+          "statuses": {
+            "validated_one_step": 1,
+            "late_fallback_stop": 1,
+            "feasible_iterate": 5,
+            "solver_failed_stop": 95,
+            "ok": 299
+          },
+          "timing_p95_ms": 91.80670700152405,
+          "timing_max_ms": 150.0436560017988,
+          "final_error": 0.0012491480287629383,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.4964580418660687
+        },
+        "1": {
+          "window_final_error": 0.003388162320946175,
+          "rows": 402,
+          "last_time": 40.127,
+          "statuses": {
+            "validated_one_step": 1,
+            "feasible_iterate": 5,
+            "ok": 396
+          },
+          "timing_p95_ms": 57.36122310408973,
+          "timing_max_ms": 100.45360200456344,
+          "final_error": 0.0026192546352442683,
+          "dynamic_cycles": 395,
+          "max_estimated_speed": 0.19905397232514638
+        },
+        "2": {
+          "window_final_error": 0.0025723665418022996,
+          "rows": 402,
+          "last_time": 40.15699999999999,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "solver_failed_stop": 2,
+            "feasible_iterate": 7,
+            "ok": 392
+          },
+          "timing_p95_ms": 65.4245221929159,
+          "timing_max_ms": 114.62511999707203,
+          "final_error": 0.002130192716548327,
+          "dynamic_cycles": 396,
+          "max_estimated_speed": 0.1857416791034617
+        },
+        "3": {
+          "window_final_error": 0.005701437180363336,
+          "rows": 401,
+          "last_time": 40.083000000000006,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "validated_one_step": 2,
+            "feasible_iterate": 8,
+            "ok": 390
+          },
+          "timing_p95_ms": 63.62484899000265,
+          "timing_max_ms": 111.07964599796105,
+          "final_error": 0.002575348802428695,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.18393568460418594
+        },
+        "4": {
+          "window_final_error": 0.006795769598890482,
+          "rows": 401,
+          "last_time": 40.09799999999999,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "ok": 391,
+            "feasible_iterate": 9
+          },
+          "timing_p95_ms": 61.54322899237741,
+          "timing_max_ms": 108.15975099103525,
+          "final_error": 0.005583103377106469,
+          "dynamic_cycles": 391,
+          "max_estimated_speed": 0.4280906601394635
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 302,
+              "reference_quality_counts": {
+                "1": 399,
+                "3": 1,
+                "2": 1
+              },
+              "max_nominal_analytic_residual": 8.37482352257932e-12,
+              "max_heading_analytic_residual": 3.0202700340709043e-09,
+              "mean_plan_execution_error": 0.012786094383150405,
+              "max_plan_execution_error": 0.04901671646402047,
+              "max_nominal_error_during_plan_samples": 1.1617707080118662
+            },
+            "1": {
+              "rows": 402,
+              "prior_plan_samples_audited": 397,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 7.506400889027587e-12,
+              "max_heading_analytic_residual": 4.038485323931695e-09,
+              "mean_plan_execution_error": 0.0051109105505449046,
+              "max_plan_execution_error": 0.030732500897260172,
+              "max_nominal_error_during_plan_samples": 0.4548016102252171
+            },
+            "2": {
+              "rows": 402,
+              "prior_plan_samples_audited": 393,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.2397197213807473e-11,
+              "max_heading_analytic_residual": 3.68244412740637e-09,
+              "mean_plan_execution_error": 0.01327527593361527,
+              "max_plan_execution_error": 0.04232805501557736,
+              "max_nominal_error_during_plan_samples": 0.5441917307175393
+            },
+            "3": {
+              "rows": 401,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 9.361489908792858e-12,
+              "max_heading_analytic_residual": 6.4058707227587774e-09,
+              "mean_plan_execution_error": 0.01271070887415704,
+              "max_plan_execution_error": 0.04425053202871742,
+              "max_nominal_error_during_plan_samples": 0.47985751438611873
+            },
+            "4": {
+              "rows": 401,
+              "prior_plan_samples_audited": 390,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.989250429117554e-12,
+              "max_heading_analytic_residual": 6.525046281069535e-09,
+              "mean_plan_execution_error": 0.010768410342808113,
+              "max_plan_execution_error": 0.03973066890211751,
+              "max_nominal_error_during_plan_samples": 0.4103716185889831
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 46,
+          "winner_checks": 46,
+          "previews_reconstructed": 91,
+          "selected_valid": 21,
+          "no_valid_previews": 25,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 25,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.983479598574263e-09,
+          "normalized_null_motion_fields": 184,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 203,
+      "circulation_flips": 0
+    },
+    {
+      "directory": "repeat_decelerating_crossing_211_r1_escape_off",
+      "role": "repeat",
+      "scenario": "decelerating_crossing",
+      "robots": 1,
+      "seed": 211,
+      "infeasible_escape_enabled": false,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.15027089269624672,
+      "peer_proxy_clearance": null,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.004198412669424526,
+          "rows": 320,
+          "last_time": 31.973000000000006,
+          "statuses": {
+            "ok": 312,
+            "late_fallback_stop": 1,
+            "feasible_iterate": 7
+          },
+          "timing_p95_ms": 78.15037504187785,
+          "timing_max_ms": 106.5932729979977,
+          "final_error": 0.004198412669424526,
+          "dynamic_cycles": 138,
+          "max_estimated_speed": 0.23589503885140423
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 320,
+              "prior_plan_samples_audited": 300,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 319
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009635906332574941,
+              "max_plan_execution_error": 0.05207080473248626,
+              "max_nominal_error_during_plan_samples": 0.5512629278066995
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 28,
+          "winner_checks": 28,
+          "previews_reconstructed": 55,
+          "selected_valid": 28,
+          "no_valid_previews": 0,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 0,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.93287005424115e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 28,
+      "circulation_flips": 0
+    },
+    {
+      "directory": "repeat_mixed_239_r5_escape_off",
+      "role": "repeat",
+      "scenario": "mixed",
+      "robots": 5,
+      "seed": 239,
+      "infeasible_escape_enabled": false,
+      "completed": true,
+      "scenario_acceptance_passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.0017192017394001002,
+      "peer_proxy_clearance": 0.054185174197450725,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0028272487824115024,
+          "rows": 400,
+          "last_time": 39.99600000000001,
+          "statuses": {
+            "validated_one_step": 1,
+            "feasible_iterate": 11,
+            "ok": 384,
+            "solver_failed_stop": 4
+          },
+          "timing_p95_ms": 73.76215371332356,
+          "timing_max_ms": 99.06609199242666,
+          "final_error": 0.0028272487824115024,
+          "dynamic_cycles": 395,
+          "max_estimated_speed": 0.25618614714660526
+        },
+        "1": {
+          "window_final_error": 0.0039012405551895764,
+          "rows": 400,
+          "last_time": 39.962999999999994,
+          "statuses": {
+            "feasible_iterate": 7,
+            "ok": 389,
+            "late_fallback_stop": 4
+          },
+          "timing_p95_ms": 65.83647229708721,
+          "timing_max_ms": 131.42537599196658,
+          "final_error": 0.0039012405551895764,
+          "dynamic_cycles": 394,
+          "max_estimated_speed": 0.20179571598736507
+        },
+        "2": {
+          "window_final_error": 0.007230246648684974,
+          "rows": 400,
+          "last_time": 39.986999999999995,
+          "statuses": {
+            "feasible_iterate": 11,
+            "late_fallback_stop": 3,
+            "ok": 364,
+            "solver_failed_stop": 22
+          },
+          "timing_p95_ms": 81.46984410050207,
+          "timing_max_ms": 115.30360199685674,
+          "final_error": 0.007230246648684974,
+          "dynamic_cycles": 395,
+          "max_estimated_speed": 0.23264125350083462
+        },
+        "3": {
+          "window_final_error": 0.0031104095107940574,
+          "rows": 399,
+          "last_time": 39.903999999999996,
+          "statuses": {
+            "validated_one_step": 1,
+            "feasible_iterate": 6,
+            "ok": 391,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 68.01241690554887,
+          "timing_max_ms": 102.92024099908303,
+          "final_error": 0.0031104095107940574,
+          "dynamic_cycles": 393,
+          "max_estimated_speed": 0.27171992266831363
+        },
+        "4": {
+          "window_final_error": 0.0025871632358913338,
+          "rows": 400,
+          "last_time": 39.926,
+          "statuses": {
+            "feasible_iterate": 6,
+            "ok": 394
+          },
+          "timing_p95_ms": 60.939251300442244,
+          "timing_max_ms": 102.34837200550828,
+          "final_error": 0.0025871632358913338,
+          "dynamic_cycles": 391,
+          "max_estimated_speed": 1.0238347584598508
+        }
+      },
+      "no_truth_input": true,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "ea1cb9887c210809aee02f627a294f8f57c899c11845ff5b6136360d2b16a241",
+        "scripts/cbf_mpc_core.py": "9e800b48534799d79c735b60f09cc4931c645d07cc7291e09a6dd6a643da755b",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "3be39c3320c33142b61b64c1fbc1ccdb1d5f275f45744976a0659a2c593130eb",
+        "scripts/cbf_experiment_results.py": "3629e4c031423d0920a4a0d58d0345079799bc8014f86ca977441d4ef767f13c",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e845da051884701473bd1e3c9b8bda4076cebf6f6fc944556bd71b95e460e981",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "400964429139f1bf7dadb99e45024923e8902092db6ec46130ae35051cb4b478",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "9f1c719eb711a4727b8dcb9f2b1f3136366492a151f3bb9f611d52c1165accd4",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "f5a6b0d326bc464ce57afb878d5e6491280f9dc060f2236cca55ac32af8a902f"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 382,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.0718444748087694e-11,
+              "max_heading_analytic_residual": 6.52504650311414e-09,
+              "mean_plan_execution_error": 0.008564930890052242,
+              "max_plan_execution_error": 0.04065220112932514,
+              "max_nominal_error_during_plan_samples": 0.39227032406328854
+            },
+            "1": {
+              "rows": 400,
+              "prior_plan_samples_audited": 388,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.1672542115372475e-11,
+              "max_heading_analytic_residual": 4.388540419952847e-09,
+              "mean_plan_execution_error": 0.004759230835991411,
+              "max_plan_execution_error": 0.029451018918538165,
+              "max_nominal_error_during_plan_samples": 0.4298431928156856
+            },
+            "2": {
+              "rows": 400,
+              "prior_plan_samples_audited": 374,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 9.657915128384556e-12,
+              "max_heading_analytic_residual": 6.7010852422555445e-09,
+              "mean_plan_execution_error": 0.01350430866143109,
+              "max_plan_execution_error": 0.04149185377729243,
+              "max_nominal_error_during_plan_samples": 0.4934108946822303
+            },
+            "3": {
+              "rows": 399,
+              "prior_plan_samples_audited": 379,
+              "reference_quality_counts": {
+                "2": 3,
+                "1": 396
+              },
+              "max_nominal_analytic_residual": 1.0708891278116151e-11,
+              "max_heading_analytic_residual": 6.26719010021759e-09,
+              "mean_plan_execution_error": 0.01163644594681133,
+              "max_plan_execution_error": 0.03685338234383618,
+              "max_nominal_error_during_plan_samples": 0.4370412144674674
+            },
+            "4": {
+              "rows": 400,
+              "prior_plan_samples_audited": 393,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 396,
+                "3": 3
+              },
+              "max_nominal_analytic_residual": 8.916997281108662e-13,
+              "max_heading_analytic_residual": 3.955376692843515e-09,
+              "mean_plan_execution_error": 0.009492595460788853,
+              "max_plan_execution_error": 0.04073498849227945,
+              "max_nominal_error_during_plan_samples": 0.40016946171644513
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "2ef21ceafef4cb22e0aa8e03a7e78fe12d6decf8e35e389316043940236ac3a8",
+          "decisions": 43,
+          "winner_checks": 43,
+          "previews_reconstructed": 85,
+          "selected_valid": 40,
+          "no_valid_previews": 3,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 3,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.822725105523844e-09,
+          "normalized_null_motion_fields": 172,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "execution": {
+          "passed": true,
+          "escape_cycles": 0,
+          "errors": [],
+          "note": "All applied commands bounded; no best-effort escape used. Does not prove DCBF safety for forced stop or late controls."
+        }
+      },
+      "logged_decisions_all_robots": 198,
+      "circulation_flips": 0
+    }
+  ],
+  "certificate_summary": {
+    "decisions_examined": 203,
+    "certified_frames": 14,
+    "note": "Sufficient infeasibility of frozen model first-step constraints only. No truth input; all robots with logged decisions. Absence of certificate is undecided. Does not establish physical impossibility, collision or safety."
+  },
+  "scope": "Seen development scenarios; all failures retained. Scene acceptance is not a guarantee that every actual command satisfies DCBF. Offline audits do not override failed physical criteria.",
+  "metric_note": "Position errors use original odometry-based schema 2; proxy clearances use sampled Gazebo positions. Small odometry error does not certify physical tracking or collision safety."
+}
