@@ -1,0 +1,321 @@
+{
+  "stage": "Bypass quality diagnostic; candidate NOT accepted as stable improvement",
+  "parent_commit": "a80f92d1e3c0bb33d41d56a39739d103bb18bcda",
+  "branch": "research/bypass-quality-2026-11-07",
+  "tag": "experiment/bypass-quality-diagnostic-2026-11-07",
+  "tests_passed": 137,
+  "active_guidance_only_default": false,
+  "attempts": 7,
+  "valid_closed_loops": 5,
+  "scenario_passes": 3,
+  "native_startup_failures": 2,
+  "negative_clearance_failures": 2,
+  "runs": [
+    {
+      "directory": "baseline_mixed_211",
+      "passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.1074075508883649,
+      "peer_proxy_clearance": 0.06818815095318415,
+      "audits": {
+        "metrics": true,
+        "progress_robot0": true,
+        "reliability_all_observers": true
+      },
+      "quality": {
+        "tb3_0": {
+          "position_rmse": 0.13879491077985479,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 43.67186950944387,
+          "status_counts": {
+            "ok": 376,
+            "feasible_iterate": 9,
+            "solver_failed_stop": 3,
+            "validated_one_step": 11,
+            "late_fallback_stop": 1
+          }
+        },
+        "tb3_1": {
+          "position_rmse": 0.12816506504034886,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 18.96857334315157,
+          "status_counts": {
+            "ok": 393,
+            "feasible_iterate": 8
+          }
+        },
+        "tb3_2": {
+          "position_rmse": 0.2795263722038316,
+          "command_low_speed_with_lag_seconds": 0.6999999999999993,
+          "omega_total_variation": 57.957225003329214,
+          "status_counts": {
+            "ok": 390,
+            "feasible_iterate": 4,
+            "solver_failed_stop": 3,
+            "validated_one_step": 4
+          }
+        },
+        "tb3_3": {
+          "position_rmse": 0.21635037413550404,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 40.81158453811712,
+          "status_counts": {
+            "ok": 397,
+            "feasible_iterate": 3,
+            "late_fallback_stop": 1
+          }
+        },
+        "tb3_4": {
+          "position_rmse": 0.1587346320362801,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 25.94501692696152,
+          "status_counts": {
+            "feasible_iterate": 2,
+            "ok": 397,
+            "validated_one_step": 1
+          }
+        }
+      }
+    },
+    {
+      "directory": "gate_decelerating_211",
+      "passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.13379419795441283,
+      "peer_proxy_clearance": 1000000000.0,
+      "audits": {
+        "metrics": true,
+        "progress_robot0": true,
+        "reliability_all_observers": true
+      },
+      "quality": {
+        "tb3_0": {
+          "position_rmse": 0.2922719036240282,
+          "command_low_speed_with_lag_seconds": 0.3999999999999986,
+          "omega_total_variation": 38.11621887006138,
+          "status_counts": {
+            "ok": 350,
+            "feasible_iterate": 47,
+            "late_fallback_stop": 2,
+            "validated_one_step": 1,
+            "late_solution_stop": 1
+          }
+        }
+      }
+    },
+    {
+      "directory": "gate_mixed_211",
+      "passed": false,
+      "failure": "Native simulation process crashed (segmentation fault); see preserved launch log",
+      "dynamic_proxy_clearance": null,
+      "peer_proxy_clearance": null,
+      "audits": {},
+      "quality": {}
+    },
+    {
+      "directory": "gate_mixed_211_boot_retry",
+      "passed": true,
+      "failure": null,
+      "dynamic_proxy_clearance": 0.1532462848652112,
+      "peer_proxy_clearance": 0.10054563892658064,
+      "audits": {
+        "metrics": true,
+        "progress_robot0": true,
+        "reliability_all_observers": true
+      },
+      "quality": {
+        "tb3_0": {
+          "position_rmse": 0.1216965106837051,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 21.255445857696493,
+          "status_counts": {
+            "ok": 392,
+            "feasible_iterate": 8,
+            "late_fallback_stop": 1
+          }
+        },
+        "tb3_1": {
+          "position_rmse": 0.14292011818429756,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 13.368274125755597,
+          "status_counts": {
+            "ok": 396,
+            "feasible_iterate": 4,
+            "late_fallback_stop": 1
+          }
+        },
+        "tb3_2": {
+          "position_rmse": 0.26222114459985885,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 61.640636830354026,
+          "status_counts": {
+            "ok": 392,
+            "feasible_iterate": 7,
+            "solver_failed_stop": 2,
+            "validated_one_step": 1
+          }
+        },
+        "tb3_3": {
+          "position_rmse": 0.20146709550064745,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 44.18554880114954,
+          "status_counts": {
+            "ok": 398,
+            "feasible_iterate": 3,
+            "validated_one_step": 1
+          }
+        },
+        "tb3_4": {
+          "position_rmse": 0.16498442719589634,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 25.00831781943913,
+          "status_counts": {
+            "validated_one_step": 1,
+            "ok": 396,
+            "feasible_iterate": 4,
+            "late_fallback_stop": 1
+          }
+        }
+      }
+    },
+    {
+      "directory": "gate_mixed_211_repeat",
+      "passed": false,
+      "failure": null,
+      "dynamic_proxy_clearance": -0.03603246213242356,
+      "peer_proxy_clearance": 0.05053571880768504,
+      "audits": {
+        "metrics": true,
+        "progress_robot0": true,
+        "reliability_all_observers": true
+      },
+      "quality": {
+        "tb3_0": {
+          "position_rmse": 0.14380329551737742,
+          "command_low_speed_with_lag_seconds": 0.10000000000000009,
+          "omega_total_variation": 22.65855226143549,
+          "status_counts": {
+            "late_fallback_stop": 3,
+            "ok": 361,
+            "solver_failed_stop": 33,
+            "feasible_iterate": 5
+          }
+        },
+        "tb3_1": {
+          "position_rmse": 0.1133693014637306,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 13.364570142043085,
+          "status_counts": {
+            "feasible_iterate": 11,
+            "ok": 390
+          }
+        },
+        "tb3_2": {
+          "position_rmse": 0.23468550519742462,
+          "command_low_speed_with_lag_seconds": 0.9999999999999987,
+          "omega_total_variation": 50.48800575923017,
+          "status_counts": {
+            "feasible_iterate": 10,
+            "ok": 390,
+            "solver_failed_stop": 1
+          }
+        },
+        "tb3_3": {
+          "position_rmse": 0.20620485017002385,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 39.674631715747125,
+          "status_counts": {
+            "feasible_iterate": 5,
+            "ok": 395,
+            "solver_failed_stop": 1
+          }
+        },
+        "tb3_4": {
+          "position_rmse": 0.1594719908684499,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 31.446149032943488,
+          "status_counts": {
+            "feasible_iterate": 8,
+            "ok": 392,
+            "late_fallback_stop": 1
+          }
+        }
+      }
+    },
+    {
+      "directory": "gate_mixed_239",
+      "passed": false,
+      "failure": "Native simulation process crashed (segmentation fault); see preserved launch log",
+      "dynamic_proxy_clearance": null,
+      "peer_proxy_clearance": null,
+      "audits": {},
+      "quality": {}
+    },
+    {
+      "directory": "gate_predictive_mixed_211",
+      "passed": false,
+      "failure": null,
+      "dynamic_proxy_clearance": -0.03372572073066493,
+      "peer_proxy_clearance": 0.047430498374855135,
+      "audits": {
+        "metrics": true,
+        "progress_robot0": true,
+        "reliability_all_observers": true
+      },
+      "quality": {
+        "tb3_0": {
+          "position_rmse": 0.4257633614263249,
+          "command_low_speed_with_lag_seconds": 3.900999999999998,
+          "omega_total_variation": 65.31578993599297,
+          "status_counts": {
+            "ok": 353,
+            "validated_one_step": 7,
+            "solver_failed_stop": 35,
+            "feasible_iterate": 4,
+            "late_fallback_stop": 2
+          }
+        },
+        "tb3_1": {
+          "position_rmse": 0.17693459295224603,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 24.44543667880773,
+          "status_counts": {
+            "validated_one_step": 1,
+            "ok": 396,
+            "late_fallback_stop": 1,
+            "feasible_iterate": 3
+          }
+        },
+        "tb3_2": {
+          "position_rmse": 0.22164793737168345,
+          "command_low_speed_with_lag_seconds": 0.40000000000000213,
+          "omega_total_variation": 40.84973003556152,
+          "status_counts": {
+            "ok": 396,
+            "feasible_iterate": 6
+          }
+        },
+        "tb3_3": {
+          "position_rmse": 0.20766102170343406,
+          "command_low_speed_with_lag_seconds": 0.23199999999999932,
+          "omega_total_variation": 51.5999364028831,
+          "status_counts": {
+            "ok": 390,
+            "feasible_iterate": 11,
+            "late_fallback_stop": 1
+          }
+        },
+        "tb3_4": {
+          "position_rmse": 0.1347308863864738,
+          "command_low_speed_with_lag_seconds": 0.0,
+          "omega_total_variation": 22.08549851696253,
+          "status_counts": {
+            "validated_one_step": 2,
+            "ok": 395,
+            "feasible_iterate": 4
+          }
+        }
+      }
+    }
+  ]
+}

@@ -9,6 +9,43 @@ from mpc_dcbf_cached_solver import relative_obstruction,progress_preview,continu
 
 
 class RelativeLookaheadChecks(unittest.TestCase):
+    def test_inactive_guidance_gate_keeps_the_checked_nonzero_backup(self):
+        d=json.loads((Path(__file__).parent/'fixtures/relative_lookahead_input.json').read_text())
+        for o in d['obstacles']:
+            if o.get('guidance_motion') is None:o.pop('guidance_motion',None)
+        cfg=dict(default_config(),**d['config']);cfg.update(progress_guidance=True,execution_backup=True,
+            bounded_local_reference=True,predictive_obstruction=False)
+        def evaluate(gate):
+            memory=dict(progress_previous=np.array(d['previous']),progress_bounds=d['bounds'])
+            result=continuous_guidance(np.array(d['state']),np.array(d['goals']),d['obstacles'],
+                dict(cfg,active_guidance_only=gate),memory)
+            return result,memory
+        old,old_memory=evaluate(False);new,memory=evaluate(True)
+        self.assertEqual(old[1],1.);self.assertEqual(new[1],0.)
+        self.assertFalse(memory['progress_summary']['circulation_active'])
+        self.assertEqual(memory['progress_summary']['mode'],'tracking_only_inactive')
+        np.testing.assert_array_equal(new[0],np.zeros_like(new[0]))
+        np.testing.assert_array_equal(old_memory['progress_plan']['controls'],memory['progress_plan']['controls'])
+        self.assertGreater(np.abs(memory['progress_plan']['controls']).max(),0.)
+        problem=CachedMPCProblem(cfg,len(d['obstacles']),False)
+        self.assertTrue(problem.validate(memory['progress_plan'],np.array(d['state']),d['obstacles'],d['bounds'],np.array(d['previous'])))
+
+    def test_active_circulation_keeps_its_velocity_and_body_heading_guide(self):
+        d=json.loads((Path(__file__).parent/'fixtures/relative_lookahead_input.json').read_text())
+        for o in d['obstacles']:
+            if o.get('guidance_motion') is None:o.pop('guidance_motion',None)
+        cfg=dict(default_config(),**d['config']);cfg.update(progress_guidance=True,execution_backup=True,
+            bounded_local_reference=True,predictive_obstruction=True,active_side_lock=True)
+        answers=[]
+        for gate in (False,True):
+            memory=dict(progress_previous=np.array(d['previous']),progress_bounds=d['bounds'])
+            answer=continuous_guidance(np.array(d['state']),np.array(d['goals']),d['obstacles'],
+                dict(cfg,active_guidance_only=gate),memory)
+            self.assertTrue(memory['progress_summary']['circulation_active'])
+            self.assertEqual(answer[1],1.);answers.append(answer)
+        np.testing.assert_array_equal(answers[0][0],answers[1][0])
+        np.testing.assert_array_equal(answers[0][2],answers[1][2])
+
     def test_relative_velocity_is_translated_back_to_world_before_world_speed_limits(self):
         tangent=np.array([-1.,0.]);normal=np.array([0.,1.]);frame=np.array([0.,.03])
         relative=bypass_velocity(tangent,normal,.06)

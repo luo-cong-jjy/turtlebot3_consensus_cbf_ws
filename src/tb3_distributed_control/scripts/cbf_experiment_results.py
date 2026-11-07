@@ -585,6 +585,7 @@ class ExperimentRecorder:
             adaptive_recovery=rospy.get_param('/cbf/adaptive_recovery',False),
             transport_geometry=rospy.get_param('/cbf/dynamic/transport_geometry',False),
             predictive_bypass=rospy.get_param('/cbf/predictive_bypass',False),
+            active_guidance_only=rospy.get_param('/cbf/active_guidance_only',False),
             endpoint_contract='fresh_measurement_within_1.5_control_dt',
             infeasible_escape=rospy.get_param('/cbf/infeasible_escape',False),
             progress_budget_ms=1000*rospy.get_param('/cbf/mpc/progress_wall_time',.025),

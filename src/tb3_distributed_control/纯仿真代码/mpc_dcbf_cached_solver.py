@@ -690,6 +690,7 @@ def progress_guidance(state,goals,obstacles,config,memory):
                         predictive_obstruction=config.get('predictive_obstruction',False),
                         obstruction_horizon=config.get('obstruction_horizon',2.),active_side_lock=config.get('active_side_lock',False),
                         relative_avoidance_flow=config.get('relative_avoidance_flow',False),
+                        active_guidance_only=config.get('active_guidance_only',False),
                         progress_hypotheses=config.get('progress_hypotheses',True),progress_abstain=config.get('progress_abstain',True)),
             obstacles=[dict(name=o['name'],center=np.asarray(o['center']).tolist(),a=o['a'],b=o['b'],theta=o['theta'],
                 gamma=o.get('gamma',config['gamma']),prediction_centers=np.asarray(o.get('prediction_centers',np.tile(o['center'],(config['horizon']+1,1)))).tolist(),
@@ -716,6 +717,13 @@ def progress_guidance(state,goals,obstacles,config,memory):
     n=config['horizon']
     memory['progress_plan']=dict(controls=preview['controls'][:n].copy(),
         states=preview['states'][:n+1].copy(),plan_controls=preview['vectors'][:n].copy(),mode=mode)
+    memory['progress_summary']['circulation_active']=bool(preview.get('circulation_active',False))
+    # A feasible nominal-tracking prefix remains useful as a checked backup,
+    # but must not automatically acquire the strong bypass velocity/heading
+    # penalty (or its larger angular-increment weight).
+    if config.get('active_guidance_only',False) and not preview.get('circulation_active',False):
+        memory['progress_summary']['mode']='tracking_only_inactive'
+        return np.zeros((n,2)),0.
     if config.get('execution_backup',False):
         return preview['vectors'][:n],1.,preview['states'][1:n+1,2].copy()
     return preview['vectors'][:n],1.

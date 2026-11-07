@@ -23,3 +23,5 @@
 - 2026-11-05 相对运动预判实验见 docs/relative_bypass_2026-11-05.md。未稳定改善多机安全，predictive_bypass 默认关闭；保留实验实现、V1索引异常以及V2/V3多机负净距。121项检查，18次尝试全部归档。任务有明确结束时刻时，末测量距结束超过1.5dt则final缺失，不以旧值回填。V4一次显式通过不覆盖V3三次多机失败。
 
 - 当前新研究分支 research/geometry-time-2026-11-07，见 docs/geometry_time_recovery_2026-11-07.md。135项检查及构建通过，20次尝试（含4启动失败）完整保留；transport_geometry+adaptive_recovery组合完成10次均过、含6次五机，但非统计或物理安全证明，两个开关仍默认false。只在h0<0且原有限网格恢复不可行时尝试降低恢复gamma，h0非负gamma保持；gamma=0仅非恶化，不保证有限时间恢复。当前仿真为world来源odom，不是真实轮式里程计验证。初始化串行校验不能被算作控制创新或消除所有Gazebo原生崩溃。
+
+- 2026-11-07 绕行质量复盘分支 research/bypass-quality-2026-11-07，见 docs/bypass_quality_2026-11-07.md。137项检查；7次尝试、2次原生启动崩溃，5次有效闭环仅3次通过。active_guidance_only默认false；门控局部修正不等于整体稳定改进，同种子重复及旧predictive组合均有负代理净距，不推荐当稳定版本。11帧同输入离线配对证明预测影响约束求解，不证明闭环整体优势。原始失败完整归档。
