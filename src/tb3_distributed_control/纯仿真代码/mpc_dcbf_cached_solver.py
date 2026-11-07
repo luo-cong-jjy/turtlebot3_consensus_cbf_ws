@@ -117,6 +117,45 @@ def first_step_mask(state, commands, obstacles, bounds, previous, config,batch=N
     return valid,positions,angle
 
 
+def adapt_negative_recovery(state,obstacles,bounds,previous,config):
+    """Construct a grid witness for a slower recovery ONLY when h0<0.
+
+    Positive barriers keep their original gamma. A reduced gamma remains in
+    [0,base], so negative h is required not to decrease in the frozen model.
+    No grid witness leaves the original problem unchanged; not a claim of
+    continuous infeasibility, recursive feasibility or physical safety.
+    """
+    cfg=config;tol=2e-6;packed=obstacle_batch(obstacles,2,cfg['gamma'])
+    h0=_batch_values(np.asarray(state)[None,:2],packed,cfg['margin'])[:,0]
+    negative=(h0<0)&(packed.gamma>0)
+    info=dict(adapted=False,scale=1.,negative_barriers=int(negative.sum()),witness=None)
+    if not negative.any():return list(obstacles),info
+    v,w=np.meshgrid(np.linspace(*bounds,33),np.linspace(-cfg['omega_max'],cfg['omega_max'],33))
+    choices=np.vstack((np.zeros(2),np.zeros(2) if previous is None else previous,np.column_stack((v.ravel(),w.ravel()))))
+    valid,_,_=first_step_mask(state,choices,[],bounds,previous,cfg)
+    _,h1,_,_=first_step_values(state,choices,packed,cfg['margin'],cfg['dt'])
+    base_valid=valid&np.all(h1-(1-packed.gamma[:,None])*h0[:,None]>=-tol,axis=0)
+    if h0.min()>=-tol:base_valid&=np.all(h1>=-tol,axis=0)
+    if base_valid.any():return list(obstacles),info
+    safe=~negative
+    valid&=np.all(h1[safe]-(1-packed.gamma[safe,None])*h0[safe,None]>=-tol,axis=0)
+    capacity=np.min((h1[negative]-h0[negative,None]-tol)/(-packed.gamma[negative,None]*h0[negative,None]),axis=0)
+    capacity=np.where(valid,capacity,-np.inf);index=int(np.argmax(capacity));scale=float(min(1.,capacity[index]))
+    if not np.isfinite(scale) or scale<0.:
+        info['reason']='no_monotone_grid_recovery';return list(obstacles),info
+    if scale>=1.:return list(obstacles),info
+    gammas=packed.gamma.copy();gammas[negative]*=scale
+    candidate=[dict(o,gamma=float(g)) for o,g in zip(obstacles,gammas)]
+    mask,_,_=first_step_mask(state,choices[index:index+1],candidate,bounds,previous,cfg)
+    if not mask[0]:
+        info['reason']='witness_recheck_failed';return list(obstacles),info
+    info.update(adapted=True,scale=scale,witness=choices[index].tolist(),
+        barrier_names=[o.get('name',str(i)) for i,o in enumerate(obstacles)],
+        base_gammas=packed.gamma.tolist(),applied_gammas=gammas.tolist(),
+        initial_h=h0.tolist(),witness_next_h=h1[:,index].tolist())
+    return candidate,info
+
+
 def project_relative_velocity(velocity,frame_velocity,limit=.22):
     """Project onto ||v_relative + v_frame|| <= limit in velocity space."""
     world=np.asarray(velocity)+np.asarray(frame_velocity)

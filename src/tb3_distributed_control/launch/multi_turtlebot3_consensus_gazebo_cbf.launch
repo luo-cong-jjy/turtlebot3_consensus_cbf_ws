@@ -18,6 +18,8 @@
   <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
   <arg name="gazebo_seed" default="" />
   <arg name="progress_hypotheses" default="true" />
+  <arg name="adaptive_recovery" default="false" />
+  <arg name="transport_geometry" default="false" />
   <arg name="predictive_bypass" default="false" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
@@ -55,6 +57,8 @@
   <param name="/cbf/dynamic/ca_jerk_density" value="$(arg ca_jerk_density)" />
   <param name="/cbf/dynamic/ca_acceleration_variance" value="$(arg ca_acceleration_variance)" />
   <param name="/cbf/progress_hypotheses" value="$(arg progress_hypotheses)" />
+  <param name="/cbf/adaptive_recovery" value="$(arg adaptive_recovery)" />
+  <param name="/cbf/dynamic/transport_geometry" value="$(arg transport_geometry)" />
   <param name="/cbf/predictive_bypass" value="$(arg predictive_bypass)" />
   <param name="/cbf/infeasible_escape" value="$(arg infeasible_escape)" />
   <param name="/cbf/execution_backup" value="$(arg execution_backup)" />
@@ -110,7 +114,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_0/odom" />
-    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_0 -x 0.4 -y 0 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_0 -x 0.4 -y 0 -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_0" output="screen">
     <param name="robot_id" value="0" />
@@ -124,7 +128,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_1/odom" />
-    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_1 -x 0.2 -y 0.4 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_1 -x 0.2 -y 0.4 -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_1" output="screen" if="$(eval int(arg('robot_count')) > 1)">
     <param name="robot_id" value="1" />
@@ -138,7 +142,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_2/odom" />
-    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_2 -x -0.2 -y 0.2 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_2 -x -0.2 -y 0.2 -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_2" output="screen" if="$(eval int(arg('robot_count')) > 2)">
     <param name="robot_id" value="2" />
@@ -152,7 +156,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_3/odom" />
-    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_3 -x -0.3 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_3 -x -0.3 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_3" output="screen" if="$(eval int(arg('robot_count')) > 3)">
     <param name="robot_id" value="3" />
@@ -166,7 +170,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_4/odom" />
-    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_4 -x 0.2 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_4 -x 0.2 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_4" output="screen" if="$(eval int(arg('robot_count')) > 4)">
     <param name="robot_id" value="4" />

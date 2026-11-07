@@ -39,7 +39,7 @@ if (PACKAGE / "纯仿真代码").is_dir():
 from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes,
                           peer_obstacle, padded_obstacles,LeaderMetricTimeline,
                           accepted_plan_reference,sample_plan_reference,wrap_angle,METRICS_SCHEMA_VERSION)
-from mpc_dcbf_cached_solver import MPCSolverManager, CachedMPCProblem, barrier_values
+from mpc_dcbf_cached_solver import MPCSolverManager, CachedMPCProblem, barrier_values,adapt_negative_recovery
 from mpc_dcbf_static_obstacles import reference_covariance_matrices, reference_axis_inflation
 
 
@@ -355,7 +355,7 @@ class DynamicEllipseTracker:
     def __init__(self, dt=.1, horizon=10, association_distance=.65, timeout=.65,
                  history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02,
                  ca_jerk_density=.01,ca_acceleration_variance=.04,singer_tau=1.,
-                 acceleration_buffer=True,stage_velocity_guidance=True):
+                 acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -371,6 +371,7 @@ class DynamicEllipseTracker:
         self.singer_tau=singer_tau
         self.acceleration_buffer=bool(acceleration_buffer)
         self.stage_velocity_guidance=bool(stage_velocity_guidance)
+        self.transport_geometry=bool(transport_geometry)
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -465,7 +466,8 @@ class DynamicEllipseTracker:
             track['P']=(track['P']+track['P'].T)/2
             track['x'][2:4]=np.maximum(track['x'][2:4],.025)
             track.update(seen=stamp,missed=0,variance=variance,count=track['count']+1,
-                         raw_a=ellipse.a,raw_b=ellipse.b,raw_center=z[:2].copy(),raw_theta=z[4],point_count=ellipse.point_count)
+                         raw_a=ellipse.a,raw_b=ellipse.b,raw_center=z[:2].copy(),raw_theta=z[4],point_count=ellipse.point_count,
+                         measurement_reference_center=track['x'][:2].copy())
             speed=float(np.linalg.norm(track['x'][5:7]))
             track['moving_votes']=max(-3,min(3,track['moving_votes']+(1 if speed>self.speed_threshold else -1)))
             if track['moving_votes']>=2:track['dynamic']=True
@@ -489,7 +491,10 @@ class DynamicEllipseTracker:
         c,s=np.cos(x[4]-track['raw_theta']),np.sin(x[4]-track['raw_theta'])
         rotation=np.array([[c,-s],[s,c]])
         base=np.maximum(x[2:4],[track['raw_a'],track['raw_b']])
-        c,s=np.cos(x[4]),np.sin(x[4]);local=(track['raw_center']-x[:2])@np.array([[c,-s],[s,c]])
+        guard_center=track['raw_center'].copy()
+        transported=self.transport_geometry and 'measurement_reference_center' in track
+        if transported:guard_center+=x[:2]-track['measurement_reference_center']
+        c,s=np.cos(x[4]),np.sin(x[4]);local=(guard_center-x[:2])@np.array([[c,-s],[s,c]])
         shape=np.diag(1./base)@rotation@np.diag([track['raw_a'],track['raw_b']])
         scale=max(1.,np.linalg.norm(local/base)+np.linalg.norm(shape,2))
         shape_guard=base*scale
@@ -522,6 +527,8 @@ class DynamicEllipseTracker:
             velocity=track['x'][5:7].copy(),dynamic=track['dynamic'],
             execution_margin=margins[0],
             guidance=not track['dynamic'],seen=track['seen'],measurement_age=now-track['seen'],
+            geometry_transport_applied=bool(transported),guard_measurement_center=guard_center,
+            geometry_reference_stamp=track['seen'],
             raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'])
 
     def obstacles(self,snapshot,now):
@@ -552,7 +559,7 @@ class ReliabilityEllipseTracker:
             raise ValueError('Invalid reliability parameters')
         self.filters={m:DynamicEllipseTracker(*args,mode=m,**kwargs) for m in self.MODES}
         base=self.filters['cv']
-        for key in ('dt','horizon','max_distance','timeout','reaction_time','extra_margin','speed_threshold','stage_velocity_guidance'):
+        for key in ('dt','horizon','max_distance','timeout','reaction_time','extra_margin','speed_threshold','stage_velocity_guidance','transport_geometry'):
             setattr(self,key,getattr(base,key))
         self.mode='adaptive';self.score_horizon=reliability_horizon
         self.score_tau,self.weight_tau,self.score_floor=score_tau,weight_tau,score_floor
@@ -680,7 +687,12 @@ class ReliabilityEllipseTracker:
         x,p=mixture_moments(states,ps,w);raw=track['banks']['cv']
         c,s=np.cos(x[4]-raw['raw_theta']),np.sin(x[4]-raw['raw_theta'])
         rotation=np.array([[c,-s],[s,c]]);base=np.maximum(x[2:4],[raw['raw_a'],raw['raw_b']])
-        c,s=np.cos(x[4]),np.sin(x[4]);local=(raw['raw_center']-x[:2])@np.array([[c,-s],[s,c]])
+        guard_center=raw['raw_center'].copy()
+        transported=self.transport_geometry and all('measurement_reference_center' in track['banks'][m] for m in self.MODES)
+        if transported:
+            reference=np.einsum('i,ij->j',w,[track['banks'][m]['measurement_reference_center'] for m in self.MODES])
+            guard_center+=x[:2]-reference
+        c,s=np.cos(x[4]),np.sin(x[4]);local=(guard_center-x[:2])@np.array([[c,-s],[s,c]])
         shape=np.diag(1./base)@rotation@np.diag([raw['raw_a'],raw['raw_b']])
         guard=base*max(1.,np.linalg.norm(local/base)+np.linalg.norm(shape,2))
         margins=np.einsum('i,ij->j',w,[e['prediction_execution_margins'] for e in experts]);axes=[]
@@ -698,6 +710,8 @@ class ReliabilityEllipseTracker:
             dynamic=track['dynamic'],guidance=not track['dynamic'],execution_margin=float(margins[0]),
             seen=track['seen'],measurement_age=now-track['seen'],missed=track['missed'],
             raw_a=raw['raw_a'],raw_b=raw['raw_b'],point_count=raw['point_count'],
+            geometry_transport_applied=bool(transported),guard_measurement_center=guard_center,
+            geometry_reference_stamp=track['seen'],
             model_weights=w.copy(),model_scores=[float(s) if np.isfinite(s) else None for s in track['scores']],
             guidance_motion=dict(stamp=now,weights=w.tolist(),models=[e['guidance_motion']['models'][0] for e in experts]),
             selected_model=self.MODES[track['selected']],score_count=track['score_count'],
@@ -744,6 +758,7 @@ class TurtleBot3CBFController:
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
         self.cfg['progress_hypotheses']=bool(rospy.get_param('/cbf/progress_hypotheses',True))
         self.cfg['predictive_bypass']=bool(rospy.get_param('/cbf/predictive_bypass',False))
+        self.adaptive_recovery=bool(rospy.get_param('/cbf/adaptive_recovery',False))
         self.cfg['infeasible_escape']=bool(rospy.get_param('/cbf/infeasible_escape',False))
         self.cfg['execution_backup']=bool(rospy.get_param('/cbf/execution_backup',False))
         self.cfg['progress_abstain']=bool(rospy.get_param('/cbf/progress_abstain',True))
@@ -897,6 +912,7 @@ class TurtleBot3CBFController:
             singer_tau=float(get('/cbf/dynamic/singer_tau',1.)),
             acceleration_buffer=bool(get('/cbf/dynamic/acceleration_buffer',True)),
             stage_velocity_guidance=bool(get('/cbf/dynamic/stage_velocity_guidance',True)),
+            transport_geometry=bool(get('/cbf/dynamic/transport_geometry',False)),
             **(get('/cbf/dynamic/reliability',{}) if dynamic_mode=='adaptive' else {}))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
@@ -1061,6 +1077,8 @@ class TurtleBot3CBFController:
                     position_covariances=o['prediction_position_covariances'].tolist(),
                     execution_margins=o['prediction_execution_margins'].tolist(),
                     measurement_age=o['measurement_age'],missed=o['missed'],
+                    geometry_transport_applied=o['geometry_transport_applied'],
+                    guard_measurement_center=o['guard_measurement_center'].tolist(),geometry_reference_stamp=o['geometry_reference_stamp'],
                     execution_margin=o['execution_margin'],
                     centers=o['prediction_centers'].tolist(),axes=o['prediction_axes'].tolist(),
                     theta=o['theta']) for o in observed]
@@ -1382,6 +1400,7 @@ class TurtleBot3CBFController:
         begin=time.perf_counter();now=rospy.get_time();self.cycle_id+=1
         self.cycle_cpu_begin=time.thread_time();self.input_ms=0.;self.manager_ms=0.;self.command_wall_ms=0.
         self.cycle_validated_steps=0
+        self.recovery_record=None
         with self.lock:
             self.metric_context={}
             poses={k:(s,x.copy(),v.copy()) for k,(s,x,v) in self.poses.items()}
@@ -1449,6 +1468,9 @@ class TurtleBot3CBFController:
         h0=barrier_values(np.tile(state,(self.n+1,1)),actual_obstacles,self.cfg['margin'])
         recovery_names={o['name'] for o,h in zip(actual_obstacles,h0[:,0]) if h < 0.}
         obstacles=[dict(o,gamma=self.recovery_gamma) if o['name'] in recovery_names else o for o in obstacles]
+        previous_control=self.applied_control.copy()
+        if self.adaptive_recovery and recovery_names:
+            obstacles,self.recovery_record=adapt_negative_recovery(state,obstacles,(-.22,.22),previous_control,self.cfg)
         actual_obstacles=[o for o in obstacles if o['name']!='inactive']
         obstacles=padded_obstacles(obstacles,self.slots)
         signature=[o['name'] for o in obstacles]
@@ -1471,7 +1493,7 @@ class TurtleBot3CBFController:
             solution=self.manager.solve(state,goals,obstacles,
                 (-.22,.22),last,self.name,
                 deadline=begin+self.control_budget-.003 if self.cfg['realtime'] else None,
-                applied_previous=self.applied_control.copy(),seed_shift=shift,cycle_token=self.cycle_id)
+                applied_previous=previous_control,seed_shift=shift,cycle_token=self.cycle_id)
             control=solution['controls'][0].copy()
             if solution.get('status')=='best_effort_escape':status='best_effort_escape'
             elif not solution['success']:
@@ -1610,7 +1632,8 @@ class TurtleBot3CBFController:
                         positions=plan_for_trace['positions'].tolist(),cycle=plan_for_trace['cycle']),
                     status=status,command=control.tolist(),control_wall_ms=row['solve_ms'],
                     command_wall_ms=self.command_wall_ms,cycle_end_ms=1000*(time.perf_counter()-begin),
-                    cycle_cpu_ms=1000*(time.thread_time()-self.cycle_cpu_begin),manager=detail))+'\n')
+                    cycle_cpu_ms=1000*(time.thread_time()-self.cycle_cpu_begin),manager=detail,
+                    recovery_selection=getattr(self,'recovery_record',None)))+'\n')
                 if self.rows%10==0:self.trace_stream.flush()
         rospy.loginfo_throttle(5.,'%s t=%.1f status=%s obs=%d e=%.3f solve=%.1fms',self.name,
             clock,status,len(obstacles),np.linalg.norm(state[:2]-nominal),row['solve_ms'])

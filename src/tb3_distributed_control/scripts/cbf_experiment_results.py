@@ -582,6 +582,8 @@ class ExperimentRecorder:
             reliability_parameters=dict(dict(reliability_horizon=1.,score_tau=.5,weight_tau=.3,score_floor=.015,switch_ratio=.8,switch_hold=.6),
                 **rospy.get_param('/cbf/dynamic/reliability',{})),
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
+            adaptive_recovery=rospy.get_param('/cbf/adaptive_recovery',False),
+            transport_geometry=rospy.get_param('/cbf/dynamic/transport_geometry',False),
             predictive_bypass=rospy.get_param('/cbf/predictive_bypass',False),
             endpoint_contract='fresh_measurement_within_1.5_control_dt',
             infeasible_escape=rospy.get_param('/cbf/infeasible_escape',False),

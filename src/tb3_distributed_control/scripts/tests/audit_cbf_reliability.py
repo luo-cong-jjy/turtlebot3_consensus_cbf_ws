@@ -10,14 +10,17 @@ from test_cbf_dynamic import inline
 def audit(directory):
     path=Path(directory);meta=json.loads((path/'run_metadata.json').read_text())
     if meta['prediction_mode']!='adaptive':return dict(applicable=False)
-    tracker=inline.make_dynamic_tracker(mode='adaptive',dt=float(meta['control_dt']),
+    def new_tracker():return inline.make_dynamic_tracker(mode='adaptive',dt=float(meta['control_dt']),
         ca_jerk_density=meta['ca_jerk_density'],ca_acceleration_variance=meta['ca_acceleration_variance'],
         singer_tau=meta['singer_tau'],reaction_time=meta['dynamic_reaction_time'],
         extra_margin=meta['dynamic_extra_margin'],acceleration_buffer=meta['acceleration_buffer'],
-        stage_velocity_guidance=meta['stage_velocity_guidance'],**meta['reliability_parameters'])
+        stage_velocity_guidance=meta['stage_velocity_guidance'],transport_geometry=meta.get('transport_geometry',False),**meta['reliability_parameters'])
     frames=[json.loads(s) for s in (path/'obstacle_predictions.jsonl').open()]
-    checked=0;max_weight=0.;max_score=0.;max_center=0.;first_mismatch=None
+    checked=0;max_weight=0.;max_score=0.;max_center=0.;first_mismatch=None;trackers={}
     for index,frame in enumerate(frames):
+        observer=frame['observer']
+        if observer not in trackers:trackers[observer]=new_tracker()
+        tracker=trackers[observer]
         stamp=float(frame['stamp'])
         fits=[inline.Ellipse(*m['center'],m['a'],m['b'],m['theta'],m['point_count']) for m in frame['measurements']]
         tracker.update(fits,stamp)
@@ -44,9 +47,9 @@ def audit(directory):
                 max_center=max(max_center,float(np.max(np.abs(o['centers']-e['prediction_centers']))))
                 checked+=1
         except (AssertionError,ValueError) as exc:
-            first_mismatch=dict(frame=index,stamp=stamp,error=str(exc));break
+            first_mismatch=dict(frame=index,observer=observer,stamp=stamp,error=str(exc));break
     result=dict(applicable=True,passed=first_mismatch is None and checked>0,frames=len(frames),
-        forecast_records_reconstructed=checked,max_weight_difference=max_weight,
+        forecast_records_reconstructed=checked,observers=len(trackers),max_weight_difference=max_weight,
         max_score_difference=max_score,max_center_difference=max_center,first_mismatch=first_mismatch,
         note='Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it.')
     (path/'reliability_audit.json').write_text(json.dumps(result,indent=2));return result

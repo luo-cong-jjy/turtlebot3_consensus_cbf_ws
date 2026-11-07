@@ -8,6 +8,8 @@
   <arg name="output_dir" default="" />
   <arg name="gazebo_seed" default="" />
   <arg name="progress_hypotheses" default="true" />
+  <arg name="adaptive_recovery" default="false" />
+  <arg name="transport_geometry" default="false" />
   <arg name="predictive_bypass" default="false" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
@@ -35,6 +37,8 @@
     <arg name="stage_velocity_guidance" value="$(arg stage_velocity_guidance)" />
     <arg name="gazebo_seed" value="$(arg gazebo_seed)" />
     <arg name="progress_hypotheses" value="$(arg progress_hypotheses)" />
+    <arg name="adaptive_recovery" value="$(arg adaptive_recovery)" />
+    <arg name="transport_geometry" value="$(arg transport_geometry)" />
     <arg name="predictive_bypass" value="$(arg predictive_bypass)" />
     <arg name="infeasible_escape" value="$(arg infeasible_escape)" />
     <arg name="execution_backup" value="$(arg execution_backup)" />

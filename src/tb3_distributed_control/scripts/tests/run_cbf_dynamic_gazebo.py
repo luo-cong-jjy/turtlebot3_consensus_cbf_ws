@@ -23,6 +23,8 @@ def main():
     parser.add_argument('--duration',type=float,default=32.)
     parser.add_argument('--prediction-mode',choices=['cv','frozen','ca','singer','adaptive'],default='cv')
     parser.add_argument('--progress-hypotheses',choices=['true','false'],default='true')
+    parser.add_argument('--adaptive-recovery',choices=['true','false'],default='false')
+    parser.add_argument('--transport-geometry',choices=['true','false'],default='false')
     parser.add_argument('--predictive-bypass',choices=['true','false'],default='false')
     parser.add_argument('--infeasible-escape',choices=['true','false'],default='false')
     parser.add_argument('--execution-backup',choices=['true','false'],default='false')
@@ -42,7 +44,7 @@ def main():
     sources=out/'sources';sources.mkdir(exist_ok=True)
     manifest={}
     for relative in ['scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py','scripts/leader_node.py',
-            'scripts/cbf_dynamic_scenario.py','scripts/cbf_experiment_results.py','config/cbf_dynamic_scenarios.yaml',
+            'scripts/cbf_dynamic_scenario.py','scripts/cbf_spawn_checked.py','scripts/cbf_experiment_results.py','config/cbf_dynamic_scenarios.yaml',
             '纯仿真代码/mpc_dcbf_cached_solver.py','launch/multi_turtlebot3_consensus_gazebo_cbf.launch',
             'launch/single_turtlebot3_cbf_dynamic.launch','launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch',
             'scripts/tests/run_cbf_dynamic_gazebo.py']:
@@ -94,7 +96,7 @@ def main():
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
-            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'execution_backup:='+args.execution_backup,'infeasible_escape:='+args.infeasible_escape,'predictive_bypass:='+args.predictive_bypass,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
+            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'execution_backup:='+args.execution_backup,'infeasible_escape:='+args.infeasible_escape,'predictive_bypass:='+args.predictive_bypass,'transport_geometry:='+args.transport_geometry,'adaptive_recovery:='+args.adaptive_recovery,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
             'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
         report=0.
         while time.monotonic()-wall<args.wall_timeout:
@@ -109,6 +111,8 @@ def main():
             if completed and (out/'RESULTS_SAVED').exists():break
             if completed and time.monotonic()-completed[0]>45:raise RuntimeError('Result export timeout')
             if process.poll() is not None:raise RuntimeError('roslaunch exited')
+            if 'Segmentation fault' in (out/'launch.log').read_text(errors='replace'):
+                raise RuntimeError('Native simulation process crashed (segmentation fault); see preserved launch log')
             if not begins and time.monotonic()-wall>75:raise RuntimeError('Sensor/MPC/scenario readiness timeout')
             if time.monotonic()-report>10:
                 print('Dynamic Gazebo %s: %s'%(args.scenario,{i:(round(d['time'],1),d['status']) for i,d in last.items()}),flush=True);report=time.monotonic()
@@ -118,7 +122,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if truth:
         fields=sorted(set().union(*(r.keys() for r in truth)))
@@ -175,11 +179,13 @@ def main():
     result['execution_backup_configured']=(bool(json.loads(metadata_path.read_text()).get('execution_backup',False))==result['execution_backup']) if metadata_path.exists() else False
     result['infeasible_escape_configured']=(bool(json.loads(metadata_path.read_text()).get('infeasible_escape',False))==result['infeasible_escape']) if metadata_path.exists() else False
     result['predictive_bypass_configured']=(bool(json.loads(metadata_path.read_text()).get('predictive_bypass',False))==result['predictive_bypass']) if metadata_path.exists() else False
+    result['transport_geometry_configured']=(bool(json.loads(metadata_path.read_text()).get('transport_geometry',False))==result['transport_geometry']) if metadata_path.exists() else False
+    result['adaptive_recovery_configured']=(bool(json.loads(metadata_path.read_text()).get('adaptive_recovery',False))==result['adaptive_recovery']) if metadata_path.exists() else False
     result['no_truth_input_passed']=bool(audit) and not any(topic in audit for topic in ('/gazebo/model_states','/cbf/scenario/truth','/gazebo/set_model_state'))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
-        and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured']
+        and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
         and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and np.isfinite(s['window_final_error']) and s['window_final_error']<.25
                 for s in result['robot_statistics'].values()))
     (out/'evaluation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2),flush=True)

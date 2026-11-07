@@ -8,6 +8,8 @@ import csv
 import json
 import math
 from pathlib import Path
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parent))
 import threading
 
 import rospy
@@ -16,6 +18,7 @@ from gazebo_msgs.srv import SpawnModel
 from geometry_msgs.msg import Pose
 from std_msgs.msg import String, Bool
 from tb3_distributed_control.msg import LeaderHistoryData
+from cbf_spawn_checked import factory_lock
 
 
 def trajectory(spec,t,shift_y=0.):
@@ -56,11 +59,12 @@ class Scenario:
         rospy.set_param('/cbf/scenario/ready',False)
         rospy.wait_for_service('/gazebo/spawn_sdf_model',timeout=60)
         spawn=rospy.ServiceProxy('/gazebo/spawn_sdf_model',SpawnModel)
-        for spec in self.specs:
-            x,y,_,_=trajectory(spec,0.,self.shift_y)
-            pose=Pose();pose.position.x=x;pose.position.y=y;pose.position.z=.4;pose.orientation.w=1.
-            response=spawn(spec['name'],cylinder_sdf(spec['name'],spec['radius']),'',pose,'world')
-            if not response.success:raise RuntimeError(response.status_message)
+        with factory_lock(shutdown=rospy.is_shutdown):
+            for spec in self.specs:
+                x,y,_,_=trajectory(spec,0.,self.shift_y)
+                pose=Pose();pose.position.x=x;pose.position.y=y;pose.position.z=.4;pose.orientation.w=1.
+                response=spawn(spec['name'],cylinder_sdf(spec['name'],spec['radius']),'',pose,'world')
+                if not response.success:raise RuntimeError(response.status_message)
         key='/cbf/results/'+rospy.get_param('/cbf/run_id')+'/directory'
         while not rospy.has_param(key) and not rospy.is_shutdown():rospy.sleep(.05)
         self.path=Path(rospy.get_param(key));self.stream=(self.path/'dynamic_truth.csv').open('w',newline='')
