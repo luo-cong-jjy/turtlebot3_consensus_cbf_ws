@@ -12,6 +12,11 @@
   <arg name="transport_geometry" default="false" />
   <arg name="predictive_bypass" default="false" />
   <arg name="active_guidance_only" default="false" />
+  <arg name="prediction_risk" default="false" />
+  <arg name="suppress_guidance" default="false" />
+  <arg name="risk_weight" default="3.0" />
+  <arg name="risk_clearance" default="0.35" />
+  <arg name="risk_discount" default="0.5" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
@@ -42,6 +47,11 @@
     <arg name="transport_geometry" value="$(arg transport_geometry)" />
     <arg name="predictive_bypass" value="$(arg predictive_bypass)" />
     <arg name="active_guidance_only" value="$(arg active_guidance_only)" />
+    <arg name="prediction_risk" value="$(arg prediction_risk)" />
+    <arg name="suppress_guidance" value="$(arg suppress_guidance)" />
+    <arg name="risk_weight" value="$(arg risk_weight)" />
+    <arg name="risk_clearance" value="$(arg risk_clearance)" />
+    <arg name="risk_discount" value="$(arg risk_discount)" />
     <arg name="infeasible_escape" value="$(arg infeasible_escape)" />
     <arg name="execution_backup" value="$(arg execution_backup)" />
     <arg name="progress_abstain" value="$(arg progress_abstain)" />

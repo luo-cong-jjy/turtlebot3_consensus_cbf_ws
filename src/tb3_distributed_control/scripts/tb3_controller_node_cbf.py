@@ -759,6 +759,8 @@ class TurtleBot3CBFController:
         self.cfg['progress_hypotheses']=bool(rospy.get_param('/cbf/progress_hypotheses',True))
         self.cfg['predictive_bypass']=bool(rospy.get_param('/cbf/predictive_bypass',False))
         self.cfg['active_guidance_only']=bool(rospy.get_param('/cbf/active_guidance_only',False))
+        self.cfg['prediction_risk']=bool(rospy.get_param('/cbf/prediction_risk',False))
+        self.cfg['suppress_guidance']=bool(rospy.get_param('/cbf/suppress_guidance',False))
         self.adaptive_recovery=bool(rospy.get_param('/cbf/adaptive_recovery',False))
         self.cfg['infeasible_escape']=bool(rospy.get_param('/cbf/infeasible_escape',False))
         self.cfg['execution_backup']=bool(rospy.get_param('/cbf/execution_backup',False))

@@ -10,13 +10,15 @@ import matplotlib.pyplot as plt
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--run',action='append',required=True,help='Label=directory')
+    p.add_argument('--robots',type=int,nargs='+',default=[0,2])
+    p.add_argument('--title',default='Recorded motion quality (development runs)')
     p.add_argument('--output',required=True,help='Output prefix (PNG and PDF)');args=p.parse_args()
     prefix=Path(args.output)
     if any(prefix.with_suffix(s).exists() for s in ('.png','.pdf')):raise FileExistsError(prefix)
-    fig,axes=plt.subplots(2,2,figsize=(11,6),sharex=True)
+    fig,axes=plt.subplots(len(args.robots),2,figsize=(11,3*len(args.robots)),sharex=True,squeeze=False)
     for spec in args.run:
         label,directory=spec.split('=',1)
-        for i,robot in enumerate((0,2)):
+        for i,robot in enumerate(args.robots):
             rows=list(csv.DictReader((Path(directory)/('tb3_'+str(robot)+'.csv')).open()))
             def col(name):return np.array([float(r[name]) for r in rows])
             t=col('evaluation_time')
@@ -27,7 +29,7 @@ if __name__=='__main__':
     for ax in axes.ravel():ax.grid(alpha=.25);ax.set_xlim(0,40)
     for ax in axes[-1]:ax.set_xlabel('Measurement time (s)')
     axes[0,0].legend(fontsize=8)
-    fig.suptitle('Five robots / mixed scene / seed 211 / headless development runs',fontsize=12)
+    fig.suptitle(args.title,fontsize=12)
     fig.tight_layout(rect=(0,0,1,.95));prefix.parent.mkdir(parents=True,exist_ok=True)
     for suffix in ('.png','.pdf'):fig.savefig(prefix.with_suffix(suffix),dpi=180)
     plt.close(fig)

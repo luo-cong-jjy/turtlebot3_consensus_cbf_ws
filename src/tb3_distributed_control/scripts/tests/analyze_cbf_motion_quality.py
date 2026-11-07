@@ -69,7 +69,7 @@ def analyze(directory):
         result[path.stem]=item
     return dict(source=str(directory.resolve()),thresholds=dict(low_command_speed=.02,lag=.25,max_interval=1.5*dt),
         interpretation='Descriptive command/measurement metrics; not a safety or prediction-benefit test.',
-        parameters={k:meta.get(k) for k in ('prediction_mode','transport_geometry','adaptive_recovery','predictive_bypass','active_guidance_only')},
+        parameters={k:meta.get(k) for k in ('prediction_mode','transport_geometry','adaptive_recovery','predictive_bypass','active_guidance_only','prediction_risk','suppress_guidance','risk_parameters')},
         robots=result)
 
 

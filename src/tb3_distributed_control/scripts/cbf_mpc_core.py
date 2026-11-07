@@ -119,7 +119,9 @@ def default_config():
         q_coupling=[30.,30.], r_control=[.15,.04], r_plan=[.04,.04],
         r_delta=[.05,.16], r_delta_plan=[.03,.03], max_iter=120,
         fallback_kv=1.8, fallback_kw=3., continuous_guidance=True,
-        guide_velocity_weight=600., guide_heading_weight=2., guide_delta_scale=8.)
+        guide_velocity_weight=600., guide_heading_weight=2., guide_delta_scale=8.,
+        prediction_risk=False,risk_weight=3.,risk_clearance=.35,risk_discount=.5,
+        risk_external_only=True,suppress_guidance=False)
 
 
 class TimedReference:

@@ -22,6 +22,11 @@
   <arg name="transport_geometry" default="false" />
   <arg name="predictive_bypass" default="false" />
   <arg name="active_guidance_only" default="false" />
+  <arg name="prediction_risk" default="false" />
+  <arg name="suppress_guidance" default="false" />
+  <arg name="risk_weight" default="3.0" />
+  <arg name="risk_clearance" default="0.35" />
+  <arg name="risk_discount" default="0.5" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
@@ -62,6 +67,11 @@
   <param name="/cbf/dynamic/transport_geometry" value="$(arg transport_geometry)" />
   <param name="/cbf/predictive_bypass" value="$(arg predictive_bypass)" />
   <param name="/cbf/active_guidance_only" value="$(arg active_guidance_only)" />
+  <param name="/cbf/prediction_risk" value="$(arg prediction_risk)" />
+  <param name="/cbf/suppress_guidance" value="$(arg suppress_guidance)" />
+  <param name="/cbf/mpc/risk_weight" value="$(arg risk_weight)" />
+  <param name="/cbf/mpc/risk_clearance" value="$(arg risk_clearance)" />
+  <param name="/cbf/mpc/risk_discount" value="$(arg risk_discount)" />
   <param name="/cbf/infeasible_escape" value="$(arg infeasible_escape)" />
   <param name="/cbf/execution_backup" value="$(arg execution_backup)" />
   <param name="/cbf/progress_abstain" value="$(arg progress_abstain)" />

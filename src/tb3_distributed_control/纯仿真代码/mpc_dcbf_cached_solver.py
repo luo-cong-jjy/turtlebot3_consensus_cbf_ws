@@ -730,6 +730,11 @@ def progress_guidance(state,goals,obstacles,config,memory):
 
 
 def continuous_guidance(state,goals,obstacles,config,memory):
+    if config.get('suppress_guidance',False):
+        memory.pop('progress_plan',None);memory.pop('guide_index',None)
+        memory.pop('progress_decision',None)
+        memory['progress_summary']=dict(mode='disabled',decision_id=memory.get('progress_counter',0))
+        return np.zeros((config['horizon'],2)),0.
     if config.get('progress_guidance',False):return progress_guidance(state,goals,obstacles,config,memory)
     return _legacy_continuous_guidance(state,goals,obstacles,config,memory)
 
@@ -767,6 +772,11 @@ class IterationDeadline(ca.Callback):
 class CachedMPCProblem:
     def __init__(self, config, obstacle_count, first_delta_bound):
         self.config = dict(config)
+        self.risk_enabled=bool(config.get('prediction_risk',False))
+        if self.risk_enabled:
+            values=[config.get('risk_weight',3.),config.get('risk_clearance',.35),config.get('risk_discount',.5)]
+            if not np.isfinite(values).all() or values[0]<0 or values[1]<=0 or values[2]<0:
+                raise ValueError('Risk weight/discount must be nonnegative; clearance must be positive and finite')
         self.n, self.dt = config['horizon'], config['dt']
         n = self.n
         self.opti = op = ca.Opti()
@@ -788,6 +798,7 @@ class CachedMPCProblem:
         self.angles = op.parameter(n+1, obstacle_count) if obstacle_count else None
         self.axes = op.parameter(n+1, 2*obstacle_count) if obstacle_count else None
         self.barrier_gamma = op.parameter(obstacle_count) if obstacle_count else None
+        self.risk_mask = op.parameter(obstacle_count) if obstacle_count and self.risk_enabled else None
         op.subject_to(x[0, :] == initial.T)
         op.subject_to(r[0, :] == initial[:2].T)
         op.subject_to(op.bounded(v_bounds[0], u[:, 0], v_bounds[1]))
@@ -806,6 +817,7 @@ class CachedMPCProblem:
             op.subject_to(x[j+1, 1] == x[j, 1]+self.dt*u[j, 0]*ca.sin(theta))
             op.subject_to(x[j+1, 2] == theta)
             op.subject_to(r[j+1, :] == r[j, :]+self.dt*q[j, :])
+        risk_objective=0
         for k in range(obstacle_count):
             h = []
             for j in range(n+1):
@@ -815,6 +827,14 @@ class CachedMPCProblem:
                 h.append(b*(ca.sqrt(((c*dx+s*dy)/a)**2+((-s*dx+c*dy)/b)**2+1e-12)-1)-config['margin'])
             for j in range(n):
                 op.subject_to(h[j+1] >= (1-self.barrier_gamma[k])*h[j])
+                if self.risk_enabled:
+                    # C3 compact-support clearance penalty. Uses the SAME
+                    # predicted geometry/margin as the hard barrier, but does
+                    # not alter its feasible set. This is a paper-inspired
+                    # adaptation, not Wang et al.'s truncated inverse distance.
+                    proximity=ca.fmax(1-h[j+1]/config.get('risk_clearance',.35),0.)
+                    risk_objective+=self.risk_mask[k]*config.get('risk_weight',3.)*math.exp(
+                        -config.get('risk_discount',.5)*(j+1)*self.dt)*proximity**4
 
         def quad(v, weights):
             return ca.mtimes([v, ca.diag(ca.DM(weights)), v.T])
@@ -841,9 +861,11 @@ class CachedMPCProblem:
         objective += quad(ca.horzcat(x[-1, :2]-goal[-1, :2], heading), config['q_terminal'])
         objective += quad(r[-1, :]-goal[-1, :2], config['q_plan'])
         objective += quad(x[-1, :2]-r[-1, :], config['q_coupling'])
-        op.minimize(objective)
+        op.minimize(objective+risk_objective)
         self.cost_function=None
-        if config.get('execution_backup',False):
+        if config.get('execution_backup',False) or self.risk_enabled:
+            # Keep the baseline cost signature; obstacle-dependent risk is
+            # added with the SAME snapshot by candidate_cost below.
             self.cost_function=ca.Function('cost_'+str(id(self)),
                 [x,u,r,q,goal,previous,has_previous,guide,self.guide_heading,guide_level],[objective])
         options={'ipopt.max_iter': config['max_iter'], 'ipopt.print_level': 0,
@@ -872,6 +894,24 @@ class CachedMPCProblem:
                 'ipopt.warm_start_mult_bound_push':1e-6,'ipopt.warm_start_slack_bound_push':1e-6})
         op.solver('ipopt', options)
 
+    def prediction_risk_cost(self,states,obstacles):
+        if not self.risk_enabled or not obstacles:return 0.
+        cfg=self.config;h=barrier_values(states,obstacles,cfg['margin'])[:,1:]
+        mask=np.array([not (cfg.get('risk_external_only',True) and o.get('peer',False)) for o in obstacles])
+        discount=np.exp(-cfg.get('risk_discount',.5)*self.dt*np.arange(1,self.n+1))
+        proximity=np.maximum(1-h/cfg.get('risk_clearance',.35),0.)
+        return float(cfg.get('risk_weight',3.)*np.sum(mask[:,None]*discount[None,:]*proximity**4))
+
+    def candidate_cost(self,candidate,goals,previous,guidance,obstacles):
+        vectors,level=guidance[:2]
+        headings=guidance[2] if len(guidance)>2 else np.arctan2(vectors[:,1],vectors[:,0])
+        controls=candidate['controls'];plan=candidate['plan_controls'];states=candidate['states']
+        r=np.vstack((states[0,:2],states[0,:2]+self.dt*np.cumsum(plan,axis=0)))
+        base=float(self.cost_function(states,controls,r,plan,goals,
+            np.zeros(2) if previous is None else previous,float(previous is not None),vectors,headings,level))
+        candidate['risk_cost']=self.prediction_risk_cost(states,obstacles)
+        return base+candidate['risk_cost']
+
     def solve(self, state, goals, obstacles, bounds, previous, guess, plan_guess, guidance=None,
               deadline=None, dual_guess=None):
         begin=time.perf_counter();cpu_begin=time.thread_time()
@@ -892,6 +932,8 @@ class CachedMPCProblem:
         op.set_value(self.guide_heading,headings)
         op.set_value(self.guide_level, level)
         if obstacles:
+            if self.risk_mask is not None:
+                op.set_value(self.risk_mask,[float(not (cfg.get('risk_external_only',True) and o.get('peer',False))) for o in obstacles])
             op.set_value(self.barrier_gamma, np.array([o.get('gamma',cfg['gamma']) for o in obstacles]))
             op.set_value(self.centers, np.column_stack([
                 np.asarray(o.get('prediction_centers', np.tile(o['center'], (self.n+1, 1))))
@@ -951,6 +993,7 @@ class CachedMPCProblem:
                             stage=int(np.argmin(slack[i]))) for i,o in enumerate(obstacles)]
             candidate=dict(states=states,controls=controls,plan_controls=plans,
                 cost=float(value(op.f)),status=self.last_attempt['status'],converged=sol is not None)
+            candidate['risk_cost']=self.prediction_risk_cost(states,obstacles) if finite else None
             valid=self.validate(candidate,state,obstacles,bounds,previous)
             self.last_attempt.update(feasible=bool(valid),min_cbf_slack=candidate.get('min_slack'))
             if valid and (sol is not None or cfg.get('realtime',False)):
@@ -963,6 +1006,9 @@ class CachedMPCProblem:
                 projected=dict(controls=controls,plan_controls=plans,
                     states=rollout(state,controls,self.dt),cost=candidate['cost'],
                     status=candidate['status'],converged=False)
+                if self.risk_enabled:
+                    projected['cost']=self.candidate_cost(projected,goals,previous,
+                        guidance if guidance is not None else (np.zeros((self.n,2)),0.),obstacles)
                 if self.validate(projected,state,obstacles,bounds,previous):
                     projected['validated_steps']=self.n
                     self.last_attempt.update(feasible=True,min_cbf_slack=projected.get('min_slack'))
@@ -1077,8 +1123,7 @@ class MPCSolverManager:
         if not problem.validate(candidate,state,obstacles,bounds,previous):return None
         vectors,level=guidance[:2]
         headings=guidance[2] if len(guidance)>2 else np.arctan2(vectors[:,1],vectors[:,0])
-        r=np.vstack((state[:2],state[:2]+self.config['dt']*np.cumsum(plan,axis=0)))
-        candidate['cost']=float(problem.cost_function(candidate['states'],controls,r,plan,goals,previous,1.,vectors,headings,level))
+        candidate['cost']=problem.candidate_cost(candidate,goals,previous,guidance,obstacles)
         return candidate if np.isfinite(candidate['cost']) else None
 
     def solve(self, state, goals, obstacles, bounds, last_solution, label,
@@ -1233,6 +1278,8 @@ class MPCSolverManager:
             recovery_triggered=bool(recovery or side is not None),recovery_improved=False,
             recovery_candidate_found=bool(best is not None and side is not None),
             seed=seed,cost=best['cost'] if best is not None else None,
+            prediction_risk=bool(cfg.get('prediction_risk',False)),
+            risk_cost=best.get('risk_cost') if best is not None else None,
             min_cbf_slack=best.get('min_slack') if best is not None else None,
             wall_ms=1000*(time.perf_counter()-begin),guide_level=guidance[1],
             guide_obstacle=memory.get('guide_index'),errors=errors,attempt_trace=trace,
