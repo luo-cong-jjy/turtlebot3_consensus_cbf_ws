@@ -33,6 +33,12 @@ def main():
     parser.add_argument('--risk-clearance',type=float,default=.35)
     parser.add_argument('--risk-discount',type=float,default=.5)
     parser.add_argument('--risk-tail-seconds',type=float,default=0.)
+    parser.add_argument('--constraint-mode',choices=['dcbf','ellipse'],default='dcbf')
+    parser.add_argument('--risk-penalty',choices=['clearance_quartic','wang_inverse'],default='clearance_quartic')
+    parser.add_argument('--wang-alpha',type=float,default=1.)
+    parser.add_argument('--wang-mu',type=float,default=.1)
+    parser.add_argument('--wang-iota',type=float,default=.02)
+    parser.add_argument('--wang-radius',type=float,default=1.)
     parser.add_argument('--infeasible-escape',choices=['true','false'],default='false')
     parser.add_argument('--execution-backup',choices=['true','false'],default='false')
     parser.add_argument('--progress-abstain',choices=['true','false'],default='true')
@@ -103,7 +109,7 @@ def main():
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
-            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'execution_backup:='+args.execution_backup,'infeasible_escape:='+args.infeasible_escape,'predictive_bypass:='+args.predictive_bypass,'active_guidance_only:='+args.active_guidance_only,'prediction_risk:='+args.prediction_risk,'suppress_guidance:='+args.suppress_guidance,'risk_weight:='+str(args.risk_weight),'risk_clearance:='+str(args.risk_clearance),'risk_discount:='+str(args.risk_discount),'risk_tail_seconds:='+str(args.risk_tail_seconds),'transport_geometry:='+args.transport_geometry,'adaptive_recovery:='+args.adaptive_recovery,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
+            'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'execution_backup:='+args.execution_backup,'infeasible_escape:='+args.infeasible_escape,'predictive_bypass:='+args.predictive_bypass,'active_guidance_only:='+args.active_guidance_only,'prediction_risk:='+args.prediction_risk,'suppress_guidance:='+args.suppress_guidance,'risk_weight:='+str(args.risk_weight),'risk_clearance:='+str(args.risk_clearance),'risk_discount:='+str(args.risk_discount),'risk_tail_seconds:='+str(args.risk_tail_seconds),'constraint_mode:='+args.constraint_mode,'risk_penalty:='+args.risk_penalty,'wang_alpha:='+str(args.wang_alpha),'wang_mu:='+str(args.wang_mu),'wang_iota:='+str(args.wang_iota),'wang_radius:='+str(args.wang_radius),'transport_geometry:='+args.transport_geometry,'adaptive_recovery:='+args.adaptive_recovery,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
             'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
         report=0.
         while time.monotonic()-wall<args.wall_timeout:
@@ -129,7 +135,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if truth:
         fields=sorted(set().union(*(r.keys() for r in truth)))
@@ -190,13 +196,15 @@ def main():
     meta=json.loads(metadata_path.read_text()) if metadata_path.exists() else {}
     result['risk_configured']=(meta.get('prediction_risk')==result['prediction_risk'] and meta.get('suppress_guidance')==result['suppress_guidance']
         and all(meta.get('risk_parameters',{}).get(k)==value for k,value in [('weight',args.risk_weight),('clearance',args.risk_clearance),('discount',args.risk_discount),('tail_seconds',args.risk_tail_seconds)]))
+    result['core_mode_configured']=(meta.get('constraint_mode')==args.constraint_mode and meta.get('risk_parameters',{}).get('penalty')==args.risk_penalty
+        and all(meta.get('risk_parameters',{}).get(k)==v for k,v in [('wang_alpha',args.wang_alpha),('wang_mu_per_node',args.wang_mu),('wang_iota',args.wang_iota),('wang_radius',args.wang_radius)]))
     result['transport_geometry_configured']=(bool(json.loads(metadata_path.read_text()).get('transport_geometry',False))==result['transport_geometry']) if metadata_path.exists() else False
     result['adaptive_recovery_configured']=(bool(json.loads(metadata_path.read_text()).get('adaptive_recovery',False))==result['adaptive_recovery']) if metadata_path.exists() else False
     result['no_truth_input_passed']=bool(audit) and not any(topic in audit for topic in ('/gazebo/model_states','/cbf/scenario/truth','/gazebo/set_model_state'))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
-        and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
+        and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
         and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and np.isfinite(s['window_final_error']) and s['window_final_error']<.25
                 for s in result['robot_statistics'].values()))
     (out/'evaluation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2),flush=True)

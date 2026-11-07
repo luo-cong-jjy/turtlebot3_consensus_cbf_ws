@@ -781,6 +781,10 @@ class TurtleBot3CBFController:
             raise ValueError('infeasible_escape requires realtime_solver and execution_backup')
         if not .005 < self.cfg['nlp_wall_time'] < self.control_budget <= .2:
             raise ValueError('Expected 5ms < NLP budget < control budget <= 200ms')
+        if self.cfg.get('constraint_mode','dcbf')=='ellipse' and (len(self.names)!=1 or not self.cfg['suppress_guidance']
+                or self.cfg['progress_guidance'] or self.cfg['predictive_bypass'] or self.cfg['infeasible_escape']
+                or self.adaptive_recovery or not self.cfg['execution_backup'] or not self.cfg['realtime']):
+            raise ValueError('Ellipse comparison requires one robot, suppressed guidance, realtime checked backup, no bypass/escape/adaptive recovery')
         self.dt=self.cfg["dt"];self.n=self.cfg["horizon"]
         self.slots=int(rospy.get_param("/cbf/obstacle_slots",12))
         self.max_static=self.slots-(len(self.names)-1)

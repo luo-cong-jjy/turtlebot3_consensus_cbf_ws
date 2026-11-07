@@ -83,6 +83,13 @@ def barrier_values(states, obstacles, margin):
     return _batch_values(np.asarray(states)[:,:2],batch,margin)
 
 
+def safety_residuals(values,obstacles,config):
+    """Future ellipse exterior or original DCBF, in the SAME meter units."""
+    if config.get('constraint_mode','dcbf')=='ellipse':return values[:,1:]
+    gammas=np.array([o.get('gamma',config['gamma']) for o in obstacles])[:,None]
+    return values[:,1:]-(1-gammas)*values[:,:-1]
+
+
 def first_step_values(state,commands,batch,margin,dt,stage=0):
     angle=state[2]+dt*commands[:,1]
     positions=state[:2]+dt*commands[:,0,None]*np.column_stack((np.cos(angle),np.sin(angle)))
@@ -112,8 +119,11 @@ def first_step_mask(state, commands, obstacles, bounds, previous, config,batch=N
         if batch is None:batch=obstacle_batch(obstacles,stage+2,config['gamma'])
         h0,h1,positions,angle=first_step_values(state,u,batch,config['margin'],dt,stage)
         initially_safe=h0.min()>=-tol
-        valid&=np.all(h1-(1-batch.gamma[:,None])*h0[:,None]>=-tol,axis=0)
-        if initially_safe:valid&=np.all(h1>=-tol,axis=0)
+        if config.get('constraint_mode','dcbf')=='ellipse':
+            valid&=initially_safe & np.all(h1>=-tol,axis=0)
+        else:
+            valid&=np.all(h1-(1-batch.gamma[:,None])*h0[:,None]>=-tol,axis=0)
+            if initially_safe:valid&=np.all(h1>=-tol,axis=0)
     return valid,positions,angle
 
 
@@ -125,6 +135,8 @@ def adapt_negative_recovery(state,obstacles,bounds,previous,config):
     No grid witness leaves the original problem unchanged; not a claim of
     continuous infeasibility, recursive feasibility or physical safety.
     """
+    if config.get('constraint_mode','dcbf')=='ellipse':
+        return list(obstacles),dict(adapted=False,reason='ellipse_mode_has_no_gamma_recovery')
     cfg=config;tol=2e-6;packed=obstacle_batch(obstacles,2,cfg['gamma'])
     h0=_batch_values(np.asarray(state)[None,:2],packed,cfg['margin'])[:,0]
     negative=(h0<0)&(packed.gamma>0)
@@ -772,6 +784,12 @@ class IterationDeadline(ca.Callback):
 class CachedMPCProblem:
     def __init__(self, config, obstacle_count, first_delta_bound):
         self.config = dict(config)
+        self.constraint_mode=config.get('constraint_mode','dcbf')
+        self.risk_penalty=config.get('risk_penalty','clearance_quartic')
+        if self.constraint_mode not in ('dcbf','ellipse'):raise ValueError('Unknown constraint_mode')
+        if self.risk_penalty not in ('clearance_quartic','wang_inverse'):raise ValueError('Unknown risk_penalty')
+        wang=[config.get('wang_alpha',1.),config.get('wang_mu',.1),config.get('wang_iota',.02),config.get('wang_radius',1.)]
+        if not np.isfinite(wang).all() or min(wang[0],wang[2],wang[3])<=0 or wang[1]<0:raise ValueError('Invalid Wang cost parameters')
         self.risk_enabled=bool(config.get('prediction_risk',False))
         if self.risk_enabled:
             values=[config.get('risk_weight',3.),config.get('risk_clearance',.35),config.get('risk_discount',.5)]
@@ -781,6 +799,7 @@ class CachedMPCProblem:
         tail=float(config.get('risk_tail_seconds',0.))
         if not np.isfinite(tail) or not 0<=tail<=5.:raise ValueError('Expected risk_tail_seconds in [0,5]')
         self.risk_tail_steps=int(math.ceil(tail/self.dt-1e-10)) if self.risk_enabled else 0
+        if self.risk_tail_steps and self.risk_penalty=='wang_inverse':raise ValueError('Wang comparison requires risk_tail_seconds=0')
         n = self.n
         self.opti = op = ca.Opti()
         self.x = x = op.variable(n+1, 3)
@@ -830,15 +849,23 @@ class CachedMPCProblem:
                 a, b = self.axes[j, 2*k], self.axes[j, 2*k+1]
                 h.append(b*(ca.sqrt(((c*dx+s*dy)/a)**2+((-s*dx+c*dy)/b)**2+1e-12)-1)-config['margin'])
             for j in range(n):
-                op.subject_to(h[j+1] >= (1-self.barrier_gamma[k])*h[j])
+                if self.constraint_mode=='ellipse':op.subject_to(h[j+1]>=0)
+                else:op.subject_to(h[j+1] >= (1-self.barrier_gamma[k])*h[j])
                 if self.risk_enabled:
                     # C3 compact-support clearance penalty. Uses the SAME
                     # predicted geometry/margin as the hard barrier, but does
                     # not alter its feasible set. This is a paper-inspired
                     # adaptation, not Wang et al.'s truncated inverse distance.
-                    proximity=ca.fmax(1-h[j+1]/config.get('risk_clearance',.35),0.)
-                    risk_objective+=self.risk_mask[k]*config.get('risk_weight',3.)*math.exp(
-                        -config.get('risk_discount',.5)*(j+1)*self.dt)*proximity**4
+                    if self.risk_penalty=='wang_inverse':
+                        distance_squared=ca.sumsqr(x[j+1,:2]-self.centers[j+1,2*k:2*k+2])
+                        distance=ca.sqrt(distance_squared+1e-12)
+                        penalty=ca.if_else(distance_squared<=config.get('wang_radius',1.)**2,
+                            config.get('risk_weight',3.)*math.exp(-config.get('wang_mu',.1)*(j+1))/
+                            (config.get('wang_alpha',1.)*distance+config.get('wang_iota',.02)),0.)
+                    else:
+                        proximity=ca.fmax(1-h[j+1]/config.get('risk_clearance',.35),0.)
+                        penalty=config.get('risk_weight',3.)*math.exp(-config.get('risk_discount',.5)*(j+1)*self.dt)*proximity**4
+                    risk_objective+=self.risk_mask[k]*penalty
             # Optional soft-only lookahead. No new decision variables or hard
             # constraints: terminal heading/speed are held, turn rate is zero.
             # Obstacle means continue under the existing predictor; axes and
@@ -914,6 +941,14 @@ class CachedMPCProblem:
 
     def prediction_risk_cost(self,states,obstacles,controls=None):
         if not self.risk_enabled or not obstacles:return 0.
+        if self.risk_penalty=='wang_inverse':
+            cfg=self.config;batch=obstacle_batch(obstacles,len(states))
+            squares=np.sum((states[None,1:,:2]-batch.centers[:,1:])**2,axis=-1)
+            distances=np.sqrt(squares+1e-12)
+            mask=np.array([not (cfg.get('risk_external_only',True) and o.get('peer',False)) for o in obstacles])[:,None]
+            decay=np.exp(-cfg.get('wang_mu',.1)*np.arange(1,self.n+1))
+            return float(np.sum(mask*(squares<=cfg.get('wang_radius',1.)**2)*cfg.get('risk_weight',3.)*decay[None,:]/
+                (cfg.get('wang_alpha',1.)*distances+cfg.get('wang_iota',.02))))
         cfg=self.config;h=barrier_values(states,obstacles,cfg['margin'])[:,1:]
         if self.risk_tail_steps:
             seconds=self.dt*np.arange(1,self.risk_tail_steps+1)
@@ -945,6 +980,12 @@ class CachedMPCProblem:
         self.last_attempt=dict(status='setup',iterations=-1,wall_ms=0.,cpu_ms=0.,
             setup_ms=0.,nlp_ms=0.,validation_ms=0.,deadline_stop=False,feasible=False,
             dual_warm=False,min_cbf_slack=None,max_dynamics_error=None)
+        self.last_attempt['constraint_mode']=self.constraint_mode
+        if self.constraint_mode=='ellipse' and obstacles:
+            initial_h=barrier_values(np.asarray(state)[None,:],obstacles,self.config['margin'])
+            if initial_h.min() < -2e-6:
+                self.last_attempt.update(status='ellipse_initial_precondition_failed',initial_h_min=float(initial_h.min()))
+                raise RuntimeError('Ellipse comparison initial state is outside its admissible safe set')
         op, cfg = self.opti, self.config
         op.set_value(self.initial, state)
         op.set_value(self.goal, goals)
@@ -1012,8 +1053,7 @@ class CachedMPCProblem:
                 self.last_attempt['max_plan_bound_violation']=float(max(0.,np.abs(plans).max()-cfg['plan_v_max']))
                 h=barrier_values(states,obstacles,cfg['margin'])
                 if h.size:
-                    gammas=np.array([o.get('gamma',cfg['gamma']) for o in obstacles])[:,None]
-                    slack=h[:,1:]-(1-gammas)*h[:,:-1]
+                    slack=safety_residuals(h,obstacles,cfg)
                     k,j=np.unravel_index(int(np.argmin(slack)),slack.shape)
                     self.last_attempt.update(raw_min_cbf_slack=float(slack[k,j]),
                         worst_obstacle=obstacles[k].get('name',str(k)),worst_stage=int(j))
@@ -1070,11 +1110,11 @@ class CachedMPCProblem:
                 return False
         values = barrier_values(states, obstacles, cfg['margin'])
         if values.size:
-            gammas = np.array([o.get('gamma',cfg['gamma']) for o in obstacles])[:,None]
-            slack = values[:, 1:]-(1-gammas)*values[:, :-1]
+            slack=safety_residuals(values,obstacles,cfg)
             checked = slack[:, :1] if one_step else slack
             candidate['min_slack'] = float(checked.min())
             candidate['min_h'] = float((values[:, :2] if one_step else values).min())
+            if self.constraint_mode=='ellipse' and values[:,0].min() < -tol:return False
             if checked.min() < -tol:
                 return False
             if values[:, 0].min() >= -tol and candidate['min_h'] < -tol:
@@ -1309,6 +1349,7 @@ class MPCSolverManager:
             recovery_candidate_found=bool(best is not None and side is not None),
             seed=seed,cost=best['cost'] if best is not None else None,
             prediction_risk=bool(cfg.get('prediction_risk',False)),
+            constraint_mode=cfg.get('constraint_mode','dcbf'),risk_penalty=cfg.get('risk_penalty','clearance_quartic'),
             risk_cost=best.get('risk_cost') if best is not None else None,
             min_cbf_slack=best.get('min_slack') if best is not None else None,
             wall_ms=1000*(time.perf_counter()-begin),guide_level=guidance[1],

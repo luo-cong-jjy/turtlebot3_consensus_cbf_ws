@@ -18,6 +18,12 @@
   <arg name="risk_clearance" default="0.35" />
   <arg name="risk_discount" default="0.5" />
   <arg name="risk_tail_seconds" default="0.0" />
+  <arg name="constraint_mode" default="dcbf" />
+  <arg name="risk_penalty" default="clearance_quartic" />
+  <arg name="wang_alpha" default="1.0" />
+  <arg name="wang_mu" default="0.1" />
+  <arg name="wang_iota" default="0.02" />
+  <arg name="wang_radius" default="1.0" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
@@ -60,6 +66,12 @@
     <arg name="risk_clearance" value="$(arg risk_clearance)" />
     <arg name="risk_discount" value="$(arg risk_discount)" />
     <arg name="risk_tail_seconds" value="$(arg risk_tail_seconds)" />
+    <arg name="constraint_mode" value="$(arg constraint_mode)" />
+    <arg name="risk_penalty" value="$(arg risk_penalty)" />
+    <arg name="wang_alpha" value="$(arg wang_alpha)" />
+    <arg name="wang_mu" value="$(arg wang_mu)" />
+    <arg name="wang_iota" value="$(arg wang_iota)" />
+    <arg name="wang_radius" value="$(arg wang_radius)" />
     <arg name="infeasible_escape" value="$(arg infeasible_escape)" />
     <arg name="execution_backup" value="$(arg execution_backup)" />
     <arg name="progress_abstain" value="$(arg progress_abstain)" />

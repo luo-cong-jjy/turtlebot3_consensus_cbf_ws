@@ -121,7 +121,8 @@ def default_config():
         fallback_kv=1.8, fallback_kw=3., continuous_guidance=True,
         guide_velocity_weight=600., guide_heading_weight=2., guide_delta_scale=8.,
         prediction_risk=False,risk_weight=3.,risk_clearance=.35,risk_discount=.5,risk_tail_seconds=0.,
-        risk_external_only=True,suppress_guidance=False)
+        risk_external_only=True,suppress_guidance=False,constraint_mode='dcbf',
+        risk_penalty='clearance_quartic',wang_alpha=1.,wang_mu=.1,wang_iota=.02,wang_radius=1.)
 
 
 class TimedReference:
