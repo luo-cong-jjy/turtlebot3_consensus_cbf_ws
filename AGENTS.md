@@ -25,3 +25,5 @@
 - 当前新研究分支 research/geometry-time-2026-11-07，见 docs/geometry_time_recovery_2026-11-07.md。135项检查及构建通过，20次尝试（含4启动失败）完整保留；transport_geometry+adaptive_recovery组合完成10次均过、含6次五机，但非统计或物理安全证明，两个开关仍默认false。只在h0<0且原有限网格恢复不可行时尝试降低恢复gamma，h0非负gamma保持；gamma=0仅非恶化，不保证有限时间恢复。当前仿真为world来源odom，不是真实轮式里程计验证。初始化串行校验不能被算作控制创新或消除所有Gazebo原生崩溃。
 
 - 2026-11-07 绕行质量复盘分支 research/bypass-quality-2026-11-07，见 docs/bypass_quality_2026-11-07.md。137项检查；7次尝试、2次原生启动崩溃，5次有效闭环仅3次通过。active_guidance_only默认false；门控局部修正不等于整体稳定改进，同种子重复及旧predictive组合均有负代理净距，不推荐当稳定版本。11帧同输入离线配对证明预测影响约束求解，不证明闭环整体优势。原始失败完整归档。
+
+- 2026-11-07 预测风险代价分支 research/prediction-risk-2026-11-07，见 docs/prediction_risk_2026-11-07.md。148项检查，8次单机尝试含1次就绪超时；7次闭环含对照5过2恢复失败。风险配置4次完成仅2过，未接受为整体改进，不进入五机。prediction_risk/suppress_guidance默认false，risk_tail_seconds默认0；尾段是固定终端运动/保持最后半轴的软假设，不增加优化变量或硬约束，不代表2.5秒安全计划。保留V1短窗口提交2de0ca7与全部失败，不将Wang论文原方法声称已复现。

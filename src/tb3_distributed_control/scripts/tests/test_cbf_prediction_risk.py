@@ -20,6 +20,41 @@ def setup(risk=True,**extra):
 
 
 class PredictionRiskChecks(unittest.TestCase):
+    def test_risk_changes_control_before_the_hard_barrier_binds(self):
+        cfg,goals,obs=setup();u=np.tile([.15,0.],(10,1));previous=u[0].copy();answers=[]
+        for enabled in (False,True):
+            problem=CachedMPCProblem(dict(cfg,prediction_risk=enabled),1,False)
+            answer=problem.solve(np.zeros(3),goals,obs,(-.22,.22),previous,u,u)
+            self.assertTrue(problem.validate(answer,np.zeros(3),obs,(-.22,.22),previous));answers.append(answer)
+        self.assertGreater(answers[0]['min_slack'],1e-3)
+        self.assertGreater(np.linalg.norm(answers[1]['controls'][0]-answers[0]['controls'][0]),1e-4)
+
+    def test_soft_tail_keeps_variable_and_hard_constraint_counts(self):
+        cfg,goals,obs=setup();short=CachedMPCProblem(cfg,1,False)
+        extended=CachedMPCProblem(dict(cfg,risk_tail_seconds=1.5),1,False)
+        self.assertEqual(extended.risk_tail_steps,15)
+        self.assertEqual(short.opti.nx,extended.opti.nx);self.assertEqual(short.opti.ng,extended.opti.ng)
+        u=np.tile([.22,0.],(10,1));states=rollout(np.zeros(3),u,.1)
+        static=[dict(obs[0],prediction_centers=np.tile([.6,0.],(11,1)))]
+        candidate=dict(states=states,controls=u,plan_controls=u.copy())
+        self.assertTrue(short.validate(candidate,np.zeros(3),static,(-.22,.22),u[0]))
+        self.assertTrue(extended.validate(candidate,np.zeros(3),static,(-.22,.22),u[0]))
+        self.assertGreater(extended.prediction_risk_cost(states,static,u),short.prediction_risk_cost(states,static,u))
+
+    def test_tail_and_solver_use_the_same_snapshot_cost(self):
+        cfg,goals,obs=setup(risk_tail_seconds=1.5);problem=CachedMPCProblem(cfg,1,False)
+        u=np.tile([.15,0.],(10,1));previous=u[0].copy()
+        answer=problem.solve(np.zeros(3),goals,obs,(-.22,.22),previous,u,u)
+        self.assertAlmostEqual(problem.candidate_cost(answer,goals,previous,(np.zeros((10,2)),0.),obs),answer['cost'],places=6)
+
+    def test_tail_circle_has_the_expected_constant_heading_forecast(self):
+        cfg,goals,obs=setup(risk_tail_seconds=1.5);problem=CachedMPCProblem(cfg,1,False)
+        j=np.arange(1,26);robot=np.column_stack((.015*j,np.zeros(25)))
+        center=np.column_stack((np.full(25,.65),-.25+.02*j))
+        h=np.linalg.norm(robot-center,axis=1)-.27
+        expected=np.sum(3.*np.exp(-.5*.1*j)*np.maximum(1-h/.35,0.)**4)
+        self.assertAlmostEqual(problem.prediction_risk_cost(goals,obs,np.tile([.15,0.],(10,1))),expected,places=9)
+
     def test_circle_closed_form_discount_and_mask(self):
         cfg,goals,obs=setup();problem=CachedMPCProblem(cfg,1,False)
         states=goals.copy();h=np.linalg.norm(states[1:,:2]-obs[0]['prediction_centers'][1:],axis=1)-.15-.12

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parameterised MPC with unchanged states/cost/CBFs and selective multistart.
+"""Parameterised MPC with preserved hard CBFs and optional soft objectives.
 
 No ROS or simulation globals. Four static-obstacle uncertainty envelopes are
 inputs, not refitted here. The nominal target and hard safety constraints are
@@ -778,6 +778,9 @@ class CachedMPCProblem:
             if not np.isfinite(values).all() or values[0]<0 or values[1]<=0 or values[2]<0:
                 raise ValueError('Risk weight/discount must be nonnegative; clearance must be positive and finite')
         self.n, self.dt = config['horizon'], config['dt']
+        tail=float(config.get('risk_tail_seconds',0.))
+        if not np.isfinite(tail) or not 0<=tail<=5.:raise ValueError('Expected risk_tail_seconds in [0,5]')
+        self.risk_tail_steps=int(math.ceil(tail/self.dt-1e-10)) if self.risk_enabled else 0
         n = self.n
         self.opti = op = ca.Opti()
         self.x = x = op.variable(n+1, 3)
@@ -799,6 +802,7 @@ class CachedMPCProblem:
         self.axes = op.parameter(n+1, 2*obstacle_count) if obstacle_count else None
         self.barrier_gamma = op.parameter(obstacle_count) if obstacle_count else None
         self.risk_mask = op.parameter(obstacle_count) if obstacle_count and self.risk_enabled else None
+        self.risk_tail_centers=op.parameter(self.risk_tail_steps,2*obstacle_count) if obstacle_count and self.risk_tail_steps else None
         op.subject_to(x[0, :] == initial.T)
         op.subject_to(r[0, :] == initial[:2].T)
         op.subject_to(op.bounded(v_bounds[0], u[:, 0], v_bounds[1]))
@@ -835,6 +839,20 @@ class CachedMPCProblem:
                     proximity=ca.fmax(1-h[j+1]/config.get('risk_clearance',.35),0.)
                     risk_objective+=self.risk_mask[k]*config.get('risk_weight',3.)*math.exp(
                         -config.get('risk_discount',.5)*(j+1)*self.dt)*proximity**4
+            # Optional soft-only lookahead. No new decision variables or hard
+            # constraints: terminal heading/speed are held, turn rate is zero.
+            # Obstacle means continue under the existing predictor; axes and
+            # angles are held at the final hard-window node. This tail is NOT
+            # an executable/validated longer plan or a safety certificate.
+            for step in range(1,self.risk_tail_steps+1):
+                c,s=ca.cos(self.angles[n,k]),ca.sin(self.angles[n,k])
+                a,b=self.axes[n,2*k],self.axes[n,2*k+1]
+                dx=x[n,0]+step*self.dt*u[n-1,0]*ca.cos(x[n,2])-self.risk_tail_centers[step-1,2*k]
+                dy=x[n,1]+step*self.dt*u[n-1,0]*ca.sin(x[n,2])-self.risk_tail_centers[step-1,2*k+1]
+                value=b*(ca.sqrt(((c*dx+s*dy)/a)**2+((-s*dx+c*dy)/b)**2+1e-12)-1)-config['margin']
+                proximity=ca.fmax(1-value/config.get('risk_clearance',.35),0.)
+                risk_objective+=self.risk_mask[k]*config.get('risk_weight',3.)*math.exp(
+                    -config.get('risk_discount',.5)*(n+step)*self.dt)*proximity**4
 
         def quad(v, weights):
             return ca.mtimes([v, ca.diag(ca.DM(weights)), v.T])
@@ -894,11 +912,20 @@ class CachedMPCProblem:
                 'ipopt.warm_start_mult_bound_push':1e-6,'ipopt.warm_start_slack_bound_push':1e-6})
         op.solver('ipopt', options)
 
-    def prediction_risk_cost(self,states,obstacles):
+    def prediction_risk_cost(self,states,obstacles,controls=None):
         if not self.risk_enabled or not obstacles:return 0.
         cfg=self.config;h=barrier_values(states,obstacles,cfg['margin'])[:,1:]
+        if self.risk_tail_steps:
+            seconds=self.dt*np.arange(1,self.risk_tail_steps+1)
+            velocity=((states[-1,:2]-states[-2,:2])/self.dt if controls is None else
+                controls[-1,0]*np.array([np.cos(states[-1,2]),np.sin(states[-1,2])]))
+            tail_states=np.column_stack((states[-1,:2]+seconds[:,None]*velocity,np.full(len(seconds),states[-1,2])))
+            tail_obstacles=[dict(o,prediction_centers=progress_centers(o,self.n*self.dt+seconds,self.dt),
+                prediction_axes=np.tile(obstacle_axes(o,self.n),(len(seconds),1)),
+                prediction_angles=np.full(len(seconds),obstacle_angles(o,self.n+1)[-1])) for o in obstacles]
+            h=np.column_stack((h,barrier_values(tail_states,tail_obstacles,cfg['margin'])))
         mask=np.array([not (cfg.get('risk_external_only',True) and o.get('peer',False)) for o in obstacles])
-        discount=np.exp(-cfg.get('risk_discount',.5)*self.dt*np.arange(1,self.n+1))
+        discount=np.exp(-cfg.get('risk_discount',.5)*self.dt*np.arange(1,self.n+self.risk_tail_steps+1))
         proximity=np.maximum(1-h/cfg.get('risk_clearance',.35),0.)
         return float(cfg.get('risk_weight',3.)*np.sum(mask[:,None]*discount[None,:]*proximity**4))
 
@@ -909,7 +936,7 @@ class CachedMPCProblem:
         r=np.vstack((states[0,:2],states[0,:2]+self.dt*np.cumsum(plan,axis=0)))
         base=float(self.cost_function(states,controls,r,plan,goals,
             np.zeros(2) if previous is None else previous,float(previous is not None),vectors,headings,level))
-        candidate['risk_cost']=self.prediction_risk_cost(states,obstacles)
+        candidate['risk_cost']=self.prediction_risk_cost(states,obstacles,controls)
         return base+candidate['risk_cost']
 
     def solve(self, state, goals, obstacles, bounds, previous, guess, plan_guess, guidance=None,
@@ -934,6 +961,9 @@ class CachedMPCProblem:
         if obstacles:
             if self.risk_mask is not None:
                 op.set_value(self.risk_mask,[float(not (cfg.get('risk_external_only',True) and o.get('peer',False))) for o in obstacles])
+            if self.risk_tail_centers is not None:
+                times=self.dt*np.arange(self.n+1,self.n+self.risk_tail_steps+1)
+                op.set_value(self.risk_tail_centers,np.column_stack([progress_centers(o,times,self.dt) for o in obstacles]))
             op.set_value(self.barrier_gamma, np.array([o.get('gamma',cfg['gamma']) for o in obstacles]))
             op.set_value(self.centers, np.column_stack([
                 np.asarray(o.get('prediction_centers', np.tile(o['center'], (self.n+1, 1))))
@@ -993,7 +1023,7 @@ class CachedMPCProblem:
                             stage=int(np.argmin(slack[i]))) for i,o in enumerate(obstacles)]
             candidate=dict(states=states,controls=controls,plan_controls=plans,
                 cost=float(value(op.f)),status=self.last_attempt['status'],converged=sol is not None)
-            candidate['risk_cost']=self.prediction_risk_cost(states,obstacles) if finite else None
+            candidate['risk_cost']=self.prediction_risk_cost(states,obstacles,controls) if finite else None
             valid=self.validate(candidate,state,obstacles,bounds,previous)
             self.last_attempt.update(feasible=bool(valid),min_cbf_slack=candidate.get('min_slack'))
             if valid and (sol is not None or cfg.get('realtime',False)):

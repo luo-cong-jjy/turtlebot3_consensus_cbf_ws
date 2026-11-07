@@ -1,0 +1,824 @@
+{
+  "stage": "Prediction risk adaptation; NOT accepted as overall improvement",
+  "parent_commit": "fecdf1d7fbf536de6d34061a57b0bb84002177a3",
+  "short_window_commit": "2de0ca7",
+  "branch": "research/prediction-risk-2026-11-07",
+  "tag": "experiment/prediction-risk-evaluation-2026-11-07",
+  "unit_tests_passed": 148,
+  "attempts": 8,
+  "valid_closed_loops": 7,
+  "passes_including_controls": 5,
+  "recovery_failures": 2,
+  "readiness_failures": 1,
+  "risk_completed": 4,
+  "risk_passes": 2,
+  "default_prediction_risk": false,
+  "default_suppress_guidance": false,
+  "default_soft_tail": 0.0,
+  "runs": [
+    {
+      "directory": "crossing_211_hard",
+      "passed": true,
+      "failure": null,
+      "prediction_risk": false,
+      "suppress_guidance": true,
+      "soft_tail_seconds": 0.0,
+      "dynamic_proxy_clearance": 0.10508765930225467,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0035295857632547355,
+          "rows": 401,
+          "last_time": 40.021,
+          "statuses": {
+            "solver_failed_stop": 1,
+            "ok": 396,
+            "validated_one_step": 1,
+            "feasible_iterate": 3
+          },
+          "timing_p95_ms": 70.35054196603596,
+          "timing_max_ms": 98.62855600658804,
+          "final_error": 0.0035295857632547355,
+          "dynamic_cycles": 280,
+          "max_estimated_speed": 0.17601677061908258
+        }
+      },
+      "quality": {
+        "tb3_0": {
+          "samples": 401,
+          "first_time": -0.0040000000000000036,
+          "last_time": 39.996,
+          "excluded_gap_count": 0,
+          "observed_duration": 40.0,
+          "position_rmse": 0.32497331662949847,
+          "time_mean_position_error": 0.19896384595237537,
+          "final_position_error": 0.0035295857632547355,
+          "peak_position_error": 0.8048064609072347,
+          "last_error_above_25cm": 22.196,
+          "command_low_speed_seconds": 1.0999999999999996,
+          "command_low_speed_with_lag_seconds": 0.9000000000000004,
+          "longest_command_low_speed_with_lag_seconds": 0.5,
+          "reverse_seconds": 2.8000000000000007,
+          "omega_total_variation": 29.68547449202495,
+          "max_omega_command_step": 2.84,
+          "measured_pose_path_length": 6.6566257177016075,
+          "status_counts": {
+            "ok": 396,
+            "feasible_iterate": 3,
+            "solver_failed_stop": 1,
+            "validated_one_step": 1
+          },
+          "reference_decisions": 0,
+          "active_circulation_decisions": 0,
+          "active_guide_cycles": 0,
+          "explicit_inactive_guide_cycles": 0,
+          "inactive_guidance_gate_check": null
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 389,
+              "reference_quality_counts": {
+                "0": 1,
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.0061970811163010705,
+              "max_plan_execution_error": 0.04569827243033705,
+              "max_nominal_error_during_plan_samples": 0.8048064609072347
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": false
+        },
+        "reliability_all_observers": {
+          "applicable": true,
+          "passed": true,
+          "frames": 395,
+          "forecast_records_reconstructed": 282,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "risk_wiring": {
+          "risk_positive_cycles": 0,
+          "risk_max": 0.0,
+          "suppressed_guide_all_zero": true,
+          "nonnegative_risk_and_total_consistent": true,
+          "suppress_command_is_not_forced_zero": true
+        }
+      }
+    },
+    {
+      "directory": "crossing_211_legacy",
+      "passed": true,
+      "failure": null,
+      "prediction_risk": false,
+      "suppress_guidance": false,
+      "soft_tail_seconds": 0.0,
+      "dynamic_proxy_clearance": 0.18583260769568555,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0028056468549531835,
+          "rows": 401,
+          "last_time": 40.062000000000005,
+          "statuses": {
+            "late_fallback_stop": 3,
+            "ok": 362,
+            "feasible_iterate": 35,
+            "validated_one_step": 1
+          },
+          "timing_p95_ms": 85.40225500473753,
+          "timing_max_ms": 117.05621203873307,
+          "final_error": 0.003004663451387182,
+          "dynamic_cycles": 280,
+          "max_estimated_speed": 0.1800655432722766
+        }
+      },
+      "quality": {
+        "tb3_0": {
+          "samples": 401,
+          "first_time": 0.042999999999999844,
+          "last_time": 40.043,
+          "excluded_gap_count": 0,
+          "observed_duration": 40.0,
+          "position_rmse": 0.2582166249317575,
+          "time_mean_position_error": 0.15983072165092085,
+          "final_position_error": 0.003004663451387182,
+          "peak_position_error": 0.6367725969267177,
+          "last_error_above_25cm": 20.942999999999998,
+          "command_low_speed_seconds": 0.9659999999999958,
+          "command_low_speed_with_lag_seconds": 0.1999999999999993,
+          "longest_command_low_speed_with_lag_seconds": 0.10000000000000142,
+          "reverse_seconds": 8.5,
+          "omega_total_variation": 32.45370573820537,
+          "max_omega_command_step": 2.228695129709469,
+          "measured_pose_path_length": 6.515612784001239,
+          "status_counts": {
+            "ok": 362,
+            "feasible_iterate": 35,
+            "validated_one_step": 1,
+            "late_fallback_stop": 3
+          },
+          "reference_decisions": 22,
+          "active_circulation_decisions": 13,
+          "active_guide_cycles": 54,
+          "explicit_inactive_guide_cycles": 34,
+          "inactive_guidance_gate_check": null
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 370,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.006487023933602934,
+              "max_plan_execution_error": 0.0432778513725414,
+              "max_nominal_error_during_plan_samples": 0.6363349045843764
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "be0ab6c23df96769a7993e27ca4384f1441fccce867af0908fb41173763100e9",
+          "decisions": 22,
+          "winner_checks": 22,
+          "previews_reconstructed": 38,
+          "selected_valid": 22,
+          "no_valid_previews": 0,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 0,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.926168997864693e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "reliability_all_observers": {
+          "applicable": true,
+          "passed": true,
+          "frames": 389,
+          "forecast_records_reconstructed": 275,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "risk_wiring": {
+          "risk_positive_cycles": 0,
+          "risk_max": 0.0,
+          "suppressed_guide_all_zero": null,
+          "nonnegative_risk_and_total_consistent": true,
+          "suppress_command_is_not_forced_zero": true
+        }
+      }
+    },
+    {
+      "directory": "crossing_211_risk",
+      "passed": true,
+      "failure": null,
+      "prediction_risk": true,
+      "suppress_guidance": true,
+      "soft_tail_seconds": 0.0,
+      "dynamic_proxy_clearance": 0.11649134145994883,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.001643049945019074,
+          "rows": 401,
+          "last_time": 40.02499999999999,
+          "statuses": {
+            "ok": 389,
+            "feasible_iterate": 10,
+            "solver_failed_stop": 2
+          },
+          "timing_p95_ms": 83.39421794516966,
+          "timing_max_ms": 103.47534401807934,
+          "final_error": 0.0015470681748202982,
+          "dynamic_cycles": 279,
+          "max_estimated_speed": 0.17756183960371463
+        }
+      },
+      "quality": {
+        "tb3_0": {
+          "samples": 401,
+          "first_time": 0.01599999999999993,
+          "last_time": 40.016,
+          "excluded_gap_count": 0,
+          "observed_duration": 40.0,
+          "position_rmse": 0.3407105881622571,
+          "time_mean_position_error": 0.21219256088239188,
+          "final_position_error": 0.0015470681748202982,
+          "peak_position_error": 0.8509538903350455,
+          "last_error_above_25cm": 22.716,
+          "command_low_speed_seconds": 1.0000000000000053,
+          "command_low_speed_with_lag_seconds": 0.5000000000000036,
+          "longest_command_low_speed_with_lag_seconds": 0.20000000000000107,
+          "reverse_seconds": 2.7999999999999994,
+          "omega_total_variation": 34.912978834110795,
+          "max_omega_command_step": 2.8399999837733536,
+          "measured_pose_path_length": 6.612510939144629,
+          "status_counts": {
+            "ok": 389,
+            "feasible_iterate": 10,
+            "solver_failed_stop": 2
+          },
+          "reference_decisions": 0,
+          "active_circulation_decisions": 0,
+          "active_guide_cycles": 0,
+          "explicit_inactive_guide_cycles": 0,
+          "inactive_guidance_gate_check": null
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.005562944133686161,
+              "max_plan_execution_error": 0.04204872324870016,
+              "max_nominal_error_during_plan_samples": 0.8509538903350455
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": false
+        },
+        "reliability_all_observers": {
+          "applicable": true,
+          "passed": true,
+          "frames": 376,
+          "forecast_records_reconstructed": 265,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "risk_wiring": {
+          "risk_positive_cycles": 98,
+          "risk_max": 35.61686377438395,
+          "suppressed_guide_all_zero": true,
+          "nonnegative_risk_and_total_consistent": true,
+          "suppress_command_is_not_forced_zero": true
+        }
+      }
+    },
+    {
+      "directory": "crossing_211_risk_short_v2",
+      "passed": true,
+      "failure": null,
+      "prediction_risk": true,
+      "suppress_guidance": true,
+      "soft_tail_seconds": 0.0,
+      "dynamic_proxy_clearance": 0.15685279352439147,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.003662609774311973,
+          "rows": 400,
+          "last_time": 40.003,
+          "statuses": {
+            "ok": 386,
+            "late_fallback_stop": 3,
+            "feasible_iterate": 11
+          },
+          "timing_p95_ms": 83.63415526691824,
+          "timing_max_ms": 108.84475597413257,
+          "final_error": 0.003662609774311973,
+          "dynamic_cycles": 285,
+          "max_estimated_speed": 0.19107749205017396
+        }
+      },
+      "quality": {
+        "tb3_0": {
+          "samples": 400,
+          "first_time": 0.07799999999999999,
+          "last_time": 39.978,
+          "excluded_gap_count": 0,
+          "observed_duration": 39.900000000000006,
+          "position_rmse": 0.43927839667698054,
+          "time_mean_position_error": 0.2969722289668109,
+          "final_position_error": 0.003662609774311973,
+          "peak_position_error": 0.9564647050974124,
+          "last_error_above_25cm": 26.278000000000002,
+          "command_low_speed_seconds": 1.4999999999999982,
+          "command_low_speed_with_lag_seconds": 1.1999999999999993,
+          "longest_command_low_speed_with_lag_seconds": 0.40000000000000036,
+          "reverse_seconds": 2.9999999999999964,
+          "omega_total_variation": 40.92545463713361,
+          "max_omega_command_step": 2.2536569429588864,
+          "measured_pose_path_length": 6.712330283774293,
+          "status_counts": {
+            "ok": 386,
+            "feasible_iterate": 11,
+            "late_fallback_stop": 3
+          },
+          "reference_decisions": 0,
+          "active_circulation_decisions": 0,
+          "active_guide_cycles": 0,
+          "explicit_inactive_guide_cycles": 0,
+          "inactive_guidance_gate_check": null
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 353,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.006704539452906431,
+              "max_plan_execution_error": 0.046472828386134445,
+              "max_nominal_error_during_plan_samples": 0.9564647050974124
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": false
+        },
+        "reliability_all_observers": {
+          "applicable": true,
+          "passed": true,
+          "frames": 366,
+          "forecast_records_reconstructed": 262,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "risk_wiring": {
+          "risk_positive_cycles": 100,
+          "risk_max": 27.034860660979476,
+          "suppressed_guide_all_zero": true,
+          "nonnegative_risk_and_total_consistent": true,
+          "suppress_command_is_not_forced_zero": true
+        }
+      }
+    },
+    {
+      "directory": "crossing_211_tail_v2",
+      "passed": false,
+      "failure": "Sensor/MPC/scenario readiness timeout",
+      "prediction_risk": true,
+      "suppress_guidance": true,
+      "soft_tail_seconds": 1.5,
+      "dynamic_proxy_clearance": null,
+      "robot_statistics": {},
+      "quality": null,
+      "audits": null
+    },
+    {
+      "directory": "decelerating_211_legacy_v2",
+      "passed": true,
+      "failure": null,
+      "prediction_risk": false,
+      "suppress_guidance": false,
+      "soft_tail_seconds": 0.0,
+      "dynamic_proxy_clearance": 0.15331137383286475,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.003853227697298388,
+          "rows": 400,
+          "last_time": 39.99799999999999,
+          "statuses": {
+            "feasible_iterate": 43,
+            "ok": 350,
+            "validated_one_step": 2,
+            "late_fallback_stop": 5
+          },
+          "timing_p95_ms": 85.57740589021705,
+          "timing_max_ms": 127.82182299997658,
+          "final_error": 0.003853227697298388,
+          "dynamic_cycles": 142,
+          "max_estimated_speed": 0.21432720140117004
+        }
+      },
+      "quality": {
+        "tb3_0": {
+          "samples": 400,
+          "first_time": 0.06899999999999987,
+          "last_time": 39.969,
+          "excluded_gap_count": 0,
+          "observed_duration": 39.900000000000006,
+          "position_rmse": 0.23393875820748167,
+          "time_mean_position_error": 0.1388236362492334,
+          "final_position_error": 0.003853227697298388,
+          "peak_position_error": 0.590685156120521,
+          "last_error_above_25cm": 17.968999999999998,
+          "command_low_speed_seconds": 0.8320000000000061,
+          "command_low_speed_with_lag_seconds": 0.7320000000000046,
+          "longest_command_low_speed_with_lag_seconds": 0.13300000000000267,
+          "reverse_seconds": 0.7999999999999989,
+          "omega_total_variation": 25.04236612003898,
+          "max_omega_command_step": 1.6368952873069282,
+          "measured_pose_path_length": 6.599952336091862,
+          "status_counts": {
+            "ok": 350,
+            "feasible_iterate": 43,
+            "validated_one_step": 2,
+            "late_fallback_stop": 5
+          },
+          "reference_decisions": 27,
+          "active_circulation_decisions": 17,
+          "active_guide_cycles": 75,
+          "explicit_inactive_guide_cycles": 39,
+          "inactive_guidance_gate_check": null
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 311,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.00613927459444358,
+              "max_plan_execution_error": 0.0436595826012432,
+              "max_nominal_error_during_plan_samples": 0.5897827822845928
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "221a150fdd77238f4792aea97c527dbd12f03ddf4afc116d6736931f2bffa391",
+          "decisions": 27,
+          "winner_checks": 27,
+          "previews_reconstructed": 50,
+          "selected_valid": 27,
+          "no_valid_previews": 0,
+          "legacy_fallbacks": 0,
+          "reference_withdrawals": 0,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "numeric_bound_tolerance": 2e-06,
+          "max_control_bound_excess": 9.913880771872385e-09,
+          "normalized_null_motion_fields": 0,
+          "note": "Only logged decision inputs are replayed. Checks preview kinematics, original-window DCBF, retained hypotheses, scores and hysteresis. Does not prove actual commands follow previews or continuous physical safety."
+        },
+        "reliability_all_observers": {
+          "applicable": true,
+          "passed": true,
+          "frames": 379,
+          "forecast_records_reconstructed": 340,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "risk_wiring": {
+          "risk_positive_cycles": 0,
+          "risk_max": 0.0,
+          "suppressed_guide_all_zero": null,
+          "nonnegative_risk_and_total_consistent": true,
+          "suppress_command_is_not_forced_zero": true
+        }
+      }
+    },
+    {
+      "directory": "decelerating_crossing_211_risk_short_v2",
+      "passed": false,
+      "failure": null,
+      "prediction_risk": true,
+      "suppress_guidance": true,
+      "soft_tail_seconds": 0.0,
+      "dynamic_proxy_clearance": 0.10900871093524617,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.9170218693851061,
+          "rows": 400,
+          "last_time": 39.99600000000001,
+          "statuses": {
+            "feasible_iterate": 18,
+            "late_fallback_stop": 2,
+            "ok": 379,
+            "validated_one_step": 1
+          },
+          "timing_p95_ms": 87.48734880064147,
+          "timing_max_ms": 113.23359899688512,
+          "final_error": 0.9170218693851061,
+          "dynamic_cycles": 131,
+          "max_estimated_speed": 0.20624956149412998
+        }
+      },
+      "quality": {
+        "tb3_0": {
+          "samples": 400,
+          "first_time": 0.07999999999999999,
+          "last_time": 39.980000000000004,
+          "excluded_gap_count": 0,
+          "observed_duration": 39.900000000000006,
+          "position_rmse": 1.243217831853272,
+          "time_mean_position_error": 1.04542616356359,
+          "final_position_error": 0.9170218693851061,
+          "peak_position_error": 2.0368628149304535,
+          "last_error_above_25cm": 39.980000000000004,
+          "command_low_speed_seconds": 5.89899999999999,
+          "command_low_speed_with_lag_seconds": 5.798999999999991,
+          "longest_command_low_speed_with_lag_seconds": 1.0,
+          "reverse_seconds": 22.000000000000007,
+          "omega_total_variation": 73.73737374961301,
+          "max_omega_command_step": 2.840000027233145,
+          "measured_pose_path_length": 5.674787943582049,
+          "status_counts": {
+            "ok": 379,
+            "feasible_iterate": 18,
+            "validated_one_step": 1,
+            "late_fallback_stop": 2
+          },
+          "reference_decisions": 0,
+          "active_circulation_decisions": 0,
+          "active_guide_cycles": 0,
+          "explicit_inactive_guide_cycles": 0,
+          "inactive_guidance_gate_check": null
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 372,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.018984098803374597,
+              "max_plan_execution_error": 0.03909452812695055,
+              "max_nominal_error_during_plan_samples": 2.0368628149304535
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": false
+        },
+        "reliability_all_observers": {
+          "applicable": true,
+          "passed": true,
+          "frames": 365,
+          "forecast_records_reconstructed": 365,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "risk_wiring": {
+          "risk_positive_cycles": 215,
+          "risk_max": 30.098037405696292,
+          "suppressed_guide_all_zero": true,
+          "nonnegative_risk_and_total_consistent": true,
+          "suppress_command_is_not_forced_zero": true
+        }
+      }
+    },
+    {
+      "directory": "decelerating_crossing_211_tail_v2",
+      "passed": false,
+      "failure": null,
+      "prediction_risk": true,
+      "suppress_guidance": true,
+      "soft_tail_seconds": 1.5,
+      "dynamic_proxy_clearance": 0.10558685276886531,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.743705987082197,
+          "rows": 400,
+          "last_time": 39.955999999999996,
+          "statuses": {
+            "late_fallback_stop": 19,
+            "ok": 245,
+            "validated_one_step": 5,
+            "feasible_iterate": 128,
+            "late_solution_stop": 3
+          },
+          "timing_p95_ms": 100.45027085288892,
+          "timing_max_ms": 135.0526830065064,
+          "final_error": 0.743705987082197,
+          "dynamic_cycles": 116,
+          "max_estimated_speed": 0.22109834434403194
+        }
+      },
+      "quality": {
+        "tb3_0": {
+          "samples": 400,
+          "first_time": 0.04600000000000018,
+          "last_time": 39.946000000000005,
+          "excluded_gap_count": 0,
+          "observed_duration": 39.900000000000006,
+          "position_rmse": 1.1313107679073335,
+          "time_mean_position_error": 0.9578678402590108,
+          "final_position_error": 0.743705987082197,
+          "peak_position_error": 1.8361664276292622,
+          "last_error_above_25cm": 39.946000000000005,
+          "command_low_speed_seconds": 6.565999999999994,
+          "command_low_speed_with_lag_seconds": 5.865999999999996,
+          "longest_command_low_speed_with_lag_seconds": 0.6999999999999993,
+          "reverse_seconds": 4.5010000000000066,
+          "omega_total_variation": 58.01017769449423,
+          "max_omega_command_step": 3.345116683681058,
+          "measured_pose_path_length": 5.75406701378922,
+          "status_counts": {
+            "feasible_iterate": 128,
+            "ok": 245,
+            "late_fallback_stop": 19,
+            "late_solution_stop": 3,
+            "validated_one_step": 5
+          },
+          "reference_decisions": 0,
+          "active_circulation_decisions": 0,
+          "active_guide_cycles": 0,
+          "explicit_inactive_guide_cycles": 0,
+          "inactive_guidance_gate_check": null
+        }
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 245,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.015339733269220453,
+              "max_plan_execution_error": 0.033167743845204205,
+              "max_nominal_error_during_plan_samples": 1.8361664276292622
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "progress_robot0": {
+          "applicable": false
+        },
+        "reliability_all_observers": {
+          "applicable": true,
+          "passed": true,
+          "frames": 318,
+          "forecast_records_reconstructed": 318,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "risk_wiring": {
+          "risk_positive_cycles": 220,
+          "risk_max": 36.48376252798461,
+          "suppressed_guide_all_zero": true,
+          "nonnegative_risk_and_total_consistent": true,
+          "suppress_command_is_not_forced_zero": true
+        }
+      }
+    }
+  ]
+}

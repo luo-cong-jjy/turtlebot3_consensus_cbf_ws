@@ -589,7 +589,7 @@ class ExperimentRecorder:
             prediction_risk=rospy.get_param('/cbf/prediction_risk',False),
             suppress_guidance=rospy.get_param('/cbf/suppress_guidance',False),
             risk_parameters=dict(weight=rospy.get_param('/cbf/mpc/risk_weight',3.),clearance=rospy.get_param('/cbf/mpc/risk_clearance',.35),
-                discount=rospy.get_param('/cbf/mpc/risk_discount',.5),external_only=rospy.get_param('/cbf/mpc/risk_external_only',True),
+                discount=rospy.get_param('/cbf/mpc/risk_discount',.5),tail_seconds=rospy.get_param('/cbf/mpc/risk_tail_seconds',0.),external_only=rospy.get_param('/cbf/mpc/risk_external_only',True),
                 penalty='C3_clearance_quartic',source='Wang2025_inspired_not_exact_replication'),
             endpoint_contract='fresh_measurement_within_1.5_control_dt',
             infeasible_escape=rospy.get_param('/cbf/infeasible_escape',False),

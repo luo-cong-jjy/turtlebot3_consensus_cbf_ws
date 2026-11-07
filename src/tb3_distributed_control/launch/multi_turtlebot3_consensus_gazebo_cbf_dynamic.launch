@@ -17,6 +17,7 @@
   <arg name="risk_weight" default="3.0" />
   <arg name="risk_clearance" default="0.35" />
   <arg name="risk_discount" default="0.5" />
+  <arg name="risk_tail_seconds" default="0.0" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
@@ -52,6 +53,7 @@
     <arg name="risk_weight" value="$(arg risk_weight)" />
     <arg name="risk_clearance" value="$(arg risk_clearance)" />
     <arg name="risk_discount" value="$(arg risk_discount)" />
+    <arg name="risk_tail_seconds" value="$(arg risk_tail_seconds)" />
     <arg name="infeasible_escape" value="$(arg infeasible_escape)" />
     <arg name="execution_backup" value="$(arg execution_backup)" />
     <arg name="progress_abstain" value="$(arg progress_abstain)" />
