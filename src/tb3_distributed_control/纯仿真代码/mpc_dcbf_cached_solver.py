@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parameterised MPC with preserved hard CBFs and optional soft objectives.
+"""Parameterised MPC with explicit DCBF/geometric comparison and soft costs.
 
 No ROS or simulation globals. Four static-obstacle uncertainty envelopes are
 inputs, not refitted here. The nominal target and hard safety constraints are
@@ -88,6 +88,21 @@ def safety_residuals(values,obstacles,config):
     if config.get('constraint_mode','dcbf')=='ellipse':return values[:,1:]
     gammas=np.array([o.get('gamma',config['gamma']) for o in obstacles])[:,None]
     return values[:,1:]-(1-gammas)*values[:,:-1]
+
+
+def solver_input_snapshot(state,goals,obstacles,bounds,previous,config):
+    """Optional measured-input replay record; no simulator truth or outputs."""
+    def plain(value):
+        if isinstance(value,np.ndarray):return value.tolist()
+        if isinstance(value,np.generic):return value.item()
+        if isinstance(value,dict):return {k:plain(v) for k,v in value.items()}
+        if isinstance(value,(list,tuple)):return [plain(v) for v in value]
+        return value
+    keys=('name','center','a','b','theta','gamma','peer','dynamic','prediction_centers',
+        'prediction_axes','prediction_angles','guidance_motion')
+    return plain(dict(state=state,goals=goals,previous=previous,bounds=bounds,
+        config={k:v for k,v in config.items() if not k.startswith('_')},
+        obstacles=[{k:o[k] for k in keys if k in o} for o in obstacles]))
 
 
 def first_step_values(state,commands,batch,margin,dt,stage=0):
@@ -1268,7 +1283,7 @@ class MPCSolverManager:
                 if candidate is not None and (full_backup is None or candidate['cost']<full_backup['cost']):full_backup=candidate
             prepare_ms+=1000*(time.perf_counter()-prepare_begin)
         pending=memory.setdefault('pending_turns',[])
-        if self.recovery and pending and full_backup is None:
+        if self.recovery and pending and (full_backup is None or cfg.get('pending_seed_with_backup',False)):
             side=pending.pop(0);guess=np.tile([min(.12,bounds[1]),side*min(1.2,cfg['omega_max'])],(n,1))
             seed='turn_left' if side>0 else 'turn_right'
         dual=None
@@ -1277,7 +1292,7 @@ class MPCSolverManager:
                 and np.linalg.norm(state[:2]-last['states'][0,:2])<.25):
             dual=np.asarray(last['lam_g']).copy()
             for _ in range(shift):dual=dual[problem.dual_shift]
-        if full_backup is not None:
+        if full_backup is not None and side is None:
             guess=full_backup['controls'].copy();plan=full_backup['plan_controls'].copy()
             if full_backup['seed']!=seed:dual=None
             seed=full_backup['seed']
@@ -1308,7 +1323,8 @@ class MPCSolverManager:
             if side is None:pending.extend([memory['preferred'],-memory['preferred']])
             else:pending.extend([-side])
             memory['cooldown']=max(1,int(1.5/dt))
-        if best is not None and side is not None and not quiet:
+        if (best is not None and side is not None and not quiet
+                and (not cfg.get('pending_seed_with_backup',False) or best.get('seed')==seed)):
             memory['preferred']=side;pending.clear()
         fallback_begin=time.perf_counter()
         if best is None and not execution_backup:
@@ -1350,6 +1366,7 @@ class MPCSolverManager:
             seed=seed,cost=best['cost'] if best is not None else None,
             prediction_risk=bool(cfg.get('prediction_risk',False)),
             constraint_mode=cfg.get('constraint_mode','dcbf'),risk_penalty=cfg.get('risk_penalty','clearance_quartic'),
+            explored_with_backup=bool(side is not None and full_backup is not None),
             risk_cost=best.get('risk_cost') if best is not None else None,
             min_cbf_slack=best.get('min_slack') if best is not None else None,
             wall_ms=1000*(time.perf_counter()-begin),guide_level=guidance[1],
@@ -1370,6 +1387,7 @@ class MPCSolverManager:
                     escape_initial_h=best['escape_initial_h'],escape_next_h=best['escape_next_h'])
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
+        if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg)
         self.histories.setdefault(label,[]).append(record);self.last_records[label]=record
         if best is None:
             raise RuntimeError(label+': no validated control within the current computation budget')

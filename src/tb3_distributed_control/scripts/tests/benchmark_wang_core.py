@@ -32,7 +32,8 @@ def main():
         shutil.copy2(source,out/source.name);manifest[source.name]=hashlib.sha256(source.read_bytes()).hexdigest()
     results=[];problems={}
     for line_number,line in enumerate(trace.open(),1):
-        record=json.loads(line);d=record.get('manager',{}).get('progress_decision');t=record['trajectory_time']
+        record=json.loads(line);manager=record.get('manager',{})
+        d=manager.get('input_snapshot') or manager.get('progress_decision');t=record['trajectory_time']
         if not d or not args.start<=t<=args.end:continue
         state=np.asarray(d['state']);goals=np.asarray(d['goals']);previous=np.asarray(d['previous'])
         obstacles=copy.deepcopy(d['obstacles']);bounds=d['bounds']

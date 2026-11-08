@@ -10,7 +10,7 @@ from test_cbf_dynamic import inline
 def audit(directory):
     path=Path(directory);meta=json.loads((path/'run_metadata.json').read_text())
     if meta['prediction_mode']!='adaptive':return dict(applicable=False)
-    def new_tracker():return inline.make_dynamic_tracker(mode='adaptive',dt=float(meta['control_dt']),
+    def new_tracker():return inline.make_dynamic_tracker(mode='adaptive',dt=float(meta['control_dt']),horizon=int(meta.get('mpc_horizon',10)),
         ca_jerk_density=meta['ca_jerk_density'],ca_acceleration_variance=meta['ca_acceleration_variance'],
         singer_tau=meta['singer_tau'],reaction_time=meta['dynamic_reaction_time'],
         extra_margin=meta['dynamic_extra_margin'],acceleration_buffer=meta['acceleration_buffer'],

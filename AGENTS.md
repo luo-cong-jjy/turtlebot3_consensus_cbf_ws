@@ -27,3 +27,5 @@
 - 2026-11-07 绕行质量复盘分支 research/bypass-quality-2026-11-07，见 docs/bypass_quality_2026-11-07.md。137项检查；7次尝试、2次原生启动崩溃，5次有效闭环仅3次通过。active_guidance_only默认false；门控局部修正不等于整体稳定改进，同种子重复及旧predictive组合均有负代理净距，不推荐当稳定版本。11帧同输入离线配对证明预测影响约束求解，不证明闭环整体优势。原始失败完整归档。
 
 - 2026-11-07 预测风险代价分支 research/prediction-risk-2026-11-07，见 docs/prediction_risk_2026-11-07.md。148项检查，8次单机尝试含1次就绪超时；7次闭环含对照5过2恢复失败。风险配置4次完成仅2过，未接受为整体改进，不进入五机。prediction_risk/suppress_guidance默认false，risk_tail_seconds默认0；尾段是固定终端运动/保持最后半轴的软假设，不增加优化变量或硬约束，不代表2.5秒安全计划。保留V1短窗口提交2de0ca7与全部失败，不将Wang论文原方法声称已复现。
+
+- 2026-11-07 Wang核心对照分支 research/wang-core-2026-11-07，见 docs/wang_core_2026-11-07.md。159项检查；13次闭环6过7未按时恢复；19帧228次离线尝试。几何模式严格检查当前安全域前提，不通过时不放松。3573条指令首步重放只来自9次有快照的DCBF运行。完整H25无代价3/3过、有反比代价1/3过，但平滑/实时性未稳定优于原引导；默认H10/原DCBF不变。pending_seed_with_backup仅改初值，后备不丢，默认false；log_mpc_inputs默认false。不是Wang论文完整复现，不进入五机/实物或替换演示版，保留全部负结果。

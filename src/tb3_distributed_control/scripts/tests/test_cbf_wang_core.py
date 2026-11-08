@@ -2,6 +2,8 @@
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import Mock
+from collections import deque
 import numpy as np
 PACKAGE=Path(__file__).resolve().parents[2]
 sys.path[:0]=[str(PACKAGE/'scripts'),str(PACKAGE/'纯仿真代码')]
@@ -22,6 +24,49 @@ def circle(x=.8,y=0.):
 
 
 class WangCoreChecks(unittest.TestCase):
+    def test_full_long_horizon_preserves_the_same_short_forecast_nodes(self):
+        from test_cbf_dynamic import inline,ellipse
+        trackers=[inline.make_dynamic_tracker(mode='adaptive',horizon=n,transport_geometry=True) for n in (10,25)]
+        for k in range(61):
+            for tracker in trackers:tracker.update([ellipse(1.+.01*k,.001*k)],k*.1)
+        outputs=[tracker.forecast(tracker.snapshot(6.)[0],6.03) for tracker in trackers]
+        self.assertEqual(len(outputs[1]['prediction_centers']),26)
+        np.testing.assert_allclose(outputs[0]['prediction_centers'],outputs[1]['prediction_centers'][:11],atol=1e-12,rtol=0)
+        np.testing.assert_allclose(outputs[0]['prediction_axes'],outputs[1]['prediction_axes'][:11],atol=1e-12,rtol=0)
+
+    def test_pending_seed_can_be_tried_without_losing_checked_backup(self):
+        for enabled in (False,True):
+            cfg=config(realtime=True,nlp_wall_time=.1,manager_wall_time=.3,pending_seed_with_backup=enabled)
+            manager=MPCSolverManager(cfg);problem=CachedMPCProblem(cfg,0,False)
+            problem.solve=Mock(side_effect=RuntimeError('forced NLP failure'))
+            manager.problems[(0,False)]=problem
+            u=np.tile([.05,0.],(10,1));state=np.zeros(3);last=dict(controls=u,plan_controls=np.zeros_like(u))
+            manager.robot_memory['r']=dict(positions=deque(maxlen=11),cooldown=0,preferred=-1,hold=0,pending_turns=[1,-1])
+            result=manager.solve(state,np.tile([.5,0.,0.],(11,1)),[],(-.22,.22),last,'r',applied_previous=u[0])
+            self.assertEqual(problem.solve.call_count,1)
+            guess=problem.solve.call_args.args[5]
+            if enabled:
+                self.assertGreater(guess[0,1],0.)
+                self.assertTrue(manager.last_records['r']['explored_with_backup'])
+                self.assertEqual(manager.robot_memory['r']['pending_turns'],[-1])
+                self.assertEqual(manager.robot_memory['r']['preferred'],-1)
+            else:
+                np.testing.assert_array_equal(guess,u)
+                self.assertEqual(manager.robot_memory['r']['pending_turns'],[1,-1])
+            np.testing.assert_array_equal(result['controls'],u)
+            self.assertEqual(result['validated_steps'],10)
+            self.assertTrue(problem.validate(result,state,[],(-.22,.22),u[0]))
+
+    def test_optional_input_record_is_json_replayable_and_detached(self):
+        import json
+        from mpc_dcbf_cached_solver import solver_input_snapshot
+        state=np.zeros(3);goals=np.zeros((11,3));obs=[circle()]
+        snapshot=solver_input_snapshot(state,goals,obs,[-.22,.22],np.zeros(2),config())
+        json.dumps(snapshot,allow_nan=False)
+        state[0]=99.;obs[0]['prediction_centers'][0,0]=99.
+        self.assertEqual(snapshot['state'][0],0.)
+        self.assertEqual(snapshot['obstacles'][0]['prediction_centers'][0][0],.8)
+
     def test_eq14_closed_form_and_per_node_discount(self):
         cfg=config();problem=CachedMPCProblem(cfg,1,False)
         expected=.3*np.exp(-.1*np.arange(1,11)).sum()/(np.sqrt(.8**2+1e-12)+.02)

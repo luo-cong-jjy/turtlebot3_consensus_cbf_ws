@@ -1,0 +1,1424 @@
+{
+  "stage": "Wang core matched comparison and diagnostics; no stable performance improvement accepted",
+  "parent_commit": "f81e00fb917654b3cc4a5a71d49329a6595e394b",
+  "core_commit": "51e5b0c",
+  "branch": "research/wang-core-2026-11-07",
+  "tag": "experiment/wang-core-evaluation-2026-11-07",
+  "unit_tests_passed": 159,
+  "attempts": 13,
+  "completed": 13,
+  "passes_including_controls": 6,
+  "recovery_deadline_failures": 7,
+  "negative_proxy_clearance_cases": 0,
+  "full_horizon_no_risk_passes": 3,
+  "full_horizon_no_risk_attempts": 3,
+  "full_horizon_inverse_passes": 1,
+  "full_horizon_inverse_attempts": 3,
+  "offline_frames": 19,
+  "offline_safe_frames": 19,
+  "offline_attempts": 228,
+  "offline_summary": {
+    "dcbf_hard": {
+      "valid_frames": 19,
+      "valid_safe_start_frames": 19,
+      "geometric_rate_violation_frames": 0
+    },
+    "dcbf_inverse": {
+      "valid_frames": 19,
+      "valid_safe_start_frames": 19,
+      "geometric_rate_violation_frames": 0
+    },
+    "ellipse_hard": {
+      "valid_frames": 19,
+      "valid_safe_start_frames": 19,
+      "geometric_rate_violation_frames": 16
+    },
+    "ellipse_inverse": {
+      "valid_frames": 19,
+      "valid_safe_start_frames": 19,
+      "geometric_rate_violation_frames": 16
+    }
+  },
+  "exact_input_runs": 9,
+  "exact_adopted_first_steps": 3573,
+  "default_horizon": 10,
+  "default_pending_seed_with_backup": false,
+  "default_constraint_mode": "dcbf",
+  "default_prediction_risk": false,
+  "runs": [
+    {
+      "directory": "decelerating_211_dcbf_hard",
+      "passed": true,
+      "constraint_mode": "dcbf",
+      "prediction_risk": false,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 10,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.0008130037830238559,
+      "dynamic_proxy_clearance": 0.1205388567225184,
+      "timing_p95_ms": 73.80305672122627,
+      "statuses": {
+        "validated_one_step": 1,
+        "feasible_iterate": 5,
+        "ok": 394
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.07799999999999976,
+        "last_time": 39.978,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.900000000000006,
+        "position_rmse": 0.7114925033000578,
+        "time_mean_position_error": 0.551830770755796,
+        "final_position_error": 0.0008130037830238559,
+        "peak_position_error": 1.322678215605391,
+        "last_error_above_25cm": 34.878,
+        "command_low_speed_seconds": 2.9999999999999982,
+        "command_low_speed_with_lag_seconds": 2.9999999999999982,
+        "longest_command_low_speed_with_lag_seconds": 0.5999999999999996,
+        "reverse_seconds": 3.5999999999999996,
+        "omega_total_variation": 51.38037096319354,
+        "max_omega_command_step": 2.3833154644572376,
+        "measured_pose_path_length": 6.62666955337467,
+        "status_counts": {
+          "ok": 394,
+          "validated_one_step": 1,
+          "feasible_iterate": 5
+        },
+        "heading_error_rmse": 0.24413886765182857,
+        "measured_reference_backward_seconds": 2.700000000000005,
+        "measured_reference_backward_distance": 0.19876835663724235,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.012126101746602754,
+              "max_plan_execution_error": 0.04121556005356337,
+              "max_nominal_error_during_plan_samples": 1.322678215605391
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 388,
+          "forecast_records_reconstructed": 359,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": false,
+          "passed": null,
+          "checked_adopted_first_steps": 0,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 400,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_dcbf_inverse",
+      "passed": false,
+      "constraint_mode": "dcbf",
+      "prediction_risk": true,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 10,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.47464406772652135,
+      "dynamic_proxy_clearance": 0.12114125967664868,
+      "timing_p95_ms": 82.45379074942319,
+      "statuses": {
+        "late_solution_stop": 1,
+        "ok": 383,
+        "validated_one_step": 3,
+        "feasible_iterate": 13
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.07999999999999977,
+        "last_time": 39.98,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.9,
+        "position_rmse": 1.0188449678585545,
+        "time_mean_position_error": 0.8481780892616514,
+        "final_position_error": 0.47464406772652135,
+        "peak_position_error": 1.7393315566822964,
+        "last_error_above_25cm": 39.98,
+        "command_low_speed_seconds": 5.300000000000011,
+        "command_low_speed_with_lag_seconds": 5.000000000000011,
+        "longest_command_low_speed_with_lag_seconds": 0.8000000000000007,
+        "reverse_seconds": 3.199999999999992,
+        "omega_total_variation": 54.59696167245767,
+        "max_omega_command_step": 4.57464657166269,
+        "measured_pose_path_length": 6.189124968538282,
+        "status_counts": {
+          "ok": 383,
+          "feasible_iterate": 13,
+          "validated_one_step": 3,
+          "late_solution_stop": 1
+        },
+        "heading_error_rmse": 0.35024022629666235,
+        "measured_reference_backward_seconds": 2.6999999999999984,
+        "measured_reference_backward_distance": 0.20148066313947027,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 385,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.014525652401125225,
+              "max_plan_execution_error": 0.04476704355064389,
+              "max_nominal_error_during_plan_samples": 1.738362049879678
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 372,
+          "forecast_records_reconstructed": 367,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": false,
+          "passed": null,
+          "checked_adopted_first_steps": 0,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 400,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_ellipse_hard",
+      "passed": false,
+      "constraint_mode": "ellipse",
+      "prediction_risk": false,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 10,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.7294639584900708,
+      "dynamic_proxy_clearance": 0.06483309141334409,
+      "timing_p95_ms": 77.07513588247821,
+      "statuses": {
+        "validated_one_step": 1,
+        "feasible_iterate": 8,
+        "ok": 273,
+        "solver_failed_stop": 118
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.08199999999999999,
+        "last_time": 39.982,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.900000000000006,
+        "position_rmse": 1.1376714681664588,
+        "time_mean_position_error": 0.9472826072261983,
+        "final_position_error": 0.7294639584900708,
+        "peak_position_error": 1.891735894111707,
+        "last_error_above_25cm": 39.982,
+        "command_low_speed_seconds": 11.766999999999996,
+        "command_low_speed_with_lag_seconds": 9.766999999999996,
+        "longest_command_low_speed_with_lag_seconds": 8.799999999999997,
+        "reverse_seconds": 1.0000000000000018,
+        "omega_total_variation": 40.522331904312566,
+        "max_omega_command_step": 2.8400000280199635,
+        "measured_pose_path_length": 5.598652319896863,
+        "status_counts": {
+          "ok": 273,
+          "feasible_iterate": 8,
+          "solver_failed_stop": 118,
+          "validated_one_step": 1
+        },
+        "heading_error_rmse": 0.16310342177669265,
+        "measured_reference_backward_seconds": 1.0000000000000007,
+        "measured_reference_backward_distance": 0.1252271211134664,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 238,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.01067891502754395,
+              "max_plan_execution_error": 0.039072344962060974,
+              "max_nominal_error_during_plan_samples": 1.8874738569886287
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 386,
+          "forecast_records_reconstructed": 386,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": false,
+          "passed": null,
+          "checked_adopted_first_steps": 0,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 400,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_ellipse_inverse",
+      "passed": false,
+      "constraint_mode": "ellipse",
+      "prediction_risk": true,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 10,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.6121411424438112,
+      "dynamic_proxy_clearance": 0.06482013853269553,
+      "timing_p95_ms": 80.70117726165331,
+      "statuses": {
+        "solver_failed_stop": 110,
+        "validated_one_step": 1,
+        "ok": 279,
+        "feasible_iterate": 10
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.042999999999999844,
+        "last_time": 39.943,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.9,
+        "position_rmse": 1.0821586900033058,
+        "time_mean_position_error": 0.8968241056720141,
+        "final_position_error": 0.6121411424438112,
+        "peak_position_error": 1.8488814461166572,
+        "last_error_above_25cm": 39.943,
+        "command_low_speed_seconds": 11.199999999999996,
+        "command_low_speed_with_lag_seconds": 9.199999999999996,
+        "longest_command_low_speed_with_lag_seconds": 8.5,
+        "reverse_seconds": 1.3000000000000043,
+        "omega_total_variation": 39.33165864003972,
+        "max_omega_command_step": 2.8400000271063517,
+        "measured_pose_path_length": 5.707643401403384,
+        "status_counts": {
+          "ok": 279,
+          "feasible_iterate": 10,
+          "validated_one_step": 1,
+          "solver_failed_stop": 110
+        },
+        "heading_error_rmse": 0.18204377240788608,
+        "measured_reference_backward_seconds": 0.8999999999999995,
+        "measured_reference_backward_distance": 0.11492084771407585,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 225,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.011127804607229851,
+              "max_plan_execution_error": 0.03909481079193467,
+              "max_nominal_error_during_plan_samples": 1.8488814461166572
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 389,
+          "forecast_records_reconstructed": 389,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": false,
+          "passed": null,
+          "checked_adopted_first_steps": 0,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 400,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_h25_hard_repeat_v3",
+      "passed": true,
+      "constraint_mode": "dcbf",
+      "prediction_risk": false,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 25,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.0904267936705656,
+      "dynamic_proxy_clearance": 0.11306881971840149,
+      "timing_p95_ms": 89.92007502820343,
+      "statuses": {
+        "ok": 274,
+        "feasible_iterate": 96,
+        "late_fallback_stop": 4,
+        "validated_one_step": 27
+      },
+      "quality": {
+        "samples": 401,
+        "first_time": 0.030999999999999833,
+        "last_time": 40.031,
+        "excluded_gap_count": 0,
+        "observed_duration": 40.0,
+        "position_rmse": 0.7806493553515633,
+        "time_mean_position_error": 0.6253313845951369,
+        "final_position_error": 0.0833911321132133,
+        "peak_position_error": 1.353314763483312,
+        "last_error_above_25cm": 37.631,
+        "command_low_speed_seconds": 3.0680000000000014,
+        "command_low_speed_with_lag_seconds": 2.4680000000000017,
+        "longest_command_low_speed_with_lag_seconds": 0.7000000000000011,
+        "reverse_seconds": 4.199999999999999,
+        "omega_total_variation": 102.86079208916576,
+        "max_omega_command_step": 2.7265866330204163,
+        "measured_pose_path_length": 6.562963140783477,
+        "status_counts": {
+          "feasible_iterate": 96,
+          "ok": 274,
+          "validated_one_step": 27,
+          "late_fallback_stop": 4
+        },
+        "heading_error_rmse": 0.7534896024318307,
+        "measured_reference_backward_seconds": 2.7000000000000046,
+        "measured_reference_backward_distance": 0.12006689393047143,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 217,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.010761624360434539,
+              "max_plan_execution_error": 0.041197157388965934,
+              "max_nominal_error_during_plan_samples": 1.353314763483312
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 359,
+          "forecast_records_reconstructed": 339,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 397,
+          "uncertified_other_statuses": 4,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_h25_inverse_repeat_v3",
+      "passed": false,
+      "constraint_mode": "dcbf",
+      "prediction_risk": true,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 25,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.280454700396559,
+      "dynamic_proxy_clearance": 0.12606337514946342,
+      "timing_p95_ms": 96.11644765245727,
+      "statuses": {
+        "late_fallback_stop": 6,
+        "validated_one_step": 29,
+        "feasible_iterate": 219,
+        "ok": 146
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.01399999999999993,
+        "last_time": 39.94799999999999,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.934,
+        "position_rmse": 0.9150897659947588,
+        "time_mean_position_error": 0.7712665391992494,
+        "final_position_error": 0.280454700396559,
+        "peak_position_error": 1.6112466844084974,
+        "last_error_above_25cm": 39.94799999999999,
+        "command_low_speed_seconds": 3.3340000000000085,
+        "command_low_speed_with_lag_seconds": 3.1340000000000092,
+        "longest_command_low_speed_with_lag_seconds": 0.40000000000000036,
+        "reverse_seconds": 5.799000000000008,
+        "omega_total_variation": 91.9622343760696,
+        "max_omega_command_step": 5.2819954891231085,
+        "measured_pose_path_length": 6.575649622031707,
+        "status_counts": {
+          "feasible_iterate": 219,
+          "late_fallback_stop": 6,
+          "ok": 146,
+          "validated_one_step": 29
+        },
+        "heading_error_rmse": 0.6307865181407692,
+        "measured_reference_backward_seconds": 3.799999999999995,
+        "measured_reference_backward_distance": 0.14460607475693377,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 334,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.016664291764835647,
+              "max_plan_execution_error": 0.04477491235601166,
+              "max_nominal_error_during_plan_samples": 1.6112466844084974
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 325,
+          "forecast_records_reconstructed": 314,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 394,
+          "uncertified_other_statuses": 6,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_h25_risk_false_v3",
+      "passed": true,
+      "constraint_mode": "dcbf",
+      "prediction_risk": false,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 25,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.0017614775497275066,
+      "dynamic_proxy_clearance": 0.11703233531344293,
+      "timing_p95_ms": 89.65155588521156,
+      "statuses": {
+        "feasible_iterate": 138,
+        "ok": 247,
+        "validated_one_step": 13,
+        "late_fallback_stop": 2
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.08399999999999999,
+        "last_time": 39.983999999999995,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.89999999999999,
+        "position_rmse": 0.6046477311441559,
+        "time_mean_position_error": 0.4556948212157172,
+        "final_position_error": 0.0017614775497275066,
+        "peak_position_error": 1.2642257364246259,
+        "last_error_above_25cm": 30.284,
+        "command_low_speed_seconds": 1.066000000000006,
+        "command_low_speed_with_lag_seconds": 0.8000000000000007,
+        "longest_command_low_speed_with_lag_seconds": 0.20000000000000107,
+        "reverse_seconds": 5.200000000000001,
+        "omega_total_variation": 55.11468631608887,
+        "max_omega_command_step": 2.3344583258586438,
+        "measured_pose_path_length": 7.115325081584626,
+        "status_counts": {
+          "feasible_iterate": 138,
+          "ok": 247,
+          "validated_one_step": 13,
+          "late_fallback_stop": 2
+        },
+        "heading_error_rmse": 0.5590255356673952,
+        "measured_reference_backward_seconds": 4.499999999999998,
+        "measured_reference_backward_distance": 0.31990894283499904,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 370,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.014937332088063303,
+              "max_plan_execution_error": 0.04927425992939063,
+              "max_nominal_error_during_plan_samples": 1.2642257364246259
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 340,
+          "forecast_records_reconstructed": 306,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 398,
+          "uncertified_other_statuses": 2,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_h25_risk_true_v3",
+      "passed": true,
+      "constraint_mode": "dcbf",
+      "prediction_risk": true,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 25,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.0001249758071330876,
+      "dynamic_proxy_clearance": 0.13382918020818624,
+      "timing_p95_ms": 96.09525338164529,
+      "statuses": {
+        "ok": 106,
+        "validated_one_step": 40,
+        "feasible_iterate": 249,
+        "late_fallback_stop": 5
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.07499999999999987,
+        "last_time": 39.975,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.900000000000006,
+        "position_rmse": 0.5022625355056956,
+        "time_mean_position_error": 0.3857701755499361,
+        "final_position_error": 0.0001249758071330876,
+        "peak_position_error": 1.0591305594959917,
+        "last_error_above_25cm": 30.775000000000002,
+        "command_low_speed_seconds": 1.1999999999999957,
+        "command_low_speed_with_lag_seconds": 0.9000000000000004,
+        "longest_command_low_speed_with_lag_seconds": 0.40000000000000036,
+        "reverse_seconds": 13.800000000000004,
+        "omega_total_variation": 56.28543704869418,
+        "max_omega_command_step": 2.541638820580816,
+        "measured_pose_path_length": 6.884893164571366,
+        "status_counts": {
+          "feasible_iterate": 249,
+          "ok": 106,
+          "validated_one_step": 40,
+          "late_fallback_stop": 5
+        },
+        "heading_error_rmse": 1.4943831953441493,
+        "measured_reference_backward_seconds": 2.4999999999999947,
+        "measured_reference_backward_distance": 0.1605420547780836,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 351,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.013663656243558822,
+              "max_plan_execution_error": 0.05069122122299773,
+              "max_nominal_error_during_plan_samples": 1.0591305594959917
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 327,
+          "forecast_records_reconstructed": 296,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 395,
+          "uncertified_other_statuses": 5,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_old_guidance_v3",
+      "passed": true,
+      "constraint_mode": "dcbf",
+      "prediction_risk": false,
+      "risk_penalty": "clearance_quartic",
+      "mpc_horizon": 10,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.005114634338448194,
+      "dynamic_proxy_clearance": 0.13534968934667224,
+      "timing_p95_ms": 86.61389509506986,
+      "statuses": {
+        "ok": 356,
+        "late_fallback_stop": 4,
+        "validated_one_step": 2,
+        "feasible_iterate": 38
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.05899999999999986,
+        "last_time": 39.958999999999996,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.9,
+        "position_rmse": 0.2971625385062169,
+        "time_mean_position_error": 0.18809104005353663,
+        "final_position_error": 0.005114634338448194,
+        "peak_position_error": 0.7070030094062688,
+        "last_error_above_25cm": 21.359,
+        "command_low_speed_seconds": 0.702,
+        "command_low_speed_with_lag_seconds": 0.5679999999999996,
+        "longest_command_low_speed_with_lag_seconds": 0.13400000000000034,
+        "reverse_seconds": 0.5999999999999996,
+        "omega_total_variation": 40.75380990367397,
+        "max_omega_command_step": 2.0413906008075506,
+        "measured_pose_path_length": 6.600941376399948,
+        "status_counts": {
+          "ok": 356,
+          "feasible_iterate": 38,
+          "late_fallback_stop": 4,
+          "validated_one_step": 2
+        },
+        "heading_error_rmse": 0.4400435804167963,
+        "measured_reference_backward_seconds": 1.4999999999999987,
+        "measured_reference_backward_distance": 0.15181676848088294,
+        "reference_decisions": 28,
+        "active_circulation_decisions": 19,
+        "active_guide_cycles": 93,
+        "explicit_inactive_guide_cycles": 40,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 300,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.0067721411239592836,
+              "max_plan_execution_error": 0.0435251558605259,
+              "max_nominal_error_during_plan_samples": 0.7070030094062688
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 384,
+          "forecast_records_reconstructed": 345,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 396,
+          "uncertified_other_statuses": 4,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_seed_false_v2",
+      "passed": false,
+      "constraint_mode": "dcbf",
+      "prediction_risk": true,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 10,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.39002215932741957,
+      "dynamic_proxy_clearance": 0.10231216090751188,
+      "timing_p95_ms": 84.12478367972653,
+      "statuses": {
+        "late_solution_stop": 1,
+        "feasible_iterate": 19,
+        "ok": 376,
+        "validated_one_step": 4
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.07899999999999988,
+        "last_time": 39.979,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.900000000000006,
+        "position_rmse": 0.8766395640049754,
+        "time_mean_position_error": 0.7304829389880872,
+        "final_position_error": 0.39002215932741957,
+        "peak_position_error": 1.5453192041919157,
+        "last_error_above_25cm": 39.979,
+        "command_low_speed_seconds": 3.700000000000001,
+        "command_low_speed_with_lag_seconds": 3.1000000000000014,
+        "longest_command_low_speed_with_lag_seconds": 0.8000000000000007,
+        "reverse_seconds": 20.499999999999993,
+        "omega_total_variation": 76.18394379732486,
+        "max_omega_command_step": 3.547672014377033,
+        "measured_pose_path_length": 6.434526209075107,
+        "status_counts": {
+          "ok": 376,
+          "feasible_iterate": 19,
+          "late_solution_stop": 1,
+          "validated_one_step": 4
+        },
+        "heading_error_rmse": 2.06363224108007,
+        "measured_reference_backward_seconds": 3.5999999999999965,
+        "measured_reference_backward_distance": 0.2643818528394844,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 360,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.018658432781843582,
+              "max_plan_execution_error": 0.0446256681659594,
+              "max_nominal_error_during_plan_samples": 1.5453192041919157
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 360,
+          "forecast_records_reconstructed": 351,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 399,
+          "uncertified_other_statuses": 1,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_211_seed_true_v2",
+      "passed": false,
+      "constraint_mode": "dcbf",
+      "prediction_risk": true,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 10,
+      "pending_seed_with_backup": true,
+      "window_final_error": 0.6698604513775838,
+      "dynamic_proxy_clearance": 0.11746706729755052,
+      "timing_p95_ms": 79.57320200512186,
+      "statuses": {
+        "late_fallback_stop": 3,
+        "feasible_iterate": 5,
+        "ok": 392,
+        "validated_one_step": 1
+      },
+      "quality": {
+        "samples": 401,
+        "first_time": 0.01399999999999993,
+        "last_time": 40.014,
+        "excluded_gap_count": 0,
+        "observed_duration": 40.0,
+        "position_rmse": 1.117626929156256,
+        "time_mean_position_error": 0.9359863912693429,
+        "final_position_error": 0.6629170824553814,
+        "peak_position_error": 1.8416130998247469,
+        "last_error_above_25cm": 40.014,
+        "command_low_speed_seconds": 5.399999999999997,
+        "command_low_speed_with_lag_seconds": 4.999999999999998,
+        "longest_command_low_speed_with_lag_seconds": 0.8000000000000007,
+        "reverse_seconds": 2.9999999999999947,
+        "omega_total_variation": 57.191288864988834,
+        "max_omega_command_step": 1.9562779801657277,
+        "measured_pose_path_length": 5.888025661815376,
+        "status_counts": {
+          "feasible_iterate": 5,
+          "ok": 392,
+          "late_fallback_stop": 3,
+          "validated_one_step": 1
+        },
+        "heading_error_rmse": 0.2463982866119779,
+        "measured_reference_backward_seconds": 2.4999999999999996,
+        "measured_reference_backward_distance": 0.17965561336333863,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 396,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.014844697828523408,
+              "max_plan_execution_error": 0.040954924682954176,
+              "max_nominal_error_during_plan_samples": 1.8416130998247469
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 385,
+          "forecast_records_reconstructed": 385,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 398,
+          "uncertified_other_statuses": 3,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_239_h25_hard_repeat_v3",
+      "passed": true,
+      "constraint_mode": "dcbf",
+      "prediction_risk": false,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 25,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.002202137070476171,
+      "dynamic_proxy_clearance": 0.11351598744511848,
+      "timing_p95_ms": 89.95828300248832,
+      "statuses": {
+        "late_fallback_stop": 4,
+        "validated_one_step": 11,
+        "ok": 252,
+        "feasible_iterate": 134
+      },
+      "quality": {
+        "samples": 401,
+        "first_time": 0.042999999999999844,
+        "last_time": 40.043,
+        "excluded_gap_count": 0,
+        "observed_duration": 40.0,
+        "position_rmse": 0.5615792301053463,
+        "time_mean_position_error": 0.41736177886467585,
+        "final_position_error": 0.002355122650892268,
+        "peak_position_error": 1.1258039141101903,
+        "last_error_above_25cm": 32.243,
+        "command_low_speed_seconds": 1.9659999999999984,
+        "command_low_speed_with_lag_seconds": 1.3329999999999966,
+        "longest_command_low_speed_with_lag_seconds": 0.6000000000000014,
+        "reverse_seconds": 13.867000000000003,
+        "omega_total_variation": 96.94393656241343,
+        "max_omega_command_step": 5.448232364278856,
+        "measured_pose_path_length": 6.701842399955291,
+        "status_counts": {
+          "feasible_iterate": 134,
+          "ok": 252,
+          "late_fallback_stop": 4,
+          "validated_one_step": 11
+        },
+        "heading_error_rmse": 1.5012314508082703,
+        "measured_reference_backward_seconds": 1.700000000000001,
+        "measured_reference_backward_distance": 0.10786810570461847,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 291,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.012471456364834124,
+              "max_plan_execution_error": 0.04950719380621348,
+              "max_nominal_error_during_plan_samples": 1.1258039141101903
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 343,
+          "forecast_records_reconstructed": 308,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 397,
+          "uncertified_other_statuses": 4,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    },
+    {
+      "directory": "decelerating_239_h25_inverse_repeat_v3",
+      "passed": false,
+      "constraint_mode": "dcbf",
+      "prediction_risk": true,
+      "risk_penalty": "wang_inverse",
+      "mpc_horizon": 25,
+      "pending_seed_with_backup": false,
+      "window_final_error": 0.45705195559789613,
+      "dynamic_proxy_clearance": 0.0919137913874144,
+      "timing_p95_ms": 94.9244910152629,
+      "statuses": {
+        "feasible_iterate": 217,
+        "ok": 139,
+        "late_fallback_stop": 2,
+        "validated_one_step": 43
+      },
+      "quality": {
+        "samples": 401,
+        "first_time": 0.07799999999999976,
+        "last_time": 40.078,
+        "excluded_gap_count": 0,
+        "observed_duration": 40.0,
+        "position_rmse": 0.99297828496858,
+        "time_mean_position_error": 0.8214979784168719,
+        "final_position_error": 0.449990108004084,
+        "peak_position_error": 1.6568650643212086,
+        "last_error_above_25cm": 40.078,
+        "command_low_speed_seconds": 2.098999999999986,
+        "command_low_speed_with_lag_seconds": 1.6989999999999874,
+        "longest_command_low_speed_with_lag_seconds": 0.40000000000000036,
+        "reverse_seconds": 4.999999999999995,
+        "omega_total_variation": 165.06339868246138,
+        "max_omega_command_step": 3.3725,
+        "measured_pose_path_length": 6.543829103521395,
+        "status_counts": {
+          "feasible_iterate": 217,
+          "ok": 139,
+          "validated_one_step": 43,
+          "late_fallback_stop": 2
+        },
+        "heading_error_rmse": 0.5621044264614672,
+        "measured_reference_backward_seconds": 4.031999999999998,
+        "measured_reference_backward_distance": 0.2398260997371131,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 29,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009065503694614133,
+              "max_plan_execution_error": 0.025954119506033015,
+              "max_nominal_error_during_plan_samples": 1.3282687625266865
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "reliability": {
+          "applicable": true,
+          "passed": true,
+          "frames": 337,
+          "forecast_records_reconstructed": 332,
+          "observers": 1,
+          "max_weight_difference": 0.0,
+          "max_score_difference": 0.0,
+          "max_center_difference": 0.0,
+          "first_mismatch": null,
+          "note": "Only logged fitted ellipses and stamps enter reconstruction. No Gazebo truth or scenario phase. A missing prefix/frame can invalidate exact reconstruction; do not silently repair it."
+        },
+        "exact_inputs": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 399,
+          "uncertified_other_statuses": 2,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      }
+    }
+  ],
+  "forecast_horizon_summary": [
+    {
+      "directory": "decelerating_211_h25_hard_repeat_v3",
+      "matched": 332,
+      "unmatched": 0,
+      "displacement_rmse_1s": 0.02570367415065581,
+      "displacement_rmse_2p5s": 0.07236519783087308,
+      "first5s_displacement_rmse_2p5s": 0.10290863433647174
+    },
+    {
+      "directory": "decelerating_211_h25_inverse_repeat_v3",
+      "matched": 299,
+      "unmatched": 0,
+      "displacement_rmse_1s": 0.027940763828595085,
+      "displacement_rmse_2p5s": 0.07662689642231763,
+      "first5s_displacement_rmse_2p5s": 0.15366607419884118
+    },
+    {
+      "directory": "decelerating_211_h25_risk_false_v3",
+      "matched": 303,
+      "unmatched": 11,
+      "displacement_rmse_1s": 0.03316762775812076,
+      "displacement_rmse_2p5s": 0.09060696786399222,
+      "first5s_displacement_rmse_2p5s": 0.1734802884633494
+    },
+    {
+      "directory": "decelerating_211_h25_risk_true_v3",
+      "matched": 293,
+      "unmatched": 10,
+      "displacement_rmse_1s": 0.03617740870754913,
+      "displacement_rmse_2p5s": 0.09499081998106575,
+      "first5s_displacement_rmse_2p5s": 0.17642419305011334
+    },
+    {
+      "directory": "decelerating_239_h25_hard_repeat_v3",
+      "matched": 304,
+      "unmatched": 10,
+      "displacement_rmse_1s": 0.03256053708355312,
+      "displacement_rmse_2p5s": 0.08942138916387979,
+      "first5s_displacement_rmse_2p5s": 0.13316544243585623
+    },
+    {
+      "directory": "decelerating_239_h25_inverse_repeat_v3",
+      "matched": 309,
+      "unmatched": 0,
+      "displacement_rmse_1s": 0.030548304678060766,
+      "displacement_rmse_2p5s": 0.08480804353383818,
+      "first5s_displacement_rmse_2p5s": 0.13796322126472493
+    }
+  ]
+}

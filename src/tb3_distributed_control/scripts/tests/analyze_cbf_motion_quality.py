@@ -50,6 +50,17 @@ def analyze(directory):
             max_omega_command_step=float(np.max(np.abs(np.diff(w))[valid])) if valid.any() else None,
             measured_pose_path_length=float(np.hypot(np.diff(column('x')),np.diff(column('y')))[valid].sum()),
             status_counts=dict(statuses))
+        if 'heading_error' in rows[0]:
+            heading=column('heading_error');finite=np.isfinite(heading)
+            item['heading_error_rmse']=float(np.sqrt(np.mean(heading[finite]**2))) if finite.any() else None
+        if 'leader_reference_heading' in rows[0]:
+            direction=column('leader_reference_heading')[:-1]
+            displacement=np.column_stack((np.diff(column('x')),np.diff(column('y'))))
+            projection=np.sum(displacement*np.column_stack((np.cos(direction),np.sin(direction))),axis=1)
+            usable=valid&np.isfinite(projection)
+            retreat=usable&(projection<-.02*np.where(valid,delta,1.))
+            item['measured_reference_backward_seconds']=float(intervals[retreat].sum())
+            item['measured_reference_backward_distance']=float(-projection[retreat].sum())
         trace=directory/(path.stem+'_solver_trace.jsonl')
         decisions=[];inactive=active=0
         if trace.exists():
@@ -69,7 +80,7 @@ def analyze(directory):
         result[path.stem]=item
     return dict(source=str(directory.resolve()),thresholds=dict(low_command_speed=.02,lag=.25,max_interval=1.5*dt),
         interpretation='Descriptive command/measurement metrics; not a safety or prediction-benefit test.',
-        parameters={k:meta.get(k) for k in ('prediction_mode','transport_geometry','adaptive_recovery','predictive_bypass','active_guidance_only','prediction_risk','suppress_guidance','risk_parameters')},
+        parameters={k:meta.get(k) for k in ('mpc_horizon','constraint_mode','pending_seed_with_backup','prediction_mode','transport_geometry','adaptive_recovery','predictive_bypass','active_guidance_only','prediction_risk','suppress_guidance','risk_parameters')},
         robots=result)
 
 
