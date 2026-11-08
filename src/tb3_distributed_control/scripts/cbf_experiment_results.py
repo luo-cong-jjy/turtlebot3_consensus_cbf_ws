@@ -591,6 +591,8 @@ class ExperimentRecorder:
             constraint_mode=rospy.get_param('/cbf/mpc/constraint_mode','dcbf'),
             pending_seed_with_backup=rospy.get_param('/cbf/mpc/pending_seed_with_backup',False),
             log_mpc_inputs=rospy.get_param('/cbf/mpc/log_mpc_inputs',False),
+            rear_pass=rospy.get_param('/cbf/mpc/rear_pass',False),
+            rear_preview_seconds=rospy.get_param('/cbf/mpc/rear_preview_seconds',6.),
             suppress_guidance=rospy.get_param('/cbf/suppress_guidance',False),
             risk_parameters=dict(weight=rospy.get_param('/cbf/mpc/risk_weight',3.),clearance=rospy.get_param('/cbf/mpc/risk_clearance',.35),
                 discount=rospy.get_param('/cbf/mpc/risk_discount',.5),tail_seconds=rospy.get_param('/cbf/mpc/risk_tail_seconds',0.),external_only=rospy.get_param('/cbf/mpc/risk_external_only',True),

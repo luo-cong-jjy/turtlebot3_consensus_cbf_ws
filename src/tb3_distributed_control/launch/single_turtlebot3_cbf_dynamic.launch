@@ -27,6 +27,8 @@
   <arg name="mpc_horizon" default="10" />
   <arg name="pending_seed_with_backup" default="false" />
   <arg name="log_mpc_inputs" default="false" />
+  <arg name="rear_pass" default="false" />
+  <arg name="rear_preview_seconds" default="6.0" />
   <arg name="infeasible_escape" default="false" />
   <arg name="execution_backup" default="false" />
   <arg name="progress_abstain" default="true" />
@@ -78,6 +80,8 @@
     <arg name="mpc_horizon" value="$(arg mpc_horizon)" />
     <arg name="pending_seed_with_backup" value="$(arg pending_seed_with_backup)" />
     <arg name="log_mpc_inputs" value="$(arg log_mpc_inputs)" />
+    <arg name="rear_pass" value="$(arg rear_pass)" />
+    <arg name="rear_preview_seconds" value="$(arg rear_preview_seconds)" />
     <arg name="infeasible_escape" value="$(arg infeasible_escape)" />
     <arg name="execution_backup" value="$(arg execution_backup)" />
     <arg name="progress_abstain" value="$(arg progress_abstain)" />

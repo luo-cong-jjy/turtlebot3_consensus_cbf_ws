@@ -785,6 +785,9 @@ class TurtleBot3CBFController:
                 or self.cfg['progress_guidance'] or self.cfg['predictive_bypass'] or self.cfg['infeasible_escape']
                 or self.adaptive_recovery or not self.cfg['execution_backup'] or not self.cfg['realtime']):
             raise ValueError('Ellipse comparison requires one robot, suppressed guidance, realtime checked backup, no bypass/escape/adaptive recovery')
+        if self.cfg.get('rear_pass',False) and (len(self.names)!=1 or not rospy.get_param('/cbf/dynamic_prediction',False)
+                or rospy.get_param('/cbf/dynamic/prediction_mode','cv')!='cv'):
+            raise ValueError('Rear-pass candidate currently requires single-robot CV dynamic mode')
         self.dt=self.cfg["dt"];self.n=self.cfg["horizon"]
         self.slots=int(rospy.get_param("/cbf/obstacle_slots",12))
         self.max_static=self.slots-(len(self.names)-1)

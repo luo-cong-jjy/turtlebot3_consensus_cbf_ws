@@ -90,7 +90,7 @@ def safety_residuals(values,obstacles,config):
     return values[:,1:]-(1-gammas)*values[:,:-1]
 
 
-def solver_input_snapshot(state,goals,obstacles,bounds,previous,config):
+def solver_input_snapshot(state,goals,obstacles,bounds,previous,config,guidance=None):
     """Optional measured-input replay record; no simulator truth or outputs."""
     def plain(value):
         if isinstance(value,np.ndarray):return value.tolist()
@@ -99,9 +99,11 @@ def solver_input_snapshot(state,goals,obstacles,bounds,previous,config):
         if isinstance(value,(list,tuple)):return [plain(v) for v in value]
         return value
     keys=('name','center','a','b','theta','gamma','peer','dynamic','prediction_centers',
-        'prediction_axes','prediction_angles','guidance_motion')
+        'prediction_axes','prediction_angles','guidance_motion','rear_prediction_centers','rear_prediction_axes')
     return plain(dict(state=state,goals=goals,previous=previous,bounds=bounds,
         config={k:v for k,v in config.items() if not k.startswith('_')},
+        guidance=None if guidance is None else dict(vectors=guidance[0],level=guidance[1],
+            headings=guidance[2] if len(guidance)>2 else np.arctan2(guidance[0][:,1],guidance[0][:,0])),
         obstacles=[{k:o[k] for k in keys if k in o} for o in obstacles]))
 
 
@@ -756,12 +758,138 @@ def progress_guidance(state,goals,obstacles,config,memory):
     return preview['vectors'][:n],1.
 
 
+def rear_pass_guidance(state,goals,obstacles,config,memory):
+    """CV crossing candidate: prefer a bounded rear crossing, otherwise yield.
+
+    Longer rollouts rank soft passing order only. Their axes are held at the
+    last hard-window envelope unless explicit longer geometry is supplied.
+    Only the original N-step prefix is a checked MPC backup; no long-horizon
+    safety guarantee or obstacle-negative-velocity command is implied.
+    """
+    n=config['horizon'];dt=config['dt'];steps=max(n,int(round(config.get('rear_preview_seconds',6.)/dt)))
+    times=np.arange(steps+1)*dt;targets=progress_targets(goals,times,dt)
+    feed=(goals[-1,:2]-goals[-2,:2])/dt;speed=float(np.linalg.norm(feed))
+    memory.pop('progress_plan',None)
+    def abstain(mode,static=False):
+        memory['rear_summary']=dict(mode=mode,hard_steps=n,soft_seconds=steps*dt)
+        if static:
+            memory.pop('rear_selected',None)
+            return _legacy_continuous_guidance(state,goals,obstacles,config,memory)
+        memory.pop('guide_index',None)
+        return _stationary_guidance(state,goals,obstacles,config,memory)
+    if speed<.02:return abstain('nominal_slow',True)
+    forward=feed/speed;normal=np.array([-forward[1],forward[0]])
+    moving=[]
+    for index,o in enumerate(obstacles):
+        if o.get('peer',False) or not o.get('dynamic',False):continue
+        c=progress_centers(o,np.array([0.,dt]),dt);velocity=(c[1]-c[0])/dt;vnorm=np.linalg.norm(velocity)
+        if vnorm>.03 and abs(np.dot(velocity/vnorm,normal))>.7:moving.append((index,velocity/vnorm))
+    if not moving:return abstain('not_crossing',True)
+    active=[o for o in obstacles if o.get('name')!='inactive']
+    extended=progress_obstacles(active,times,config)
+    for original,item in zip(active,extended):
+        if 'rear_prediction_centers' in original:
+            item['prediction_centers']=np.asarray(original['rear_prediction_centers'])[:steps+1]
+        if 'rear_prediction_axes' in original:
+            item['prediction_axes']=np.asarray(original['rear_prediction_axes'])[:steps+1]
+    packed=obstacle_batch(extended,steps+1,config['gamma'])
+    index,direction=min(moving,key=lambda item:np.linalg.norm(state[:2]-np.asarray(obstacles[item[0]]['center']))-obstacles[item[0]]['a'])
+    obs=obstacles[index];k=next(k for k,x in enumerate(active) if x['name']==obs['name'])
+    center=packed.centers[k];axes=packed.axes[k];c,s=packed.cosine[k],packed.sine[k]
+    effective=axes*(1+config['margin']/axes[:,1,None])
+    def support(vector):
+        return np.sqrt((effective[:,0]*(c*vector[0]+s*vector[1]))**2+(effective[:,1]*(-s*vector[0]+c*vector[1]))**2)
+    along_support=support(forward);normal_support=support(normal)
+    previous=np.asarray(memory.get('progress_previous',np.zeros(2)),float)
+    bounds=memory.get('progress_bounds',[-.22,.22]);vmax=min(.22,bounds[1])
+    if vmax<=0:return abstain('no_forward_speed')
+    # Direct, full hold, short waits and bounded initial arcs, followed by
+    # pursuit of the ORIGINAL moving reference. No shifted evaluation target.
+    primitives=[(vmax,0.,0.),(0.,0.,steps*dt)]
+    primitives.extend((0.,0.,d) for d in (.8,1.6,2.4))
+    primitives.extend((v,w,d) for v in (.12,.18,vmax) for w in (-1.,-.6,-.3,0.,.3,.6,1.) for d in (.8,1.6,2.4,3.2))
+    count=len(primitives);old=memory.get('rear_selected');now=max((o.get('guidance_motion') or {}).get('stamp',0.) for o in obstacles)
+    carry=None
+    if old is not None:
+        shift=max(1,int(round((now-old['stamp'])/dt)))
+        if shift<len(old['controls']):carry=np.vstack((old['controls'][shift:],np.tile(old['controls'][-1],(shift,1))))
+    size=count+int(carry is not None);states=np.zeros((size,steps+1,3));states[:,0]=state
+    controls=np.zeros((size,steps,2));last=np.tile(previous,(size,1));spec=np.asarray(primitives)
+    lane_offset=np.zeros(count);was_initial=np.ones(count,dtype=bool)
+    for j in range(steps):
+        _check_preview_budget(config)
+        initial=j*dt<spec[:,2]
+        capture=was_initial&(~initial)
+        lane_offset[capture]=((states[:count,j,:2]-targets[j])@normal)[capture]
+        passed=(states[:count,j,:2]-center[j])@forward>along_support[j]+.05
+        object_clear=(np.dot(center[j]-targets[j],normal)*np.sign(np.dot(direction,normal))>normal_support[j]+.05)
+        lateral=np.where(passed|object_clear,0.,lane_offset)
+        local_target=targets[j+1]+lateral[:,None]*normal
+        desired=feed+1.2*(local_target-states[:count,j,:2])
+        angle=np.arctan2(desired[:,1],desired[:,0]);error=np.arctan2(np.sin(angle-states[:count,j,2]),np.cos(angle-states[:count,j,2]))
+        v=np.minimum(vmax,np.linalg.norm(desired,axis=1))*np.maximum(np.cos(error),0.)
+        w=np.clip(2.5*error,-config['omega_max'],config['omega_max'])
+        v=np.where(initial,np.minimum(spec[:,0],vmax),v);w=np.where(initial,spec[:,1],w);was_initial=initial
+        controls[:count,j,0]=last[:count,0]+.35*(v-last[:count,0])
+        controls[:count,j,1]=last[:count,1]+.35*(w-last[:count,1])
+        if carry is not None:controls[-1,j]=carry[j]
+        controls[:,j,0]=np.clip(controls[:,j,0],max(0.,bounds[0]),vmax)
+        controls[:,j,1]=np.clip(controls[:,j,1],-config['omega_max'],config['omega_max'])
+        if config['delta_limit']:
+            controls[:,j]=np.clip(controls[:,j],last-[config['delta_v'],config['delta_w']],last+[config['delta_v'],config['delta_w']])
+        states[:,j+1,2]=states[:,j,2]+dt*controls[:,j,1]
+        states[:,j+1,:2]=states[:,j,:2]+dt*controls[:,j,0,None]*np.column_stack((np.cos(states[:,j+1,2]),np.sin(states[:,j+1,2])))
+        last=controls[:,j]
+    _check_preview_budget(config)
+    def values(batch):
+        length=batch.centers.shape[1];delta=states[None,:,:length,:2]-batch.centers[:,None,:,:]
+        c,s=batch.cosine[:,None,:],batch.sine[:,None,:];axes=batch.axes[:,None,:,:]
+        local=np.stack((c*delta[:,:,:,0]+s*delta[:,:,:,1],-s*delta[:,:,:,0]+c*delta[:,:,:,1]),axis=-1)
+        return axes[:,:,:,1]*(np.sqrt(np.sum((local/axes)**2,axis=-1)+1e-12)-1)-config['margin']
+    soft_h=values(packed);hard=obstacle_batch(obstacles,n+1,config['gamma']);hard_h=values(hard)
+    hard_slack=hard_h[:,:,1:]-(1-hard.gamma[:,None,None])*hard_h[:,:,:-1]
+    feasible=(np.min(soft_h,axis=(0,2))>=.02)&(np.min(hard_slack,axis=(0,2))>=-2e-6)
+    memory['guide_index']=index
+    relative=states[:,:,:2]-center[None,:,:];along=relative@forward
+    crossed=(along[:,1:]>=0)&(along[:,:-1]<0);already=along[:,0]>=0
+    has=crossed.any(axis=1)|already;gate=np.where(already,0,np.argmax(crossed,axis=1)+1)
+    rear=np.einsum('ij,j->i',relative[np.arange(size),gate],direction)
+    behind=has&(rear<=-support(direction)[gate]-.02)
+    direct_safe=bool(feasible[0])
+    cleared=(np.dot(obs['center']-goals[0,:2],normal)*np.sign(np.dot(direction,normal))>support(normal)[0]+.05
+             or np.dot(state[:2]-obs['center'],forward)>support(forward)[0]+.05)
+    if direct_safe and (old is None or old['name']!=obs['name'] or cleared):
+        memory.pop('rear_selected',None);return abstain('released' if cleared else 'direct_clear')
+    options=feasible&behind;mode='rear'
+    if not options.any():
+        waiting=np.zeros(size,dtype=bool);waiting[1:5]=True
+        if carry is not None and old.get('mode')=='yield':waiting[-1]=True
+        options=feasible&(~has)&waiting;mode='yield'
+    if not options.any():
+        memory.pop('rear_selected',None);return abstain('no_feasible_reference')
+    error=states[:,:,0:2]-targets[None,:,:]
+    score=np.mean(np.sum(error**2,axis=2),axis=1)+.25*np.sum(error[:,-1]**2,axis=1)
+    score+=.01*np.sum(np.diff(np.concatenate((np.tile(previous,(size,1))[:,None,:],controls),axis=1),axis=1)**2,axis=(1,2))
+    score+=.03*np.where(has,gate*dt,steps*dt)
+    selected=int(np.argmin(np.where(options,score,np.inf)));kept=False
+    if carry is not None and options[-1] and score[-1]<=score[selected]+max(.02,.1*score[selected]):selected=size-1;kept=True
+    chosen=controls[selected];predicted=states[selected]
+    vectors=chosen[:n,0,None]*np.column_stack((np.cos(predicted[1:n+1,2]),np.sin(predicted[1:n+1,2])))
+    memory['progress_plan']=dict(controls=chosen[:n].copy(),states=predicted[:n+1].copy(),plan_controls=vectors.copy(),mode='rear_'+mode)
+    memory['rear_selected']=dict(stamp=now,controls=chosen.copy(),name=obs['name'],mode=mode)
+    memory['rear_summary']=dict(mode=mode,obstacle=obs['name'],feasible=int(feasible.sum()),rear_candidates=int((feasible&behind).sum()),
+        candidates=size,kept=kept,soft_seconds=steps*dt,hard_steps=n,gate_seconds=float(gate[selected]*dt) if has[selected] else None,
+        rear_offset=float(rear[selected]) if has[selected] else None,far_axes='held_final_hard_envelope_unless_supplied')
+    return vectors,1.,predicted[1:n+1,2].copy()
+
+
 def continuous_guidance(state,goals,obstacles,config,memory):
     if config.get('suppress_guidance',False):
         memory.pop('progress_plan',None);memory.pop('guide_index',None)
         memory.pop('progress_decision',None)
         memory['progress_summary']=dict(mode='disabled',decision_id=memory.get('progress_counter',0))
         return np.zeros((config['horizon'],2)),0.
+    if config.get('rear_pass',False):return rear_pass_guidance(state,goals,obstacles,config,memory)
     if config.get('progress_guidance',False):return progress_guidance(state,goals,obstacles,config,memory)
     return _legacy_continuous_guidance(state,goals,obstacles,config,memory)
 
@@ -1142,6 +1270,10 @@ class CachedMPCProblem:
 class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
+        if config.get('rear_pass',False) and (not config.get('execution_backup',False) or config.get('suppress_guidance',False)
+                or config.get('progress_guidance',False) or config.get('predictive_bypass',False)
+                or config.get('prediction_risk',False) or config.get('constraint_mode','dcbf')!='dcbf'):
+            raise ValueError('Rear pass requires checked backup and original DCBF, without competing guidance/risk candidates')
         self.recovery = bool(recovery)
         self.problems = {}
         self.histories = {}
@@ -1232,7 +1364,7 @@ class MPCSolverManager:
         memory=self.robot_memory.setdefault(label,dict(positions=deque(maxlen=11),cooldown=0,preferred=1,hold=0))
         memory['positions'].append(state[:2].copy())
         memory['cooldown']=max(0,memory['cooldown']-1)
-        if cfg.get('progress_guidance',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
+        if cfg.get('progress_guidance',False) or cfg.get('rear_pass',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
         signature=tuple((o.get('name',str(i)),o.get('gamma',cfg['gamma'])) for i,o in enumerate(obstacles))
         usable=last is not None and np.shape(last.get('controls'))==(n,2)
         shift=min(n,max(1,int(shift)))
@@ -1269,6 +1401,7 @@ class MPCSolverManager:
         try:guidance=continuous_guidance(state,goals,obstacles,preview_config,memory)
         except PreviewBudgetExceeded:
             memory.pop('progress_plan',None)
+            if cfg.get('rear_pass',False):memory['rear_summary']=dict(mode='budget_abstain')
             memory['progress_summary']=dict(mode='budget_deferred',decision_id=memory.get('progress_counter',0))
             guidance=np.zeros((n,2)),0.;preview_budget_hit=True
         preview_ms=1000*(time.perf_counter()-preview_begin)
@@ -1387,7 +1520,8 @@ class MPCSolverManager:
                     escape_initial_h=best['escape_initial_h'],escape_next_h=best['escape_next_h'])
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
-        if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg)
+        if cfg.get('rear_pass',False):record['rear_pass']=dict(memory.get('rear_summary',{}))
+        if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
         self.histories.setdefault(label,[]).append(record);self.last_records[label]=record
         if best is None:
             raise RuntimeError(label+': no validated control within the current computation budget')
