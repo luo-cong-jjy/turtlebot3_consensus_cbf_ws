@@ -1,0 +1,1015 @@
+{
+  "stage": "Static regression and bounded rear-passing candidate; limited crossing support",
+  "parent_commit": "c50bf5c5eb97e01e9b2ce7da971cb465fad166d9",
+  "prototype_commit": "685048b",
+  "branch": "research/pass-order-2026-11-08",
+  "tag": "experiment/rear-pass-validation-2026-11-08",
+  "unit_tests_passed": 166,
+  "static_runs": 2,
+  "static_comparison": {
+    "interpretation": "Same nominal target / mission window comparison of two static Gazebo runs.\n\nUses independent sampled model positions for both versions, not their legacy\nerror columns. A single pair is a regression check, not statistical evidence.\n",
+    "teacher": {
+      "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/static_teacher_180",
+      "radius": 0.5,
+      "truth_samples": 1650,
+      "last_mission_sample": 179.92399999999998,
+      "mean_position_error": 0.07864232271026529,
+      "position_rmse": 0.18820790337353316,
+      "final_position_error_max": 0.0051872556789078084,
+      "mean_position_error_per_robot": [
+        0.04736041541489806,
+        0.14119670043992616,
+        0.10156770519841826,
+        0.08116687440848215,
+        0.021919918089601823
+      ],
+      "physical_proxy_clearance": 0.11218002114840359,
+      "peer_proxy_clearance": 0.010675014601155386,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "f6bec42520b4584217574eae37293835ac94f4d0d2b549d7f6666a4cc5013138",
+        "scripts/cbf_mpc_core.py": "15896bdf6ae01422c755e42ce3d54b3442b02bd69a8832e264c149333f835948",
+        "scripts/leader_node_cbf.py": "ed5834cc4cedd521e396b2c1b6a8eb49191ce0cd7d0d4f66f53ee86861ff9787",
+        "scripts/cbf_experiment_results.py": "140c8ff60e9a9c167541bad6c95d2cd82ccf66321687faff7c6c23743f92eb82",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "cf6f921f19214fdc6f0c9c42469cc743af877fe4598a5944ba6984e17ebc01f9",
+        "纯仿真代码/mpc_dcbf_static_obstacles.py": "a3737836aa5f7d231a5fe28d03332856bf5f2b6aa6b30576be6dad876f537f17",
+        "rviz/tb3_cbf.rviz": "ebd3cf3a5963c76a62dce506cf6b2962f4592b1d0a611c7165625626e69bc7c4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "a6a3d2689af32a68c852c3732d1a299109f4969c71e6db1154f6bdb79fb4e957"
+      },
+      "completed": true,
+      "failure": null,
+      "reported_basic_checks": true,
+      "truth_sha256": "09865282978f7b0ff3eba6ae7f7c938480aa256a5349f8f8f64277e55a5bf43d"
+    },
+    "current": {
+      "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/static_current_180",
+      "radius": 0.5,
+      "truth_samples": 1662,
+      "last_mission_sample": 179.894,
+      "mean_position_error": 0.07214627710893944,
+      "position_rmse": 0.17565927689880995,
+      "final_position_error_max": 0.005359825262152271,
+      "mean_position_error_per_robot": [
+        0.043665877622880975,
+        0.1364945000607614,
+        0.08027244353589347,
+        0.07813779876852742,
+        0.022160765556633877
+      ],
+      "physical_proxy_clearance": 0.11898232086351412,
+      "peer_proxy_clearance": 0.03317135518806191,
+      "source_sha256": {
+        "scripts/tb3_controller_node_cbf.py": "73e5ba8042aa1807eee28c7eb674aeb728295c5a81f1989a6506d6533995d4b2",
+        "scripts/cbf_mpc_core.py": "64ffaf52fb6eedaa382e34a3b8653691e618026c8f284ea63efedc390af2768f",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/cbf_experiment_results.py": "29d04dcc932af344ae7b2592b6321dd0d0f0dbe9249692de7439fdf20e8ad401",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4885cb8fb8b25791f2b85ea0c8e7b261f44c02aaea96547587848e750dfede00",
+        "纯仿真代码/mpc_dcbf_static_obstacles.py": "a3737836aa5f7d231a5fe28d03332856bf5f2b6aa6b30576be6dad876f537f17",
+        "rviz/tb3_cbf.rviz": "0f6ba14647b56b5f5fd0d2d1cd66027740fbcd90b573b3b417ef98dfca006fa4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "9b3694ab9fa2baa224fac5f8ebe3b8d32f50f6c9e1a4ef8e1d572731e3872e2a"
+      },
+      "completed": true,
+      "failure": null,
+      "reported_basic_checks": true,
+      "truth_sha256": "0b66dd018c24ed5d664d42d83d1abf0564d4feb4c1ef70c0434949b6db9b09b2"
+    },
+    "mean_error_change": -0.006496045601325856
+  },
+  "ideal_initial_misaligned_runs_preserved": 4,
+  "ideal_aligned_runs": 4,
+  "ideal_aligned_passes": 4,
+  "real_cv_runs": 8,
+  "real_cv_passes": 8,
+  "crossing_pairs": 3,
+  "crossing_quality_improved_pairs": 3,
+  "decelerating_pairs": 1,
+  "decelerating_position_quality_improved": false,
+  "paired_crossing": [
+    {
+      "label": "211首次",
+      "baseline": "gazebo_crossing_rear_false",
+      "candidate": "gazebo_crossing_rear_true",
+      "position_rmse_reduction": 0.4032752831154467,
+      "omega_tv_reduction": 0.16641013748257516,
+      "heading_rmse_reduction": 0.7813274638050886
+    },
+    {
+      "label": "211重复",
+      "baseline": "gazebo_crossing_211_rear_false_repeat",
+      "candidate": "gazebo_crossing_211_rear_true_repeat",
+      "position_rmse_reduction": 0.2424176983855877,
+      "omega_tv_reduction": 0.20651017753507517,
+      "heading_rmse_reduction": 0.8784949954536607
+    },
+    {
+      "label": "239开发种子",
+      "baseline": "gazebo_crossing_239_rear_false_repeat",
+      "candidate": "gazebo_crossing_239_rear_true_repeat",
+      "position_rmse_reduction": 0.40527853229620925,
+      "omega_tv_reduction": 0.3776156666698952,
+      "heading_rmse_reduction": 0.918992527367088
+    }
+  ],
+  "real_verified_first_steps": 3198,
+  "real_rear_replay_cycles": 1601,
+  "real_rear_prefixes_validated": 359,
+  "real_rear_budget_abstentions": 200,
+  "ideal_verified_first_steps": 1600,
+  "ideal_rear_reference_cycles": 800,
+  "ideal_rear_prefixes_validated": 173,
+  "default_rear_pass": false,
+  "supported_scope": "single-robot CV crossing candidate only; not universal/physical/recursive safety proof",
+  "runs": [
+    {
+      "directory": "gazebo_crossing_211_rear_false_repeat",
+      "rear_pass": false,
+      "scenario": "crossing",
+      "seed": 211,
+      "passed": true,
+      "window_final_error": 0.0029506264778194225,
+      "proxy_clearance": 0.18701737681349423,
+      "control_call_p95_ms": 58.73211199650541,
+      "statuses": {
+        "feasible_iterate": 1,
+        "ok": 400
+      },
+      "quality": {
+        "samples": 401,
+        "first_time": 0.011999999999999927,
+        "last_time": 40.012,
+        "excluded_gap_count": 0,
+        "observed_duration": 40.0,
+        "position_rmse": 0.43225830131546633,
+        "time_mean_position_error": 0.2815400139799467,
+        "final_position_error": 0.0029401297773616816,
+        "peak_position_error": 0.9878931284496499,
+        "last_error_above_25cm": 25.512,
+        "command_low_speed_seconds": 0.0,
+        "command_low_speed_with_lag_seconds": 0.0,
+        "longest_command_low_speed_with_lag_seconds": 0.0,
+        "reverse_seconds": 0.6000000000000001,
+        "omega_total_variation": 18.904598471149523,
+        "max_omega_command_step": 0.7629926210217746,
+        "measured_pose_path_length": 7.000495381758549,
+        "status_counts": {
+          "ok": 400,
+          "feasible_iterate": 1
+        },
+        "heading_error_rmse": 0.7509970929374362,
+        "measured_reference_backward_seconds": 3.3,
+        "measured_reference_backward_distance": 0.2952227709512607,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_crossing_211_rear_false_repeat",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 16.916433974105374,
+            "relative_position": [
+              0.0,
+              -0.7179713915799466
+            ],
+            "signed_motion_projection": -0.7179713915799466,
+            "order": "rear",
+            "center_distance": 0.7179713915799466,
+            "proxy_clearance": 0.4079713915799466
+          }
+        ],
+        "first_order": "rear",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 399,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009586232287240731,
+              "max_plan_execution_error": 0.04892667790451904,
+              "max_nominal_error_during_plan_samples": 0.9878931284496499
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 401,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": false
+        }
+      }
+    },
+    {
+      "directory": "gazebo_crossing_211_rear_true_repeat",
+      "rear_pass": true,
+      "scenario": "crossing",
+      "seed": 211,
+      "passed": true,
+      "window_final_error": 0.0037944131374047976,
+      "proxy_clearance": 0.20325531928138646,
+      "control_call_p95_ms": 76.72034730494488,
+      "statuses": {
+        "ok": 377,
+        "feasible_iterate": 23
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.04799999999999996,
+        "last_time": 39.948,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.900000000000006,
+        "position_rmse": 0.3274712388025071,
+        "time_mean_position_error": 0.2194222841365379,
+        "final_position_error": 0.0037944131374047976,
+        "peak_position_error": 0.710799264553587,
+        "last_error_above_25cm": 18.348,
+        "command_low_speed_seconds": 0.0,
+        "command_low_speed_with_lag_seconds": 0.0,
+        "longest_command_low_speed_with_lag_seconds": 0.0,
+        "reverse_seconds": 0.5,
+        "omega_total_variation": 15.000606484643125,
+        "max_omega_command_step": 2.036884049965749,
+        "measured_pose_path_length": 6.261686723948158,
+        "status_counts": {
+          "ok": 377,
+          "feasible_iterate": 23
+        },
+        "heading_error_rmse": 0.09124990519165081,
+        "measured_reference_backward_seconds": 0.7,
+        "measured_reference_backward_distance": 0.1154459036514246,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_crossing_211_rear_true_repeat",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 14.711740491753629,
+            "relative_position": [
+              0.0,
+              -0.6388169350733438
+            ],
+            "signed_motion_projection": -0.6388169350733438,
+            "order": "rear",
+            "center_distance": 0.6388169350733438,
+            "proxy_clearance": 0.3288169350733438
+          }
+        ],
+        "first_order": "rear",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 369,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.006716905107616848,
+              "max_plan_execution_error": 0.029735202131273737,
+              "max_nominal_error_during_plan_samples": 0.710799264553587
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 400,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "56d6218275137b9f5c8e5bd3fe56616ea09b3a331204c7ec2d7b7cc5e942c565",
+          "checked_cycles": 400,
+          "validated_reference_prefixes": 105,
+          "recorded_budget_abstentions": 53,
+          "cv_guidance_fields_restored": 4800,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "interpretation": "Replay rear-candidate guidance from frozen source and recorded model inputs.\n\nRecorded budget-abstain events skip the unfinished computation, preserving\nthe incumbent as online. Early snapshot schemas omitted the CV guidance flag;\nrestore its documented dynamic/inactive convention in a replay copy only.\n"
+        }
+      }
+    },
+    {
+      "directory": "gazebo_crossing_239_rear_false_repeat",
+      "rear_pass": false,
+      "scenario": "crossing",
+      "seed": 239,
+      "passed": true,
+      "window_final_error": 0.0048575869227009925,
+      "proxy_clearance": 0.1898270047962095,
+      "control_call_p95_ms": 69.90817995974791,
+      "statuses": {
+        "feasible_iterate": 4,
+        "ok": 395,
+        "late_fallback_stop": 1
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.045999999999999736,
+        "last_time": 39.946,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.9,
+        "position_rmse": 0.5365897588392046,
+        "time_mean_position_error": 0.3361424867357799,
+        "final_position_error": 0.0048575869227009925,
+        "peak_position_error": 1.2984004922992385,
+        "last_error_above_25cm": 25.246000000000002,
+        "command_low_speed_seconds": 0.13299999999999912,
+        "command_low_speed_with_lag_seconds": 0.13299999999999912,
+        "longest_command_low_speed_with_lag_seconds": 0.13299999999999912,
+        "reverse_seconds": 0.5,
+        "omega_total_variation": 23.105008403340822,
+        "max_omega_command_step": 0.7013896207180668,
+        "measured_pose_path_length": 7.495356954843903,
+        "status_counts": {
+          "ok": 395,
+          "feasible_iterate": 4,
+          "late_fallback_stop": 1
+        },
+        "heading_error_rmse": 0.593099548673711,
+        "measured_reference_backward_seconds": 1.3999999999999995,
+        "measured_reference_backward_distance": 0.13874897749376236,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_crossing_239_rear_false_repeat",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 14.614456829410111,
+            "relative_position": [
+              0.0,
+              0.5263662476424719
+            ],
+            "signed_motion_projection": 0.5263662476424719,
+            "order": "front",
+            "center_distance": 0.5263662476424719,
+            "proxy_clearance": 0.21636624764247187
+          }
+        ],
+        "first_order": "front",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 377,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.0104417146321294,
+              "max_plan_execution_error": 0.04885340406971976,
+              "max_nominal_error_during_plan_samples": 1.2984004922992385
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 399,
+          "uncertified_other_statuses": 1,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": false
+        }
+      }
+    },
+    {
+      "directory": "gazebo_crossing_239_rear_true_repeat",
+      "rear_pass": true,
+      "scenario": "crossing",
+      "seed": 239,
+      "passed": true,
+      "window_final_error": 0.003729817834670951,
+      "proxy_clearance": 0.20458871392358496,
+      "control_call_p95_ms": 78.36526003666222,
+      "statuses": {
+        "ok": 364,
+        "late_fallback_stop": 1,
+        "feasible_iterate": 36
+      },
+      "quality": {
+        "samples": 401,
+        "first_time": 0.04799999999999996,
+        "last_time": 40.047999999999995,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.99999999999999,
+        "position_rmse": 0.3191214489316749,
+        "time_mean_position_error": 0.21703766345625625,
+        "final_position_error": 0.0035163000646069574,
+        "peak_position_error": 0.6742373854597687,
+        "last_error_above_25cm": 19.148000000000003,
+        "command_low_speed_seconds": 0.133,
+        "command_low_speed_with_lag_seconds": 0.0,
+        "longest_command_low_speed_with_lag_seconds": 0.0,
+        "reverse_seconds": 0.5,
+        "omega_total_variation": 14.380195251699746,
+        "max_omega_command_step": 1.334346818125216,
+        "measured_pose_path_length": 6.27131277422409,
+        "status_counts": {
+          "ok": 364,
+          "feasible_iterate": 36,
+          "late_fallback_stop": 1
+        },
+        "heading_error_rmse": 0.0480454954577781,
+        "measured_reference_backward_seconds": 0.8,
+        "measured_reference_backward_distance": 0.12529065839570797,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_crossing_239_rear_true_repeat",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 14.962423604495632,
+            "relative_position": [
+              0.0,
+              -0.6422394289140054
+            ],
+            "signed_motion_projection": -0.6422394289140054,
+            "order": "rear",
+            "center_distance": 0.6422394289140054,
+            "proxy_clearance": 0.33223942891400543
+          }
+        ],
+        "first_order": "rear",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 401,
+              "prior_plan_samples_audited": 358,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.005675137227916111,
+              "max_plan_execution_error": 0.041819594133360775,
+              "max_nominal_error_during_plan_samples": 0.6742373854597687
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 400,
+          "uncertified_other_statuses": 1,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "56d6218275137b9f5c8e5bd3fe56616ea09b3a331204c7ec2d7b7cc5e942c565",
+          "checked_cycles": 401,
+          "validated_reference_prefixes": 89,
+          "recorded_budget_abstentions": 68,
+          "cv_guidance_fields_restored": 4812,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "interpretation": "Replay rear-candidate guidance from frozen source and recorded model inputs.\n\nRecorded budget-abstain events skip the unfinished computation, preserving\nthe incumbent as online. Early snapshot schemas omitted the CV guidance flag;\nrestore its documented dynamic/inactive convention in a replay copy only.\n"
+        }
+      }
+    },
+    {
+      "directory": "gazebo_crossing_rear_false",
+      "rear_pass": false,
+      "scenario": "crossing",
+      "seed": 211,
+      "passed": true,
+      "window_final_error": 0.002030986471960295,
+      "proxy_clearance": 0.18998584565801357,
+      "control_call_p95_ms": 71.34858797653574,
+      "statuses": {
+        "feasible_iterate": 9,
+        "ok": 391
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.08199999999999999,
+        "last_time": 39.982,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.9,
+        "position_rmse": 0.5544692865395136,
+        "time_mean_position_error": 0.3536662017235761,
+        "final_position_error": 0.002030986471960295,
+        "peak_position_error": 1.3258054874023941,
+        "last_error_above_25cm": 25.782,
+        "command_low_speed_seconds": 0.0,
+        "command_low_speed_with_lag_seconds": 0.0,
+        "longest_command_low_speed_with_lag_seconds": 0.0,
+        "reverse_seconds": 0.5,
+        "omega_total_variation": 22.653143658221232,
+        "max_omega_command_step": 0.7005115858680151,
+        "measured_pose_path_length": 7.543618482388542,
+        "status_counts": {
+          "ok": 391,
+          "feasible_iterate": 9
+        },
+        "heading_error_rmse": 0.5965794431212426,
+        "measured_reference_backward_seconds": 1.2999999999999998,
+        "measured_reference_backward_distance": 0.14396945363788083,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_crossing_rear_false",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 14.771243766513873,
+            "relative_position": [
+              0.0,
+              0.5249989804140137
+            ],
+            "signed_motion_projection": 0.5249989804140137,
+            "order": "front",
+            "center_distance": 0.5249989804140137,
+            "proxy_clearance": 0.21499898041401372
+          }
+        ],
+        "first_order": "front",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.011700807798302784,
+              "max_plan_execution_error": 0.049119956380320136,
+              "max_nominal_error_during_plan_samples": 1.3258054874023941
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 400,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": false
+        }
+      }
+    },
+    {
+      "directory": "gazebo_crossing_rear_true",
+      "rear_pass": true,
+      "scenario": "crossing",
+      "seed": 211,
+      "passed": true,
+      "window_final_error": 0.004260654945066357,
+      "proxy_clearance": 0.1878245981785166,
+      "control_call_p95_ms": 80.66509266791397,
+      "statuses": {
+        "ok": 359,
+        "feasible_iterate": 40,
+        "late_fallback_stop": 1
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.04799999999999996,
+        "last_time": 39.948,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.900000000000006,
+        "position_rmse": 0.3308655280314715,
+        "time_mean_position_error": 0.22810958375950535,
+        "final_position_error": 0.004260654945066357,
+        "peak_position_error": 0.684770461858659,
+        "last_error_above_25cm": 20.048000000000002,
+        "command_low_speed_seconds": 0.23299999999999876,
+        "command_low_speed_with_lag_seconds": 0.09999999999999964,
+        "longest_command_low_speed_with_lag_seconds": 0.09999999999999964,
+        "reverse_seconds": 0.5999999999999996,
+        "omega_total_variation": 18.88343090764411,
+        "max_omega_command_step": 1.9540760899373926,
+        "measured_pose_path_length": 6.256113323773101,
+        "status_counts": {
+          "ok": 359,
+          "feasible_iterate": 40,
+          "late_fallback_stop": 1
+        },
+        "heading_error_rmse": 0.13045553986907005,
+        "measured_reference_backward_seconds": 0.7,
+        "measured_reference_backward_distance": 0.10814443248534511,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_crossing_rear_true",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 15.254244311639969,
+            "relative_position": [
+              0.0,
+              -0.7182107042065432
+            ],
+            "signed_motion_projection": -0.7182107042065432,
+            "order": "rear",
+            "center_distance": 0.7182107042065432,
+            "proxy_clearance": 0.4082107042065432
+          }
+        ],
+        "first_order": "rear",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 337,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.006191075704697412,
+              "max_plan_execution_error": 0.03584431840663058,
+              "max_nominal_error_during_plan_samples": 0.684770461858659
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 399,
+          "uncertified_other_statuses": 1,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "56d6218275137b9f5c8e5bd3fe56616ea09b3a331204c7ec2d7b7cc5e942c565",
+          "checked_cycles": 400,
+          "validated_reference_prefixes": 91,
+          "recorded_budget_abstentions": 60,
+          "cv_guidance_fields_restored": 4800,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "interpretation": "Replay rear-candidate guidance from frozen source and recorded model inputs.\n\nRecorded budget-abstain events skip the unfinished computation, preserving\nthe incumbent as online. Early snapshot schemas omitted the CV guidance flag;\nrestore its documented dynamic/inactive convention in a replay copy only.\n"
+        }
+      }
+    },
+    {
+      "directory": "gazebo_decelerating_crossing_rear_false",
+      "rear_pass": false,
+      "scenario": "decelerating_crossing",
+      "seed": 211,
+      "passed": true,
+      "window_final_error": 0.0030089503275624683,
+      "proxy_clearance": 0.13216162106993906,
+      "control_call_p95_ms": 71.79717676481229,
+      "statuses": {
+        "ok": 395,
+        "feasible_iterate": 5
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.07999999999999999,
+        "last_time": 39.98,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.9,
+        "position_rmse": 0.36696883828520854,
+        "time_mean_position_error": 0.2593743343451926,
+        "final_position_error": 0.0030089503275624683,
+        "peak_position_error": 0.7574429314900792,
+        "last_error_above_25cm": 26.380000000000003,
+        "command_low_speed_seconds": 0.6999999999999993,
+        "command_low_speed_with_lag_seconds": 0.1999999999999993,
+        "longest_command_low_speed_with_lag_seconds": 0.1999999999999993,
+        "reverse_seconds": 10.1,
+        "omega_total_variation": 42.961752684712124,
+        "max_omega_command_step": 1.9030667443626275,
+        "measured_pose_path_length": 6.743854358180339,
+        "status_counts": {
+          "ok": 395,
+          "feasible_iterate": 5
+        },
+        "heading_error_rmse": 1.1582941037198848,
+        "measured_reference_backward_seconds": 1.8999999999999995,
+        "measured_reference_backward_distance": 0.14973874054161257,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_decelerating_crossing_rear_false",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 15.436100344021954,
+            "relative_position": [
+              0.0,
+              -0.5171541799169805
+            ],
+            "signed_motion_projection": -0.5171541799169805,
+            "order": "rear",
+            "center_distance": 0.5171541799169805,
+            "proxy_clearance": 0.20715417991698054
+          }
+        ],
+        "first_order": "rear",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009692102678343851,
+              "max_plan_execution_error": 0.04327503785589026,
+              "max_nominal_error_during_plan_samples": 0.7574429314900792
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 400,
+          "uncertified_other_statuses": 0,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": false
+        }
+      }
+    },
+    {
+      "directory": "gazebo_decelerating_crossing_rear_true",
+      "rear_pass": true,
+      "scenario": "decelerating_crossing",
+      "seed": 211,
+      "passed": true,
+      "window_final_error": 0.0008326259455967859,
+      "proxy_clearance": 0.1309477638324053,
+      "control_call_p95_ms": 76.74535511177963,
+      "statuses": {
+        "feasible_iterate": 19,
+        "ok": 380,
+        "late_fallback_stop": 1
+      },
+      "quality": {
+        "samples": 400,
+        "first_time": 0.096,
+        "last_time": 39.996,
+        "excluded_gap_count": 0,
+        "observed_duration": 39.900000000000006,
+        "position_rmse": 0.44244270820221476,
+        "time_mean_position_error": 0.3560702058319414,
+        "final_position_error": 0.0008326259455967859,
+        "peak_position_error": 0.831057245870894,
+        "last_error_above_25cm": 27.196,
+        "command_low_speed_seconds": 1.2000000000000028,
+        "command_low_speed_with_lag_seconds": 1.2000000000000028,
+        "longest_command_low_speed_with_lag_seconds": 0.9000000000000004,
+        "reverse_seconds": 7.899999999999999,
+        "omega_total_variation": 38.231255170360484,
+        "max_omega_command_step": 1.4183690094713255,
+        "measured_pose_path_length": 6.560281723599578,
+        "status_counts": {
+          "ok": 380,
+          "feasible_iterate": 19,
+          "late_fallback_stop": 1
+        },
+        "heading_error_rmse": 1.1144578233639026,
+        "measured_reference_backward_seconds": 0.8999999999999995,
+        "measured_reference_backward_distance": 0.11359250978708668,
+        "reference_decisions": 0,
+        "active_circulation_decisions": 0,
+        "active_guide_cycles": 0,
+        "explicit_inactive_guide_cycles": 0,
+        "inactive_guidance_gate_check": null
+      },
+      "passing": {
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/静态回归与后方通行_2026-11-08/gazebo_decelerating_crossing_rear_true",
+        "input_kind": "independent_gazebo",
+        "forward_crossings": [
+          {
+            "time": 15.95184841161558,
+            "relative_position": [
+              0.0,
+              -0.5299873624382753
+            ],
+            "signed_motion_projection": -0.5299873624382753,
+            "order": "rear",
+            "center_distance": 0.5299873624382753,
+            "proxy_clearance": 0.21998736243827527
+          }
+        ],
+        "first_order": "rear",
+        "interpretation": "Offline actual crossing order for the single straight-reference scenarios.\n\nUses recorded ideal poses or independent Gazebo model poses. This does not\nfeed truth to the controller or infer passing order from a desired guide.\n"
+      },
+      "audits": {
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.01163894019277145,
+              "max_plan_execution_error": 0.0430170076557617,
+              "max_nominal_error_during_plan_samples": 0.831057245870894
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "adopted_commands": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 399,
+          "uncertified_other_statuses": 1,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "rear_references": {
+          "applicable": true,
+          "passed": true,
+          "source_sha256": "56d6218275137b9f5c8e5bd3fe56616ea09b3a331204c7ec2d7b7cc5e942c565",
+          "checked_cycles": 400,
+          "validated_reference_prefixes": 74,
+          "recorded_budget_abstentions": 19,
+          "cv_guidance_fields_restored": 4800,
+          "maximum_numeric_difference": 0.0,
+          "first_error": null,
+          "interpretation": "Replay rear-candidate guidance from frozen source and recorded model inputs.\n\nRecorded budget-abstain events skip the unfinished computation, preserving\nthe incumbent as online. Early snapshot schemas omitted the CV guidance flag;\nrestore its documented dynamic/inactive convention in a replay copy only.\n"
+        }
+      }
+    }
+  ]
+}

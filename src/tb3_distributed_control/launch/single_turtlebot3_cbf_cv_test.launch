@@ -1,0 +1,33 @@
+<launch>
+  <!-- Frozen single-robot CV comparison profile; rear candidate is opt-in. -->
+  <arg name="scenario" default="crossing" />
+  <arg name="rear_pass" default="false" />
+  <arg name="total_time" default="40" />
+  <arg name="gazebo_seed" default="211" />
+  <arg name="gui" default="true" />
+  <arg name="open_rviz" default="true" />
+  <arg name="output_dir" default="" />
+  <arg name="log_mpc_inputs" default="false" />
+  <include file="$(find tb3_distributed_control)/launch/single_turtlebot3_cbf_dynamic.launch">
+    <arg name="scenario" value="$(arg scenario)" />
+    <arg name="rear_pass" value="$(arg rear_pass)" />
+    <arg name="total_time" value="$(arg total_time)" />
+    <arg name="gazebo_seed" value="$(arg gazebo_seed)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="open_rviz" value="$(arg open_rviz)" />
+    <arg name="output_dir" value="$(arg output_dir)" />
+    <arg name="log_mpc_inputs" value="$(arg log_mpc_inputs)" />
+    <arg name="prediction_mode" value="cv" />
+    <arg name="mpc_horizon" value="10" />
+    <arg name="execution_backup" value="true" />
+    <arg name="transport_geometry" value="true" />
+    <arg name="rear_preview_seconds" value="6.0" />
+    <arg name="adaptive_recovery" value="false" />
+    <arg name="progress_guidance" value="false" />
+    <arg name="predictive_bypass" value="false" />
+    <arg name="prediction_risk" value="false" />
+    <arg name="suppress_guidance" value="false" />
+    <arg name="pending_seed_with_backup" value="false" />
+    <arg name="infeasible_escape" value="false" />
+  </include>
+</launch>

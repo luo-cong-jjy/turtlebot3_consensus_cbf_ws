@@ -98,7 +98,7 @@ def solver_input_snapshot(state,goals,obstacles,bounds,previous,config,guidance=
         if isinstance(value,dict):return {k:plain(v) for k,v in value.items()}
         if isinstance(value,(list,tuple)):return [plain(v) for v in value]
         return value
-    keys=('name','center','a','b','theta','gamma','peer','dynamic','prediction_centers',
+    keys=('name','center','a','b','theta','gamma','peer','dynamic','guidance','prediction_model','stage_velocity_guidance','prediction_centers',
         'prediction_axes','prediction_angles','guidance_motion','rear_prediction_centers','rear_prediction_axes')
     return plain(dict(state=state,goals=goals,previous=previous,bounds=bounds,
         config={k:v for k,v in config.items() if not k.startswith('_')},
@@ -1274,6 +1274,9 @@ class MPCSolverManager:
                 or config.get('progress_guidance',False) or config.get('predictive_bypass',False)
                 or config.get('prediction_risk',False) or config.get('constraint_mode','dcbf')!='dcbf'):
             raise ValueError('Rear pass requires checked backup and original DCBF, without competing guidance/risk candidates')
+        if config.get('rear_pass',False) and (not np.isfinite(config.get('rear_preview_seconds',6.))
+                or not config['horizon']*config['dt']<=config.get('rear_preview_seconds',6.)<=8.):
+            raise ValueError('Rear preview must be finite, cover the hard window, and not exceed 8 seconds')
         self.recovery = bool(recovery)
         self.problems = {}
         self.histories = {}

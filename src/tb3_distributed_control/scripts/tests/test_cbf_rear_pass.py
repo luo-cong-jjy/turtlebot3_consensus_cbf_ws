@@ -21,6 +21,31 @@ def inputs(y=-.6):
 
 
 class RearPassChecks(unittest.TestCase):
+    def test_mirrored_crossing_changes_the_side_instead_of_always_turning_down(self):
+        cfg,state,goals,obs,memory=inputs(-.8)
+        continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertEqual(memory['rear_summary']['mode'],'rear')
+        self.assertLess(memory['rear_selected']['controls'][:,1].min(),0.)
+        reflected=dict(obs[0]);reflected['center']=obs[0]['center']*np.array([1.,-1.])
+        reflected['prediction_centers']=obs[0]['prediction_centers']*np.array([1.,-1.])
+        reflected['guidance_motion']=dict(stamp=10.,weights=[1.],models=[dict(mode='cv',position=[2.1,.8],velocity=[0.,-.16],acceleration=[0.,0.],tau=1.)])
+        other=dict(progress_previous=np.array([.15,0.]),progress_bounds=[-.22,.22])
+        continuous_guidance(state,goals,[reflected],cfg,other)
+        self.assertEqual(other['rear_summary']['mode'],'rear')
+        self.assertGreater(other['rear_selected']['controls'][:,1].max(),0.)
+        self.assertLess(rollout(state,memory['rear_selected']['controls'],.1)[:,1].min(),-.1)
+        self.assertGreater(rollout(state,other['rear_selected']['controls'],.1)[:,1].max(),.1)
+
+    def test_kept_reference_advances_its_phase_instead_of_restarting_the_turn(self):
+        cfg,state,goals,obs,memory=inputs(-.8)
+        continuous_guidance(state,goals,obs,cfg,memory);old=memory['rear_selected']['controls'].copy()
+        advanced=rollout(state,old[:1],.1)[1];goals=goals.copy();goals[:,0]+=.015
+        o=dict(obs[0],center=obs[0]['center']+np.array([0.,.016]),prediction_centers=obs[0]['prediction_centers']+np.array([0.,.016]))
+        o['guidance_motion']=dict(stamp=10.1,weights=[1.],models=[dict(mode='cv',position=o['center'].tolist(),velocity=[0.,.16],acceleration=[0.,0.],tau=1.)])
+        memory['progress_previous']=old[0].copy();continuous_guidance(advanced,goals,[o],cfg,memory)
+        self.assertTrue(memory['rear_summary']['kept'])
+        np.testing.assert_allclose(memory['rear_selected']['controls'][0],old[1],atol=1e-12)
+
     def test_selected_prefix_is_bounded_and_original_validator_accepts(self):
         cfg,state,goals,obs,memory=inputs();before=goals.copy()
         vectors,level,headings=continuous_guidance(state,goals,obs,cfg,memory)

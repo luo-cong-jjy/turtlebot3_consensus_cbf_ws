@@ -22,10 +22,12 @@
 
 - 2026-11-05 相对运动预判实验见 docs/relative_bypass_2026-11-05.md。未稳定改善多机安全，predictive_bypass 默认关闭；保留实验实现、V1索引异常以及V2/V3多机负净距。121项检查，18次尝试全部归档。任务有明确结束时刻时，末测量距结束超过1.5dt则final缺失，不以旧值回填。V4一次显式通过不覆盖V3三次多机失败。
 
-- 当前新研究分支 research/geometry-time-2026-11-07，见 docs/geometry_time_recovery_2026-11-07.md。135项检查及构建通过，20次尝试（含4启动失败）完整保留；transport_geometry+adaptive_recovery组合完成10次均过、含6次五机，但非统计或物理安全证明，两个开关仍默认false。只在h0<0且原有限网格恢复不可行时尝试降低恢复gamma，h0非负gamma保持；gamma=0仅非恶化，不保证有限时间恢复。当前仿真为world来源odom，不是真实轮式里程计验证。初始化串行校验不能被算作控制创新或消除所有Gazebo原生崩溃。
+- 2026-11-07 几何时标保留分支 research/geometry-time-2026-11-07，见 docs/geometry_time_recovery_2026-11-07.md。135项检查及构建通过，20次尝试（含4启动失败）完整保留；transport_geometry+adaptive_recovery组合完成10次均过、含6次五机，但非统计或物理安全证明，两个开关仍默认false。只在h0<0且原有限网格恢复不可行时尝试降低恢复gamma，h0非负gamma保持；gamma=0仅非恶化，不保证有限时间恢复。当前仿真为world来源odom，不是真实轮式里程计验证。初始化串行校验不能被算作控制创新或消除所有Gazebo原生崩溃。
 
 - 2026-11-07 绕行质量复盘分支 research/bypass-quality-2026-11-07，见 docs/bypass_quality_2026-11-07.md。137项检查；7次尝试、2次原生启动崩溃，5次有效闭环仅3次通过。active_guidance_only默认false；门控局部修正不等于整体稳定改进，同种子重复及旧predictive组合均有负代理净距，不推荐当稳定版本。11帧同输入离线配对证明预测影响约束求解，不证明闭环整体优势。原始失败完整归档。
 
 - 2026-11-07 预测风险代价分支 research/prediction-risk-2026-11-07，见 docs/prediction_risk_2026-11-07.md。148项检查，8次单机尝试含1次就绪超时；7次闭环含对照5过2恢复失败。风险配置4次完成仅2过，未接受为整体改进，不进入五机。prediction_risk/suppress_guidance默认false，risk_tail_seconds默认0；尾段是固定终端运动/保持最后半轴的软假设，不增加优化变量或硬约束，不代表2.5秒安全计划。保留V1短窗口提交2de0ca7与全部失败，不将Wang论文原方法声称已复现。
 
 - 2026-11-07 Wang核心对照分支 research/wang-core-2026-11-07，见 docs/wang_core_2026-11-07.md。159项检查；13次闭环6过7未按时恢复；19帧228次离线尝试。几何模式严格检查当前安全域前提，不通过时不放松。3573条指令首步重放只来自9次有快照的DCBF运行。完整H25无代价3/3过、有反比代价1/3过，但平滑/实时性未稳定优于原引导；默认H10/原DCBF不变。pending_seed_with_backup仅改初值，后备不丢，默认false；log_mpc_inputs默认false。不是Wang论文完整复现，不进入五机/实物或替换演示版，保留全部负结果。
+
+- 2026-11-08 后方通行研究分支 research/pass-order-2026-11-08，见 docs/rear_pass_2026-11-08.md。166项检查；静态180s老师/当前配对均通过且统一真值未见明显退化；初轮4次理想诊断因模型/评估半径不一致保留并排除，修正为既有执行裕量后的4次理想均过。8次真实CV均过，横穿3对RMSE/omegaTV改善，减速1对位置误差变差。后方6s只是软排序（远期轴保持），原N=10硬前缀重新校验，不是6s安全保证。rear_pass默认false且只允许单机CV；固定测试入口single_turtlebot3_cbf_cv_test.launch。预算退出和少量超时保留，不进五机或实物，不宣称普遍优势。
