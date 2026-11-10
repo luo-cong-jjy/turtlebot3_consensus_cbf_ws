@@ -1,0 +1,10 @@
+# Frozen BEFORE controller tests. Existing scenarios remain in their old file.
+# Single robot: start=(0.4,0), nominal vx=0.15, actual |v|<=0.22 m/s.
+# Types inspired by Wang2025 crossing/oncoming experiments and MPC-D-CBF movers;
+# these Burger-scaled numbers are our scenario design, not paper reproduction.
+active_head_on:
+  - {name: cbf_dynamic_0, start: [2.8, 0.0], velocity: [-0.06, 0.0], radius: 0.18}
+active_overtaking:
+  - {name: cbf_dynamic_0, start: [1.35, 0.0], velocity: [0.05, 0.0], radius: 0.18}
+active_oblique_crossing:
+  - {name: cbf_dynamic_0, start: [2.3, 0.85], velocity: [-0.04, -0.10], radius: 0.18}

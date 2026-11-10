@@ -187,6 +187,8 @@ catkin_install_python(PROGRAMS
   scripts/cbf_experiment_results.py
   scripts/cbf_dynamic_scenario.py
   scripts/cbf_spawn_checked.py
+  scripts/cbf_active_monitor.py
+  scripts/evaluate_cbf_active_motion.py
   scripts/distributed_control_visualizer.py
   laser/mpc_dcbf_geometry/laser_geometry_node.py
   laser/mpc_dcbf_geometry/geometry_rviz.py

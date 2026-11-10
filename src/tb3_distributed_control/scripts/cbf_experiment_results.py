@@ -579,6 +579,8 @@ class ExperimentRecorder:
             dual_warm_start=rospy.get_param('/cbf/dual_warm_start',True),
             stagger_callbacks=rospy.get_param('/cbf/stagger_callbacks',True),
             dynamic_prediction=rospy.get_param('/cbf/dynamic_prediction',False),
+            active_experiment=rospy.get_param('/cbf/active_experiment',False),
+            active_protocol=rospy.get_param('/cbf/active_protocol',{}),
             gazebo_seed=rospy.get_param('/cbf/gazebo_seed',''),
             reliability_parameters=dict(dict(reliability_horizon=1.,score_tau=.5,weight_tau=.3,score_floor=.015,switch_ratio=.8,switch_hold=.6),
                 **rospy.get_param('/cbf/dynamic/reliability',{})),

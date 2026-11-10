@@ -1,5 +1,6 @@
 <launch>
   <arg name="scenario" default="crossing" />
+  <arg name="active_experiment" default="false" />
   <arg name="total_time" default="32" />
   <arg name="gui" default="true" />
   <arg name="open_rviz" default="true" />
@@ -53,6 +54,7 @@
     <arg name="dynamic_prediction" value="true" />
     <arg name="static_accumulation" value="false" />
     <arg name="dynamic_scenario" value="$(arg scenario)" />
+    <arg name="active_experiment" value="$(arg active_experiment)" />
     <arg name="ca_jerk_density" value="$(arg ca_jerk_density)" />
     <arg name="ca_acceleration_variance" value="$(arg ca_acceleration_variance)" />
     <arg name="moving_frame_projection" value="$(arg moving_frame_projection)" />

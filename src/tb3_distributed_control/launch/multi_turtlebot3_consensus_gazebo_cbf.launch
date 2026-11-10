@@ -6,6 +6,7 @@
   <arg name="open_rviz" default="true" />
   <arg name="paused" default="false" />
   <arg name="dynamic_scenario" default="none" />
+  <arg name="active_experiment" default="false" />
   <arg name="world_name" default="$(eval find('tb3_distributed_control') + '/worlds/' + ('consensus_obstacle_1.world' if arg('dynamic_scenario') == 'none' else 'consensus_dynamic_obstacles.world'))" />
   <!-- Empty output_dir creates a unique timestamped experiment in data_collect. -->
   <arg name="output_dir" default="" />
@@ -111,6 +112,10 @@
   <param name="/cbf/trajectory_type" value="$(arg trajectory_type)" />
   <param name="/cbf/scenario/ready" value="false" />
   <rosparam command="load" file="$(find tb3_distributed_control)/config/cbf_dynamic_scenarios.yaml" ns="/cbf/scenarios" />
+  <rosparam command="load" file="$(find tb3_distributed_control)/config/cbf_active_avoidance_scenarios.yaml" ns="/cbf/scenarios" />
+  <param name="/cbf/active_experiment" value="$(arg active_experiment)" type="bool" />
+  <rosparam param="/cbf/active_protocol">{}</rosparam>
+  <rosparam command="load" file="$(find tb3_distributed_control)/config/cbf_active_avoidance_protocol.yaml" ns="/cbf/active_protocol" if="$(arg active_experiment)" />
   <node pkg="tb3_distributed_control" type="cbf_dynamic_scenario.py" name="cbf_dynamic_scenario" output="screen" if="$(eval arg('dynamic_scenario') != 'none')" />
   <param name="/cbf/output_dir" value="$(arg output_dir)" type="str" />
   <param name="/cbf/run_id" value="$(arg run_id)" />
@@ -118,6 +123,7 @@
   <param name="/cbf/visualization/observer" value="$(arg geometry_observer)" type="int" />
   <param name="/cbf/visualization/debug" value="$(arg geometry_debug)" type="bool" />
   <node pkg="tb3_distributed_control" type="cbf_experiment_results.py" name="cbf_experiment_results" output="screen" />
+  <node pkg="tb3_distributed_control" type="cbf_active_monitor.py" name="cbf_active_monitor" output="screen" if="$(arg active_experiment)" />
   <param name="/cbf/formation_radius" value="$(arg formation_radius)" />
   <param name="/cbf/peer_safety" value="$(arg peer_safety)" />
   <param name="/cbf/peer_radius" value="$(arg peer_radius)" />

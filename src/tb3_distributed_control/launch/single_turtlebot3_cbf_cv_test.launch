@@ -1,6 +1,7 @@
 <launch>
   <!-- Frozen single-robot CV comparison profile; rear candidate is opt-in. -->
   <arg name="scenario" default="crossing" />
+  <arg name="active_experiment" default="false" />
   <arg name="rear_pass" default="false" />
   <arg name="total_time" default="40" />
   <arg name="gazebo_seed" default="211" />
@@ -10,6 +11,7 @@
   <arg name="log_mpc_inputs" default="false" />
   <include file="$(find tb3_distributed_control)/launch/single_turtlebot3_cbf_dynamic.launch">
     <arg name="scenario" value="$(arg scenario)" />
+    <arg name="active_experiment" value="$(arg active_experiment)" />
     <arg name="rear_pass" value="$(arg rear_pass)" />
     <arg name="total_time" value="$(arg total_time)" />
     <arg name="gazebo_seed" value="$(arg gazebo_seed)" />

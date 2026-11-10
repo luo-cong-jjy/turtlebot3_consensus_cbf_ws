@@ -1,0 +1,29 @@
+version: active_motion_v1_2026_11_10
+duration: 40.0
+reference_start: [0.4, 0.0]
+reference_velocity: [0.15, 0.0]
+body_radius: 0.13
+maximum_speed: 0.22
+maximum_yaw_rate: 2.84
+# Startup observer transient and final stop are separate from avoidance motion.
+# Full-task tracking error/clearance are still evaluated, not dropped.
+motion_window: [4.0, 39.0]
+stop_speed: 0.02
+maximum_stop_episode: 0.25
+maximum_total_stop: 0.30
+rolling_window: 1.0
+minimum_rolling_speed: 0.075
+# One body radius distinguishes spatial detour from nearly straight time-yield.
+# This is a behavior classifier, NOT a controller lateral-position constraint.
+minimum_lateral_at_pass: 0.13
+maximum_truth_gap: 0.25
+endpoint_freshness: 0.15
+maximum_final_position_error: 0.25
+require_no_fault_stop: true
+# Independent constructive geometric witness, never supplied to the controller.
+witness:
+  lateral_offset: 0.45
+  start_time: 3.0
+  outward_duration: 6.0
+  hold_duration: 8.0
+  return_duration: 6.0
