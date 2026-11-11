@@ -12,6 +12,9 @@ import time
 import xmlrpc.client
 import xml.etree.ElementTree as ET
 import numpy as np
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from evaluate_cbf_active_motion import evaluate_run as evaluate_active_run
 from run_cbf_gazebo import free_port,stop
 
 
@@ -220,9 +223,8 @@ def main():
         and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and np.isfinite(s['window_final_error']) and s['window_final_error']<.25
                 for s in result['robot_statistics'].values()))
     if active:
-        from evaluate_cbf_active_motion import evaluate_run
         result['base_passed']=result['passed']
-        try:continuous=evaluate_run(out,base_passed=result['base_passed'])
+        try:continuous=evaluate_active_run(out,base_passed=result['base_passed'])
         except Exception as exc:continuous=dict(passed=False,failed_checks=['active_evaluation_error'],error=str(exc))
         (out/'active_evaluation.json').write_text(json.dumps(continuous,indent=2,allow_nan=False))
         result.update(acceptance_protocol='active_motion_v1',active_motion=continuous,passed=continuous['passed'])

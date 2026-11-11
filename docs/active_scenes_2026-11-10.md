@@ -40,4 +40,35 @@
 
 现有隔离Gazebo测试器支持三场景，新的evaluation.json.passed为原基础验收与active_evaluation.json连续避让验收的交集，并保留base_passed。旧场景继续旧验收，不回写旧结果。
 
-174项检查、包构建与参数展开通过。包括可达性、停住/龟速/缺真值/未完成/无空间绕行/故障停车拒绝。此时尚不宣称当前控制器已经满足新实验要求。
+175项检查、包构建与参数展开通过。包括可达性、停住/低速/缺真值/未完成/无空间绕行/故障停车拒绝，以及在其他工作目录启动测试器的导入检查。
+
+## 实际Gazebo结果：场景就绪，连续运动尚未达标
+
+冻结场景及协议提交99e1802之后运行，种子211，原CV控制、N=10、execution_backup/transport_geometry开启、rear_pass关闭。控制器、MPC核心与旧场景文件相对b503476逐字节不变。四次均完成40s，原始数据和失败均保留。
+
+| 运行 | 最小1s路程速度(m/s) | 最长停住(s) | 通过时侧偏(m) | 最小线性扫掠代理净距(m) | 末端误差(m) | 连续验收 |
+|---|---:|---:|---:|---:|---:|---|
+| 迎面 | 0.0427 | 0.184 | 0.499 | 0.154 | 0.00185 | 低速未达标 |
+| 同向追越 | 0.0138 | 0.780 | 0.522 | 0.152 | 0.00192 | 停住、累计停住和低速未达标 |
+| 斜向横穿 | 0.0393 | 0.183 | 0.185 | 0.170 | 0.00129 | 低速未达标 |
+| 同向追越，修复汇总后复测 | 0.0135 | 0.734 | 0.521 | 0.152 | 0.00066 | 停住、累计停住和低速未达标 |
+
+这些运行**确实有空间绕行**，不是完全没有避障。低速指标只表明连续运动不合格，不能单凭它判定控制器有意等待。全部记录中的圆形代理净距为正、末端跟踪恢复、窗口内无故障停车；不等于网格模型连续碰撞证明，也不等于流畅避障成功。前三次外部汇总末尾出现Python导入路径错误，控制运行和独立在线评测已完成；原记录不覆盖，在新文件active_evaluation_replayed.json中按同一协议重算。修复导入路径后仅重复一次追越验证整个汇总链，原基础验收base_passed=true，新增passed=false，未改场景或门槛。
+
+独立在线active_truth.csv与外部gazebo_truth.csv采样时刻略有不同；表格采用后者。原输出中另保留在线报告。真值仅供评测，第四次订阅审计确认控制器不接收Gazebo真值/脚本轨迹。见docs/stages/active_scenes_validation_2026-11-10.json及独立归档的全部CSV、输入快照、日志和报告。
+
+下一阶段针对固定场景改进有界输入下的提前侧向绕行、持续进展和回归；不添加强制正速度下界、不删除紧急停止，不把离线几何见证当作算法输出。当前阶段是可复用的场景/测量基准，不是已解决连续避障的控制版本。
+
+## 启动
+
+本机先进入研究副本并source其devel/setup.bash，避免运行原保留工程：
+
+```bash
+cd /home/gdut/24_LC/turtlebot3_consensus_cbf_ws/研究副本/ca_prediction_ws_2026-10-26
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+export TURTLEBOT3_MODEL=burger
+roslaunch tb3_distributed_control single_turtlebot3_cbf_active_avoidance.launch scenario:=active_overtaking
+```
+
+可换成active_head_on或active_oblique_crossing。默认40s、GUI/RViz开启，结果仍在本副本包内data_collect。active_motion_report.json是新增连续运动验收，不能只看RESULTS_SAVED或旧基础验收是否完成。场景布局图绿色曲线明确标记为离线可达性见证；实际运动图由plot_cbf_active_results.py读取独立真值另行生成。

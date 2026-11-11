@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 import json
 import unittest
+import subprocess
 import numpy as np
 PACKAGE=Path(__file__).resolve().parents[2]
 sys.path[:0]=[str(PACKAGE/'scripts'),str(Path(__file__).resolve().parent)]
@@ -23,6 +24,11 @@ class ActiveSceneChecks(unittest.TestCase):
             self.assertTrue(r['witness']['passed']);self.assertLessEqual(r['witness_speed_max'],.22)
             self.assertGreater(r['witness_speed_min'],.14);self.assertLessEqual(r['witness_yaw_rate_max'],2.84)
             self.assertIsNotNone(r['first_nominal_proxy_collision']);self.assertGreater(r['ideal_geometry_dcbf_residual_min'],0.)
+
+    def test_harness_resolves_active_evaluator_from_an_unrelated_directory(self):
+        script=Path(__file__).resolve().parent/'run_cbf_dynamic_gazebo.py'
+        process=subprocess.run([sys.executable,str(script),'--help'],cwd='/tmp',stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+        self.assertEqual(process.returncode,0,process.stderr);self.assertIn('active_head_on',process.stdout)
 
     def test_stopped_robot_and_slow_following_cannot_be_called_success(self):
         for r in self.q['scenes'].values():self.assertFalse(r['stopped_baseline']['passed'])

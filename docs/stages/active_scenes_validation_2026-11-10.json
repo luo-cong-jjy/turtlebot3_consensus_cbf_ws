@@ -1,0 +1,154 @@
+{
+  "stage": "active_scenes_2026-11-10",
+  "verified_at_utc": "2026-11-11T09:47:14.645477+00:00",
+  "branch": "research/active-scenes-2026-11-10",
+  "parent_commit": "b503476dbf891f5884d5d1fd2a57e05f7ae4558b",
+  "protocol_frozen_commit": "99e1802567f786314e1a74b63a3403414e3d0f64",
+  "tests": {
+    "count": 175,
+    "passed": true,
+    "command": "OPENBLAS_NUM_THREADS=1 python3 -m unittest discover -s src/tb3_distributed_control/scripts/tests -p 'test_cbf*.py' -q"
+  },
+  "catkin_build_passed": true,
+  "launch_parameter_expansion_passed": true,
+  "qualified_scenarios": 3,
+  "qualification_sha256": "e273eb0a71f8d9a8b5aaea7e223a697e323c53eb2b868557ee22400cc5570cf7",
+  "frozen_source_hashes": {
+    "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+    "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+    "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a"
+  },
+  "controller_unchanged": {
+    "scripts/tb3_controller_node_cbf.py": {
+      "unchanged_from_b503476": true,
+      "sha256": "08145bb81a2d4e5c08b332d0e00062261215f4c4c75a5695dd03cb4ca17f0161"
+    },
+    "纯仿真代码/mpc_dcbf_cached_solver.py": {
+      "unchanged_from_b503476": true,
+      "sha256": "6715a73e3cdc1ac2673d277e0e1e5641fe926e9cf73554bf2e584b2bacc2880d"
+    },
+    "config/cbf_dynamic_scenarios.yaml": {
+      "unchanged_from_b503476": true,
+      "sha256": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f"
+    }
+  },
+  "root_controller_sha256": "9f4fb045b7ed76a12738891b750d4dec6cd1968ed13f51627bca7a74e61d3094",
+  "runs": [
+    {
+      "id": "gazebo_active_head_on",
+      "scenario": "active_head_on",
+      "seed": "211",
+      "duration": 40.0,
+      "report_file": "active_evaluation_replayed.json",
+      "report_sha256": "c72a52411cc8b3e01fd314dad197d697035a37c843eae79891f7aa58b836e0b3",
+      "completed": true,
+      "external_summary_status": "import_failure_preserved_then_independent_replay",
+      "base_passed": null,
+      "active_passed": false,
+      "minimum_rolling_speed": 0.04273120394429042,
+      "longest_standstill_seconds": 0.18400000000000105,
+      "total_standstill_seconds": 0.2759999999999998,
+      "lateral_offset_at_pass": 0.4994191021724758,
+      "minimum_linear_swept_proxy_clearance": 0.15389231827079586,
+      "final_error": 0.0018510666863777634,
+      "failed_checks": [
+        "no_crawling_time_avoidance"
+      ],
+      "controller_fault_count": 0,
+      "truth_sha256": "a4bda1b841d75e6fa9b51ecfbe23b36e3acf383a538ac81917a289219f5703e6",
+      "controller_csv_sha256": "ae989630a5681611e97dee27687671769c0fe0a072450161e7ab3a52cd923b2a"
+    },
+    {
+      "id": "gazebo_active_oblique_crossing",
+      "scenario": "active_oblique_crossing",
+      "seed": "211",
+      "duration": 40.0,
+      "report_file": "active_evaluation_replayed.json",
+      "report_sha256": "52f7c8281e8b33a8b5c647b03eb519e8ca9a505a290abd103f7008ff9653e92f",
+      "completed": true,
+      "external_summary_status": "import_failure_preserved_then_independent_replay",
+      "base_passed": null,
+      "active_passed": false,
+      "minimum_rolling_speed": 0.03932765042908182,
+      "longest_standstill_seconds": 0.1830000000000016,
+      "total_standstill_seconds": 0.2280000000000033,
+      "lateral_offset_at_pass": 0.18548585333930362,
+      "minimum_linear_swept_proxy_clearance": 0.1704184994873683,
+      "final_error": 0.0012889197146123143,
+      "failed_checks": [
+        "no_crawling_time_avoidance"
+      ],
+      "controller_fault_count": 0,
+      "truth_sha256": "e727d112bc7b384e9ac7f526b01d28a3dabc36f029f89fee1bfc0dc997b7906b",
+      "controller_csv_sha256": "ac175f8947db9bdb64674950164a2821eff0a1f70f15dcc6ee855ca5e94df2b7"
+    },
+    {
+      "id": "gazebo_active_overtaking",
+      "scenario": "active_overtaking",
+      "seed": "211",
+      "duration": 40.0,
+      "report_file": "active_evaluation_replayed.json",
+      "report_sha256": "b12dcc43f07bdfc9f54502732d50c89902a5445310a7ec82b839fc26336f2939",
+      "completed": true,
+      "external_summary_status": "import_failure_preserved_then_independent_replay",
+      "base_passed": null,
+      "active_passed": false,
+      "minimum_rolling_speed": 0.013794258625647982,
+      "longest_standstill_seconds": 0.7800000000000002,
+      "total_standstill_seconds": 0.7800000000000002,
+      "lateral_offset_at_pass": 0.5217650902827836,
+      "minimum_linear_swept_proxy_clearance": 0.15238918437087656,
+      "final_error": 0.0019198564691819207,
+      "failed_checks": [
+        "no_sustained_standstill",
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance"
+      ],
+      "controller_fault_count": 0,
+      "truth_sha256": "040e29de1838b48336281477b52bb4e520d12659d1a66e907741b41fdc264883",
+      "controller_csv_sha256": "4e843a6ae2e24dc98f0c52cc120abd7000aae464fe64d3d86a78915d5d5b6446"
+    },
+    {
+      "id": "gazebo_active_overtaking_summary_fixed",
+      "scenario": "active_overtaking",
+      "seed": "211",
+      "duration": 40.0,
+      "report_file": "active_evaluation.json",
+      "report_sha256": "72d5aa46edd3f7a5f34049f3602863ce41ddf173f87a1d7ba23509d1cadf9939",
+      "completed": true,
+      "external_summary_status": "canonical",
+      "base_passed": true,
+      "active_passed": false,
+      "minimum_rolling_speed": 0.013459912212254954,
+      "longest_standstill_seconds": 0.734,
+      "total_standstill_seconds": 0.9179999999999975,
+      "lateral_offset_at_pass": 0.521353844682228,
+      "minimum_linear_swept_proxy_clearance": 0.15209978676905062,
+      "final_error": 0.0006589069812341351,
+      "failed_checks": [
+        "no_sustained_standstill",
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance"
+      ],
+      "controller_fault_count": 0,
+      "truth_sha256": "785c2a50fcc0f455f1a238dfa712fca58702d5f00e11f439d32a9e2a4297c92e",
+      "controller_csv_sha256": "2a3a51042072c0cf06f845a7dadc6f3b14feec2d118a913851eb15f6cfdc47e0"
+    }
+  ],
+  "summary": {
+    "attempts": 4,
+    "completed_control_episodes": 4,
+    "external_summary_import_failures": 3,
+    "canonical_pipeline_recheck": 1,
+    "active_passed": 0
+  },
+  "limits": [
+    "Scenario and acceptance stage, not a controller improvement",
+    "Constructive geometric witness is not controller output or sensor-uncertainty feasibility proof",
+    "Positive circular swept proxy clearance is not mesh/contact or continuous safety proof",
+    "Low speed alone does not prove intentional waiting",
+    "No new five-robot or physical validation",
+    "Emergency stop retained; no positive lower speed constraint added",
+    "No papers or raw experiment data uploaded"
+  ]
+}
