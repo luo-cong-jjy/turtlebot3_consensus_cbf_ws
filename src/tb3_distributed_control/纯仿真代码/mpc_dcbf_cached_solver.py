@@ -956,6 +956,13 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
             for duration in (4.5, 6., 7.5):
                 descriptors.append(dict(name=obs['name'], start=now, y0=y0, dy0=dy0,
                                         target=side * offset, duration=duration, returning=False, side=side))
+    contracted_index = None
+    if old is not None and not old['returning']:
+        requested = old['side'] * float(lateral_support.max() + .12)
+        if abs(requested) < abs(old['target']) - 1e-6:
+            target = old['target'] + float(np.clip(requested-old['target'], -.06*elapsed, .06*elapsed))
+            contracted_index = len(descriptors)
+            descriptors.append(dict(old, target=target))
     if old is not None:
         descriptors.append(old)
     count = len(descriptors)
@@ -1038,7 +1045,10 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     error = states[:, :, :2] - targets[None]
     score = np.mean(np.sum(error**2, axis=2), axis=1) + .2*np.sum(error[:, -1]**2, axis=1)
     score += .02*np.sum(np.diff(controls[:, :, 1], axis=1)**2, axis=1)
-    chosen = count-1 if old is not None and valid[-1] else int(np.argmin(np.where(valid, score, np.inf)))
+    if contracted_index is not None and valid[contracted_index]:
+        chosen = contracted_index
+    else:
+        chosen = count-1 if old is not None and valid[-1] else int(np.argmin(np.where(valid, score, np.inf)))
     selected = descriptors[chosen]
     memory['spatial_selected'] = dict(selected)
     memory['guide_index'] = next(i for i, o in enumerate(obstacles) if o['name'] == obs['name'])
@@ -1048,7 +1058,9 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     memory['spatial_summary'] = dict(mode='return' if selected['returning'] else 'side_shift_hold',
         side=selected['side'], obstacle=obs['name'], candidates=count, valid=int(valid.sum()),
         target_offset=selected['target'], duration=selected['duration'], phase_age=now-selected['start'],
-        kept=old is not None and chosen==count-1, minimum_preview_speed=float(minimum_speed[chosen]),
+        kept=old is not None and chosen in (count-1, contracted_index),
+        geometry_contracted=contracted_index is not None and chosen==contracted_index,
+        minimum_preview_speed=float(minimum_speed[chosen]),
         same_side_candidates=int(same_side_valid.sum()),
         side_changed=old is not None and selected['side']!=old['side'],
         hard_steps=n, soft_seconds=steps*dt, far_axes='held_final_hard_envelope')
