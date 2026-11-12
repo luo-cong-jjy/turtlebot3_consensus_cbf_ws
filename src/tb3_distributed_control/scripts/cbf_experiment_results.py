@@ -587,6 +587,8 @@ class ExperimentRecorder:
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
             local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed'),
             spatial_pass=rospy.get_param('/cbf/mpc/spatial_pass',False),
+            spatial_guidance_weights=({'velocity':3000.,'heading':8.}
+                if rospy.get_param('/cbf/mpc/spatial_pass',False) else None),
             adaptive_recovery=rospy.get_param('/cbf/adaptive_recovery',False),
             transport_geometry=rospy.get_param('/cbf/dynamic/transport_geometry',False),
             predictive_bypass=rospy.get_param('/cbf/predictive_bypass',False),

@@ -756,6 +756,9 @@ class TurtleBot3CBFController:
         self.names=rospy.get_param("/cbf/robot_names",["tb3_"+str(i) for i in range(5)])
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
+        if self.cfg.get('spatial_pass',False):
+            self.cfg['guide_velocity_weight']=3000.
+            self.cfg['guide_heading_weight']=8.
         self.local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed')
         if self.local_reference_mode not in ('timed','nearest_line'):
             raise ValueError('Unknown local reference mode')

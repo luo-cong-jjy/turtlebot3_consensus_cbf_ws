@@ -33,7 +33,7 @@ def run(method, output, scenario='active_overtaking'):
     spec = yaml.safe_load((PACKAGE / relatives[-2]).read_text())[scenario][0]
     cfg = default_config()
     cfg.update(realtime=True, nlp_wall_time=.4, manager_wall_time=.48, execution_backup=True)
-    if method == 'spatial': cfg.update(spatial_pass=True)
+    if method == 'spatial': cfg.update(spatial_pass=True,guide_velocity_weight=3000.,guide_heading_weight=8.)
     if method not in ('legacy', 'spatial'):
         cfg.update(horizon=25, suppress_guidance=True, prediction_risk=True,
                    constraint_mode='ellipse', risk_penalty='wang_inverse', risk_weight=.3)
