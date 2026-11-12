@@ -1,0 +1,345 @@
+{
+  "stage": "wang_reference_2026-11-12",
+  "verified_at_utc": "2026-11-12T08:16:02.540166+00:00",
+  "branch": "research/wang-reference-2026-11-12",
+  "parent_commit": "cac2de3dc2115ba89130d4f2597ec43cc7b9c406",
+  "protocol_commit": "8bbee9e324869ee9dcab38df42e8a9abc747adb0",
+  "ros_wiring_commit": "2c82fb5205a2d68618738220a4d18ca9fc1d60b1",
+  "tests": {
+    "count": 179,
+    "passed": true
+  },
+  "build_passed": true,
+  "launch_parameter_expansion_passed": true,
+  "frozen_plan_sha256": "90e9063775d998cd9bd7edfed3ee8e0d996f240a8fc8a0221fc8dc9b32c0e3da",
+  "runs": [
+    {
+      "id": "gazebo_wang_nearest_line",
+      "environment": "actual_gazebo",
+      "active_passed": false,
+      "failed_checks": [
+        "no_sustained_standstill",
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance",
+        "passed_actor",
+        "spatial_detour_observed",
+        "tracking_recovered",
+        "no_fault_stop"
+      ],
+      "minimum_rolling_speed": 0.008092445607121967,
+      "longest_standstill_seconds": 0.8730000000000002,
+      "minimum_linear_swept_proxy_clearance": 0.10635556144088143,
+      "final_timed_leader_position_error": 3.517122363485924,
+      "completed": true,
+      "evaluation_sha256": "5dfaf3676a7dfb08dfa90fd649907c1b1de2dc1c692503a39b8d18c8cf0cb60d",
+      "controller_csv_sha256": "246d4a292be94ab167f58a10e63bc715051153c18b6575cf6be1b377a68bcf3d",
+      "base_passed": false,
+      "seed": 211,
+      "no_truth_input_passed": true,
+      "reference_mode_configured": true,
+      "timing_p95_ms": 84.88561600006506,
+      "reference_and_failure_audit": {
+        "eligible_recorded_inputs": 400,
+        "projection_applied": 318,
+        "projection_abstentions": {
+          "Nearest-line comparison requires a uniform straight reference": 82
+        },
+        "solver_failed_stops": 16,
+        "all_failed_stops_have_initial_model_h_below_tolerance": true,
+        "initial_h_min": -0.020314241319420556,
+        "initial_h_max": -0.0009504297742782691,
+        "selected_model_replay": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 384,
+          "uncertified_other_statuses": 16,
+          "records_without_snapshot": 1,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      },
+      "metrics_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 401,
+            "prior_plan_samples_audited": 375,
+            "reference_quality_counts": {
+              "2": 2,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.008379509609014986,
+            "max_plan_execution_error": 0.040235741560641074,
+            "max_nominal_error_during_plan_samples": 3.537235460757521
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "gazebo_wang_timed",
+      "environment": "actual_gazebo",
+      "active_passed": false,
+      "failed_checks": [
+        "no_sustained_standstill",
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance",
+        "no_fault_stop"
+      ],
+      "minimum_rolling_speed": 0.012656076306545527,
+      "longest_standstill_seconds": 0.7810000000000006,
+      "minimum_linear_swept_proxy_clearance": 0.09935963250615493,
+      "final_timed_leader_position_error": 0.00016148894521796235,
+      "completed": true,
+      "evaluation_sha256": "a736ffd549df6cb4a5e23a7834e4d70546aff06c22161bc4d583eda28ab86443",
+      "controller_csv_sha256": "07cad1991e6a3a0de31efacbeebb6388f20ff8f6250492cee928f8f80b674d05",
+      "base_passed": true,
+      "seed": 211,
+      "no_truth_input_passed": true,
+      "reference_mode_configured": true,
+      "timing_p95_ms": 83.54486799998995,
+      "reference_and_failure_audit": {
+        "eligible_recorded_inputs": 401,
+        "projection_applied": 0,
+        "projection_abstentions": {},
+        "solver_failed_stops": 45,
+        "all_failed_stops_have_initial_model_h_below_tolerance": true,
+        "initial_h_min": -0.03994828916379646,
+        "initial_h_max": -0.0012041122395777676,
+        "selected_model_replay": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 356,
+          "uncertified_other_statuses": 45,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        }
+      },
+      "metrics_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 401,
+            "prior_plan_samples_audited": 352,
+            "reference_quality_counts": {
+              "0": 1,
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.01605567567007452,
+            "max_plan_execution_error": 0.04735451529369611,
+            "max_nominal_error_during_plan_samples": 1.2671428388233583
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "ideal_legacy",
+      "environment": "ideal_offline",
+      "active_passed": false,
+      "failed_checks": [
+        "no_crawling_time_avoidance"
+      ],
+      "minimum_rolling_speed": 0.03960036818461676,
+      "longest_standstill_seconds": 0.0,
+      "minimum_linear_swept_proxy_clearance": 0.038052709897990644,
+      "final_timed_leader_position_error": 1.367841484849813e-08,
+      "completed": true,
+      "evaluation_sha256": "f41f9c6c02aa7f49ac64f668fead3285f87c36970cef79fadd139739a69e2abf",
+      "controller_csv_sha256": "86230eaffde00c4e70bd6a8dcd0f72110fe074c8463bf25acbce2adc2ff4f3f5",
+      "position_rmse": 0.1980373381753614,
+      "statuses": {
+        "ok": 400
+      }
+    },
+    {
+      "id": "ideal_wang_nearest",
+      "environment": "ideal_offline",
+      "active_passed": false,
+      "failed_checks": [
+        "no_crawling_time_avoidance",
+        "passed_actor",
+        "spatial_detour_observed",
+        "tracking_recovered"
+      ],
+      "minimum_rolling_speed": 0.05000007372876736,
+      "longest_standstill_seconds": 0.0,
+      "minimum_linear_swept_proxy_clearance": 0.12313984943209638,
+      "final_timed_leader_position_error": 3.4831398494320966,
+      "completed": true,
+      "evaluation_sha256": "95c71a8bdf4525928291f51a91db7cc48ed92efb6a1bbbec2b3b85679adaf892",
+      "controller_csv_sha256": "2d227236634c9ac67ad59b06a0d74c4c46355dde58bb091a15cf2fb99d985b99",
+      "position_rmse": 1.8750850640611436,
+      "statuses": {
+        "ok": 400
+      }
+    },
+    {
+      "id": "ideal_wang_timed",
+      "environment": "ideal_offline",
+      "active_passed": false,
+      "failed_checks": [
+        "no_crawling_time_avoidance",
+        "passed_actor",
+        "spatial_detour_observed",
+        "tracking_recovered"
+      ],
+      "minimum_rolling_speed": 0.04999999993693782,
+      "longest_standstill_seconds": 0.0,
+      "minimum_linear_swept_proxy_clearance": 0.0274999900309279,
+      "final_timed_leader_position_error": 3.3874999900642395,
+      "completed": true,
+      "evaluation_sha256": "11565938ddf5db2bba8e26f6e021f4950a1c2afbe8021936d369092e86d5b956",
+      "controller_csv_sha256": "f962d7c1cdd784d734bfd50161930d4e8beb18ce868f8c2846cd62a06478e55f",
+      "position_rmse": 1.795835571793513,
+      "statuses": {
+        "ok": 400
+      }
+    }
+  ],
+  "seed_diagnostic": {
+    "type": "post-hoc, offline same-input local solve, not closed-loop",
+    "frames": [
+      {
+        "time": 4.0,
+        "attempts": [
+          {
+            "seed": 0,
+            "valid": true,
+            "cost": 5.708165331889265,
+            "first_control": [
+              0.1470668592125027,
+              0.0
+            ],
+            "max_lateral": 0.0
+          },
+          {
+            "seed": 1,
+            "valid": true,
+            "cost": 5.708165331884404,
+            "first_control": [
+              0.14706685921250298,
+              -2.640123247544254e-28
+            ],
+            "max_lateral": 8.215855063212874e-29
+          },
+          {
+            "seed": -1,
+            "valid": true,
+            "cost": 5.708165331884405,
+            "first_control": [
+              0.14706685921250273,
+              -3.9137428516361383e-28
+            ],
+            "max_lateral": 2.372198337383641e-28
+          }
+        ]
+      },
+      {
+        "time": 20.0,
+        "attempts": [
+          {
+            "seed": 0,
+            "valid": true,
+            "cost": 3143.0660029248806,
+            "first_control": [
+              0.05000000017597271,
+              0.0
+            ],
+            "max_lateral": 0.0
+          },
+          {
+            "seed": 1,
+            "valid": true,
+            "cost": 2921.94947854977,
+            "first_control": [
+              -0.20414275401807452,
+              2.840000027055933
+            ],
+            "max_lateral": 0.32346160796740253
+          },
+          {
+            "seed": -1,
+            "valid": true,
+            "cost": 2921.94947854977,
+            "first_control": [
+              -0.2041427540180721,
+              -2.840000027055933
+            ],
+            "max_lateral": 0.3234616079674026
+          }
+        ]
+      }
+    ],
+    "sha256": "3d22e7f5827f1cdffd3cd86ec3fae1624ddff5fe16af3ddf2918700d94e7979c"
+  },
+  "unchanged_sources": {
+    "纯仿真代码/mpc_dcbf_cached_solver.py": {
+      "unchanged_from_cac2de3": true,
+      "sha256": "6715a73e3cdc1ac2673d277e0e1e5641fe926e9cf73554bf2e584b2bacc2880d"
+    },
+    "config/cbf_active_avoidance_scenarios.yaml": {
+      "unchanged_from_cac2de3": true,
+      "sha256": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1"
+    },
+    "config/cbf_active_avoidance_protocol.yaml": {
+      "unchanged_from_cac2de3": true,
+      "sha256": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc"
+    },
+    "config/cbf_dynamic_scenarios.yaml": {
+      "unchanged_from_cac2de3": true,
+      "sha256": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f"
+    },
+    "scripts/leader_node.py": {
+      "unchanged_from_cac2de3": true,
+      "sha256": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd"
+    },
+    "scripts/leader_node_cbf.py": {
+      "unchanged_from_cac2de3": true,
+      "sha256": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41"
+    }
+  },
+  "root_controller_sha256": "9f4fb045b7ed76a12738891b750d4dec6cd1968ed13f51627bca7a74e61d3094",
+  "summary": {
+    "ideal_runs": 3,
+    "gazebo_runs": 2,
+    "completed": 5,
+    "active_passed": 0,
+    "adopted_first_steps_replayed": 740,
+    "all_selected_model_replays_passed": true,
+    "all_metrics_audits_passed": true
+  },
+  "limits": [
+    "Not complete Wang paper reproduction; original model/auxiliary variables/control cost/CV/geometry/periodic solver retained",
+    "Ideal diagnostic has exact prescribed CV and extra wall budget, not actual perception or realtime",
+    "Nearest line has causal premise-based abstention (82/400 eligible Gazebo cycles), not full global-path handling",
+    "Original timed leader metrics retained; path following cannot substitute for formation tracking",
+    "Safety-model initial-h0 violations are not physical contact; stops not certified safe",
+    "Negative comparisons and failed trials preserved; no new five-robot or physical test",
+    "No papers or raw experimental data uploaded"
+  ]
+}
