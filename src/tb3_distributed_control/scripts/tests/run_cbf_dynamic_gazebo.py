@@ -24,6 +24,7 @@ def main():
     parser.add_argument('--robots',type=int,default=1,choices=[1,5])
     parser.add_argument('--gazebo-seed',type=int,default=None)
     parser.add_argument('--duration',type=float,default=32.)
+    parser.add_argument('--local-reference-mode',choices=['timed','nearest_line'],default='timed')
     parser.add_argument('--prediction-mode',choices=['cv','frozen','ca','singer','adaptive'],default='cv')
     parser.add_argument('--progress-hypotheses',choices=['true','false'],default='true')
     parser.add_argument('--adaptive-recovery',choices=['true','false'],default='false')
@@ -59,6 +60,7 @@ def main():
     parser.add_argument('--wall-timeout',type=float,default=240.)
     args=parser.parse_args();out=Path(args.output).resolve()
     active=args.scenario.startswith('active_')
+    if args.local_reference_mode=='nearest_line' and args.robots!=1:parser.error('Nearest reference is single-robot only')
     if active and args.robots!=1:parser.error('Active-motion protocol currently requires one robot')
     if active and args.duration!=40.:parser.error('Frozen active-motion protocol requires duration=40')
     if any(out.glob('tb3_*.csv')) or (out/'evaluation.json').exists():
@@ -119,7 +121,7 @@ def main():
         for i in range(args.robots):subscribers.append(rospy.Subscriber('/tb3_%d/cbf_diagnostics'%i,String,diagnostic,callback_args=i,queue_size=1))
         name='single_turtlebot3_cbf_dynamic.launch' if args.robots==1 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch'
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
-            'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),'active_experiment:='+str(active).lower(),
+            'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),'active_experiment:='+str(active).lower(),'local_reference_mode:='+args.local_reference_mode,
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
             'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'execution_backup:='+args.execution_backup,'infeasible_escape:='+args.infeasible_escape,'predictive_bypass:='+args.predictive_bypass,'active_guidance_only:='+args.active_guidance_only,'prediction_risk:='+args.prediction_risk,'suppress_guidance:='+args.suppress_guidance,'risk_weight:='+str(args.risk_weight),'risk_clearance:='+str(args.risk_clearance),'risk_discount:='+str(args.risk_discount),'risk_tail_seconds:='+str(args.risk_tail_seconds),'constraint_mode:='+args.constraint_mode,'risk_penalty:='+args.risk_penalty,'wang_alpha:='+str(args.wang_alpha),'wang_mu:='+str(args.wang_mu),'wang_iota:='+str(args.wang_iota),'wang_radius:='+str(args.wang_radius),'mpc_horizon:='+str(args.mpc_horizon),'pending_seed_with_backup:='+args.pending_seed_with_backup,'log_mpc_inputs:='+args.log_mpc_inputs,'rear_pass:='+args.rear_pass,'rear_preview_seconds:='+str(args.rear_preview_seconds),'transport_geometry:='+args.transport_geometry,'adaptive_recovery:='+args.adaptive_recovery,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
             'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
@@ -147,7 +149,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(rear_pass=args.rear_pass=='true',rear_preview_seconds=args.rear_preview_seconds,mpc_horizon=args.mpc_horizon,pending_seed_with_backup=args.pending_seed_with_backup=='true',log_mpc_inputs=args.log_mpc_inputs=='true',constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(local_reference_mode=args.local_reference_mode,rear_pass=args.rear_pass=='true',rear_preview_seconds=args.rear_preview_seconds,mpc_horizon=args.mpc_horizon,pending_seed_with_backup=args.pending_seed_with_backup=='true',log_mpc_inputs=args.log_mpc_inputs=='true',constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if truth:
         fields=sorted(set().union(*(r.keys() for r in truth)))
@@ -212,6 +214,7 @@ def main():
         and all(meta.get('risk_parameters',{}).get(k)==v for k,v in [('wang_alpha',args.wang_alpha),('wang_mu_per_node',args.wang_mu),('wang_iota',args.wang_iota),('wang_radius',args.wang_radius)]))
     result['rear_configured']=(meta.get('rear_pass')==result['rear_pass'] and meta.get('rear_preview_seconds')==args.rear_preview_seconds)
     result['horizon_configured']=(meta.get('mpc_horizon')==args.mpc_horizon)
+    result['local_reference_configured']=(meta.get('local_reference_mode','timed')==args.local_reference_mode)
     result['seed_policy_configured']=(meta.get('pending_seed_with_backup')==result['pending_seed_with_backup'] and meta.get('log_mpc_inputs')==result['log_mpc_inputs'])
     result['transport_geometry_configured']=(bool(json.loads(metadata_path.read_text()).get('transport_geometry',False))==result['transport_geometry']) if metadata_path.exists() else False
     result['adaptive_recovery_configured']=(bool(json.loads(metadata_path.read_text()).get('adaptive_recovery',False))==result['adaptive_recovery']) if metadata_path.exists() else False
@@ -219,7 +222,7 @@ def main():
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
-        and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['seed_policy_configured'] and result['horizon_configured'] and result['rear_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
+        and result['local_reference_configured'] and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['seed_policy_configured'] and result['horizon_configured'] and result['rear_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
         and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and np.isfinite(s['window_final_error']) and s['window_final_error']<.25
                 for s in result['robot_statistics'].values()))
     if active:

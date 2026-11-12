@@ -36,7 +36,7 @@ PACKAGE = Path(rospkg.RosPack().get_path("tb3_distributed_control"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 if (PACKAGE / "纯仿真代码").is_dir():
     sys.path.insert(0, str(PACKAGE / "纯仿真代码"))
-from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes,
+from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes, nearest_line_reference,
                           peer_obstacle, padded_obstacles,LeaderMetricTimeline,
                           accepted_plan_reference,sample_plan_reference,wrap_angle,METRICS_SCHEMA_VERSION)
 from mpc_dcbf_cached_solver import MPCSolverManager, CachedMPCProblem, barrier_values,adapt_negative_recovery
@@ -756,6 +756,14 @@ class TurtleBot3CBFController:
         self.names=rospy.get_param("/cbf/robot_names",["tb3_"+str(i) for i in range(5)])
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
+        self.local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed')
+        if self.local_reference_mode not in ('timed','nearest_line'):
+            raise ValueError('Unknown local reference mode')
+        if self.local_reference_mode=='nearest_line' and (len(self.names)!=1 or
+                rospy.get_param('/cbf/trajectory_type','')!='line'):
+            raise ValueError('Nearest-line comparison currently requires a single robot and line trajectory')
+        self.reference_projection_applied=False
+        self.reference_projection_error=None
         self.cfg['progress_hypotheses']=bool(rospy.get_param('/cbf/progress_hypotheses',True))
         self.cfg['predictive_bypass']=bool(rospy.get_param('/cbf/predictive_bypass',False))
         self.cfg['active_guidance_only']=bool(rospy.get_param('/cbf/active_guidance_only',False))
@@ -1447,6 +1455,16 @@ class TurtleBot3CBFController:
             goals=self.reference.goals(age,state[2])
             if age>self.stale:
                 self.stop_motion();self.record(now,state,goals,observed,age,'stale_observer',begin);return
+        self.reference_projection_applied=False
+        self.reference_projection_error=None
+        if self.local_reference_mode=='nearest_line':
+            try:
+                goals=nearest_line_reference(state,goals,self.dt)
+                self.reference_projection_applied=True
+            except ValueError as exc:
+                # Observer startup/curvature can invalidate the straight-line
+                # premise. Preserve the observed timed target and record it.
+                self.reference_projection_error=str(exc)
         # All optimizer inputs are immutable snapshots. ROS observation callbacks remain live.
         nearby=sorted(observed,key=lambda o:np.linalg.norm(state[:2]-o['center'])-o['a'])[:self.max_static]
         by_name={o['name']:o for o in nearby}
@@ -1643,6 +1661,9 @@ class TurtleBot3CBFController:
                     status=status,command=control.tolist(),control_wall_ms=row['solve_ms'],
                     command_wall_ms=self.command_wall_ms,cycle_end_ms=1000*(time.perf_counter()-begin),
                     cycle_cpu_ms=1000*(time.thread_time()-self.cycle_cpu_begin),manager=detail,
+                    local_reference_mode=getattr(self,'local_reference_mode','timed'),
+                    reference_projection_applied=getattr(self,'reference_projection_applied',False),
+                    reference_projection_error=getattr(self,'reference_projection_error',None),
                     recovery_selection=getattr(self,'recovery_record',None)))+'\n')
                 if self.rows%10==0:self.trace_stream.flush()
         rospy.loginfo_throttle(5.,'%s t=%.1f status=%s obs=%d e=%.3f solve=%.1fms',self.name,

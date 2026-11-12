@@ -1,0 +1,28 @@
+<launch>
+  <!-- Research comparison only: not a full paper reproduction or accepted controller. -->
+  <arg name="local_reference_mode" default="nearest_line" />
+  <arg name="gui" default="true" />
+  <arg name="open_rviz" default="true" />
+  <arg name="output_dir" default="" />
+  <arg name="gazebo_seed" default="211" />
+  <include file="$(find tb3_distributed_control)/launch/single_turtlebot3_cbf_dynamic.launch">
+    <arg name="scenario" value="active_overtaking" />
+    <arg name="active_experiment" value="true" />
+    <arg name="total_time" value="40" />
+    <arg name="local_reference_mode" value="$(arg local_reference_mode)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="open_rviz" value="$(arg open_rviz)" />
+    <arg name="output_dir" value="$(arg output_dir)" />
+    <arg name="gazebo_seed" value="$(arg gazebo_seed)" />
+    <arg name="prediction_mode" value="cv" />
+    <arg name="mpc_horizon" value="25" />
+    <arg name="execution_backup" value="true" />
+    <arg name="transport_geometry" value="true" />
+    <arg name="constraint_mode" value="ellipse" />
+    <arg name="prediction_risk" value="true" />
+    <arg name="risk_penalty" value="wang_inverse" />
+    <arg name="risk_weight" value="0.3" />
+    <arg name="suppress_guidance" value="true" />
+    <arg name="log_mpc_inputs" value="true" />
+  </include>
+</launch>
