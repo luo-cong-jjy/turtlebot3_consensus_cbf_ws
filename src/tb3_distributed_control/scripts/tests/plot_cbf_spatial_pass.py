@@ -30,11 +30,11 @@ def save(fig,prefix):
     plt.close(fig)
 
 
-def draw(root):
+def draw(root,version='v2'):
     root = Path(root)
     fig,axes = plt.subplots(3,2,figsize=(12,9))
-    for (path_ax,speed_ax),(directory,title) in zip(axes,[('gazebo_overtaking_v2','Slow-target overtaking'),
-            ('gazebo_head_on_v2','Head-on'),('gazebo_oblique_v2','Oblique crossing')]):
+    for (path_ax,speed_ax),(directory,title) in zip(axes,[('gazebo_overtaking_'+version,'Slow-target overtaking'),
+            ('gazebo_head_on_'+version,'Head-on'),('gazebo_oblique_'+version,'Oblique crossing')]):
         t,ego,actor,grid,speed,report = load(root/directory)
         path_ax.plot(ego[:,0],ego[:,1],lw=1.2,label='Measured robot')
         shown = np.abs(actor[:,1])<1.
@@ -54,11 +54,13 @@ def draw(root):
         for ax in (path_ax,speed_ax):ax.grid(alpha=.2)
     axes[0,0].legend(fontsize=7);axes[0,1].legend(fontsize=7)
     fig.suptitle('Actual Gazebo / CV / original timed goals; circles are body proxies at passing',fontsize=12)
-    save(fig,root/'three_scenarios_v2')
+    save(fig,root/('three_scenarios_'+version))
 
     fig,axes = plt.subplots(2,2,figsize=(12,7))
-    for name,label,color in [('gazebo_overtaking_paired_baseline','Flag off / baseline','C1'),
-                              ('gazebo_overtaking_v2','Flag on / spatial pass','C0')]:
+    baseline='gazebo_overtaking_paired_baseline_'+version
+    if not (root/baseline).exists():baseline='gazebo_overtaking_paired_baseline'
+    for name,label,color in [(baseline,'Flag off / baseline','C1'),
+                              ('gazebo_overtaking_'+version,'Flag on / spatial pass','C0')]:
         directory=root/name;t,ego,actor,grid,speed,report=load(directory)
         axes[0,0].plot(ego[:,0],ego[:,1],lw=1.2,label=label,color=color)
         axes[0,1].plot(grid,speed,lw=1.2,label=label,color=color)
@@ -75,9 +77,10 @@ def draw(root):
     axes[1,1].set(xlabel='Task time (s)',ylabel='Original timed-leader error (m)',xlim=(0,40))
     for ax in axes.flat:ax.grid(alpha=.2);ax.legend(fontsize=8)
     fig.suptitle('Paired overtake: same scene/seed/bounds; original metrics retained',fontsize=12)
-    save(fig,root/'overtaking_paired_v2')
+    save(fig,root/('overtaking_paired_'+version))
 
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('directory')
-    args=parser.parse_args();draw(args.directory)
+    parser.add_argument('--version',choices=['v2','v3','v4','v5'],default='v2')
+    args=parser.parse_args();draw(args.directory,args.version)

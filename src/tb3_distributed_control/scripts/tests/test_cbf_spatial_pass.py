@@ -24,6 +24,17 @@ def inputs():
 
 
 class SpatialPassChecks(unittest.TestCase):
+    def test_geometry_contraction_is_rate_limited_and_retains_a_valid_prefix(self):
+        cfg,state,goals,obs,memory=inputs()
+        memory.update(spatial_time=0.,spatial_stamp=0.,spatial_selected=dict(
+            name='actor',start=0.,y0=0.,dy0=0.,target=.8,duration=7.5,returning=False,side=1))
+        continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertTrue(memory['spatial_summary']['geometry_contracted'])
+        self.assertTrue(memory['spatial_summary']['kept'])
+        self.assertAlmostEqual(memory['spatial_selected']['target'],.794)
+        self.assertTrue(CachedMPCProblem(cfg,1,False).validate(memory['progress_plan'],state,obs,
+            [-.22,.22],memory['progress_previous']))
+
     def test_unclassified_slow_mover_is_not_ignored_and_clock_epoch_does_not_jump(self):
         cfg,state,goals,obs,memory = inputs()
         obs[0]['dynamic']=False
