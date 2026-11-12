@@ -42,7 +42,8 @@ def run(method, output, scenario='active_overtaking'):
         method=method, scenario=scenario, simulator='ideal_discrete_unicycle', forecast='exact_prescribed_constant_velocity',
         realtime_claim=False, offline_budget_seconds=.5, configuration=cfg, protocol=protocol,
         nearest_line_reference=nearest, source_sha256=manifest,
-        scope='Wang mechanism adaptation; original nonlinear joint MPC, not complete paper reproduction'), indent=2))
+        scope=('Bounded spatial reference on original timed MPC; no paper reproduction claim' if method=='spatial'
+               else 'Wang mechanism adaptation; original nonlinear joint MPC, not complete paper reproduction')), indent=2))
     dt = cfg['dt']; n = cfg['horizon']; duration = protocol['duration']
     state = np.array([.4, 0., 0.]); previous = np.array([.15, 0.]); last = None
     velocity = np.array(spec['velocity']); start = np.array(spec['start'])

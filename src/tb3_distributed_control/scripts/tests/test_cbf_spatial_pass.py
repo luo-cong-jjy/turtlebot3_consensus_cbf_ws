@@ -38,7 +38,34 @@ class SpatialPassChecks(unittest.TestCase):
         obs[0]['guidance_motion']=dict(stamp=1000.,weights=[1.],models=[dict(
             mode='cv',position=obs[0]['center'].tolist(),velocity=[.05,0.],acceleration=[0.,0.],tau=1.)])
         continuous_guidance(state,goals,obs,cfg,memory)
-        self.assertLess(memory['spatial_summary'].get('phase_age',0.),.2)
+        self.assertEqual(memory['spatial_summary']['mode'],'side_shift_hold')
+        self.assertAlmostEqual(memory['spatial_summary']['phase_age'],.1)
+
+    def test_asymmetric_geometry_selects_mirrored_sides(self):
+        sides=[];vectors=[]
+        for shift in (.2,-.2):
+            cfg,state,goals,obs,memory=inputs()
+            obs[0]['center'][1]=shift
+            obs[0]['prediction_centers'][:,1]=shift
+            obs[0]['guidance_motion']['models'][0]['position'][1]=shift
+            answer=continuous_guidance(state,goals,obs,cfg,memory)
+            self.assertEqual(answer[1],1.)
+            sides.append(memory['spatial_summary']['side']);vectors.append(answer[0])
+        self.assertEqual(sides,[-1,1])
+        np.testing.assert_allclose(vectors[0][:,1],-vectors[1][:,1],atol=1e-12)
+
+    def test_actual_pass_starts_return_and_completed_return_releases_reference(self):
+        cfg,state,goals,obs,memory=inputs()
+        state=np.array([3.,.45,0.]);goals[:,0]+=2.6
+        memory.update(spatial_time=10.,spatial_stamp=0.,spatial_selected=dict(
+            name='actor',start=4.,y0=0.,dy0=0.,target=.45,duration=6.,returning=False,side=1))
+        continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertEqual(memory['spatial_summary']['mode'],'return')
+        self.assertEqual(memory['spatial_selected']['target'],0.)
+        memory['spatial_time']+=6.1;state[1]=0.
+        continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertEqual(memory['spatial_summary']['mode'],'returned_to_timed_path')
+        self.assertNotIn('progress_plan',memory)
 
     def test_slow_same_lane_target_causes_early_side_shift_with_valid_original_prefix(self):
         cfg,state,goals,obs,memory = inputs(); before = goals.copy()
