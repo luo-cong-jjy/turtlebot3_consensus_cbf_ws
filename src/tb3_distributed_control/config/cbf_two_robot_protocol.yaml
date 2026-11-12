@@ -23,9 +23,9 @@ require_no_fault_stop: true
 # Independent constructive geometric witness, never supplied to the controller.
 witness:
   lateral_offset: 0.45
-  start_time: 3.0
+  start_time: 2.0
   outward_duration: 6.0
-  hold_duration: 11.0
+  hold_duration: 12.0
   return_duration: 6.0
 
 formation_radius: 0.5
