@@ -126,6 +126,35 @@ def default_config():
         pending_seed_with_backup=False,log_mpc_inputs=False,rear_pass=False,rear_preview_seconds=6.)
 
 
+def nearest_line_reference(state, timed_goals, dt):
+    """Wang eq16-inspired straight-line reference, using only observed goals.
+
+    Project onto the supporting line and sample forward at the observed speed.
+    No obstacle information, lateral detour, clock change or error redefinition.
+    Continuous projection is an adaptation of the paper's nearest sampled point;
+    finite paths/curves and its error model/IMM/event trigger are not reproduced.
+    """
+    state = np.asarray(state, float)
+    goals = np.asarray(timed_goals, float)
+    if (state.shape != (3,) or goals.ndim != 2 or goals.shape[1] != 3 or len(goals) < 2
+            or not np.isfinite(state).all() or not np.isfinite(goals).all()
+            or not np.isfinite(dt) or dt <= 0):
+        raise ValueError('Expected finite state, reference nodes and positive dt')
+    increments = np.diff(goals[:, :2], axis=0)
+    step = increments.mean(axis=0)
+    if not np.allclose(increments, step, rtol=1e-5, atol=1e-7):
+        raise ValueError('Nearest-line comparison requires a uniform straight reference')
+    result = goals.copy()
+    length = np.linalg.norm(step)
+    if length <= 1e-9:
+        return result  # No direction/speed available; retain the observed hold.
+    tangent = step / length
+    shift = float(np.dot(state[:2] - goals[0, :2], tangent))
+    result[:, :2] += shift * tangent
+    result[:, 2] = np.arctan2(tangent[1], tangent[0])
+    return result
+
+
 class TimedReference:
     def __init__(self, robot_id, dt=.1, horizon=10, radius=.5, robot_count=5):
         self.dt, self.n, self.radius, self.robot_id = dt, horizon, radius, robot_id
