@@ -1,0 +1,22 @@
+<launch>
+  <arg name="scenario" default="active_overtaking" />
+  <arg name="gui" default="true" />
+  <arg name="open_rviz" default="true" />
+  <arg name="gazebo_seed" default="211" />
+  <arg name="output_dir" default="" />
+  <include file="$(find tb3_distributed_control)/launch/single_turtlebot3_cbf_dynamic.launch">
+    <arg name="scenario" value="$(arg scenario)" />
+    <arg name="total_time" value="40" />
+    <arg name="active_experiment" value="true" />
+    <arg name="spatial_pass" value="true" />
+    <arg name="local_reference_mode" value="timed" />
+    <arg name="prediction_mode" value="cv" />
+    <arg name="execution_backup" value="true" />
+    <arg name="transport_geometry" value="true" />
+    <arg name="log_mpc_inputs" value="true" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="open_rviz" value="$(arg open_rviz)" />
+    <arg name="gazebo_seed" value="$(arg gazebo_seed)" />
+    <arg name="output_dir" value="$(arg output_dir)" />
+  </include>
+</launch>

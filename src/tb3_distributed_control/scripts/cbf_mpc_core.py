@@ -123,7 +123,8 @@ def default_config():
         prediction_risk=False,risk_weight=3.,risk_clearance=.35,risk_discount=.5,risk_tail_seconds=0.,
         risk_external_only=True,suppress_guidance=False,constraint_mode='dcbf',
         risk_penalty='clearance_quartic',wang_alpha=1.,wang_mu=.1,wang_iota=.02,wang_radius=1.,
-        pending_seed_with_backup=False,log_mpc_inputs=False,rear_pass=False,rear_preview_seconds=6.)
+        pending_seed_with_backup=False,log_mpc_inputs=False,rear_pass=False,rear_preview_seconds=6.,
+        spatial_pass=False,spatial_preview_seconds=8.)
 
 
 def nearest_line_reference(state, timed_goals, dt):

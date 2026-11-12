@@ -19,7 +19,7 @@ from evaluate_cbf_active_motion import evaluate_motion
 from mpc_dcbf_cached_solver import MPCSolverManager, CachedMPCProblem, rollout
 
 
-def run(method, output):
+def run(method, output, scenario='active_overtaking'):
     out = Path(output).resolve(); out.mkdir(parents=True, exist_ok=False)
     sources = out / 'sources'; sources.mkdir()
     relatives = ['scripts/cbf_mpc_core.py', '纯仿真代码/mpc_dcbf_cached_solver.py',
@@ -30,15 +30,16 @@ def run(method, output):
         path = PACKAGE / relative; shutil.copy2(path, sources / path.name)
         manifest[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
     protocol = yaml.safe_load((PACKAGE / relatives[-1]).read_text())
-    spec = yaml.safe_load((PACKAGE / relatives[-2]).read_text())['active_overtaking'][0]
+    spec = yaml.safe_load((PACKAGE / relatives[-2]).read_text())[scenario][0]
     cfg = default_config()
     cfg.update(realtime=True, nlp_wall_time=.4, manager_wall_time=.48, execution_backup=True)
-    if method != 'legacy':
+    if method == 'spatial': cfg.update(spatial_pass=True)
+    if method not in ('legacy', 'spatial'):
         cfg.update(horizon=25, suppress_guidance=True, prediction_risk=True,
                    constraint_mode='ellipse', risk_penalty='wang_inverse', risk_weight=.3)
     nearest = method == 'wang_nearest'
     (out / 'run_metadata.json').write_text(json.dumps(dict(
-        method=method, simulator='ideal_discrete_unicycle', forecast='exact_prescribed_constant_velocity',
+        method=method, scenario=scenario, simulator='ideal_discrete_unicycle', forecast='exact_prescribed_constant_velocity',
         realtime_claim=False, offline_budget_seconds=.5, configuration=cfg, protocol=protocol,
         nearest_line_reference=nearest, source_sha256=manifest,
         scope='Wang mechanism adaptation; original nonlinear joint MPC, not complete paper reproduction'), indent=2))
@@ -102,6 +103,7 @@ def run(method, output):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--method', choices=['legacy', 'wang_timed', 'wang_nearest'], required=True)
+    parser.add_argument('--method', choices=['legacy', 'wang_timed', 'wang_nearest', 'spatial'], required=True)
     parser.add_argument('--output', required=True)
-    args = parser.parse_args(); run(args.method, args.output)
+    parser.add_argument('--scenario', choices=['active_overtaking','active_head_on','active_oblique_crossing'], default='active_overtaking')
+    args = parser.parse_args(); run(args.method, args.output, args.scenario)

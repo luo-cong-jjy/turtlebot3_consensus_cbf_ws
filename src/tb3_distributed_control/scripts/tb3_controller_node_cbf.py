@@ -777,6 +777,10 @@ class TurtleBot3CBFController:
         self.cfg['moving_frame_projection']=bool(rospy.get_param('/cbf/moving_frame_projection',False))
         self.cfg['feasible_seed_search']=bool(rospy.get_param('/cbf/feasible_seed_search',False))
         self.cfg['realtime']=bool(rospy.get_param('/cbf/realtime_solver',True))
+        if self.cfg.get('spatial_pass',False) and (len(self.names)!=1 or self.local_reference_mode!='timed'
+                or rospy.get_param('/cbf/trajectory_type','')!='line'
+                or rospy.get_param('/cbf/dynamic/prediction_mode','cv')!='cv'):
+            raise ValueError('Spatial pass currently requires single-robot timed line and CV prediction')
         self.control_budget=float(rospy.get_param('/cbf/control_budget_ms',100.))/1000.
         self.cfg['nlp_wall_time']=float(rospy.get_param('/cbf/nlp_budget_ms',65.))/1000.
         self.cfg['manager_wall_time']=max(.010,self.control_budget-.015)

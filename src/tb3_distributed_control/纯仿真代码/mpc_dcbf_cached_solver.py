@@ -883,6 +883,167 @@ def rear_pass_guidance(state,goals,obstacles,config,memory):
     return vectors,1.,predicted[1:n+1,2].copy()
 
 
+def spatial_pass_guidance(state, goals, obstacles, config, memory):
+    """Early bounded side-shift/hold/return candidates for CV dynamic scenes.
+
+    The timed goals never change. An extended, held-axis preview selects a
+    continuous-motion reference, not a safety certificate. The original hard
+    prefix is screened here and revalidated by the MPC/backup manager.
+    """
+    n, dt = config['horizon'], config['dt']
+    steps = max(n, int(round(config.get('spatial_preview_seconds', 8.) / dt)))
+    times = np.arange(steps + 1) * dt
+    targets = progress_targets(goals, times, dt)
+    feed = (goals[-1, :2] - goals[-2, :2]) / dt
+    speed = float(np.linalg.norm(feed))
+    memory.pop('progress_plan', None)
+
+    def abstain(mode):
+        memory['spatial_summary'] = dict(mode=mode)
+        return _legacy_continuous_guidance(state, goals, obstacles, config, memory)
+
+    if speed < .02:
+        return abstain('nominal_hold')
+    forward = feed / speed
+    normal = np.array([-forward[1], forward[0]])
+    moving = [o for o in obstacles if o.get('dynamic', False) and not o.get('peer', False)]
+    if not moving:
+        memory.pop('spatial_selected', None)
+        return abstain('no_dynamic_target')
+    old = memory.get('spatial_selected')
+    obs = next((o for o in moving if old is not None and o['name'] == old['name']), None)
+    if obs is None:
+        old = None
+        obs = min(moving, key=lambda o: np.linalg.norm(state[:2] - o['center']) - o['a'])
+    stamp = max(((o.get('guidance_motion') or {}).get('stamp', 0.) for o in moving))
+    now = float(stamp) if stamp > memory.get('spatial_stamp', -1.) else memory.get('spatial_time', -dt) + dt
+    memory.update(spatial_stamp=stamp, spatial_time=now)
+    active = [o for o in obstacles if o.get('name') != 'inactive']
+    extended = progress_obstacles(active, times, config)
+    packed = obstacle_batch(extended, steps + 1, config['gamma'])
+    focus = next(i for i, o in enumerate(active) if o['name'] == obs['name'])
+    center = packed.centers[focus]
+    a = packed.axes[focus] * (1 + config['margin'] / packed.axes[focus, :, 1, None])
+    c, s = packed.cosine[focus], packed.sine[focus]
+
+    def support(vector):
+        return np.sqrt((a[:, 0] * (c * vector[0] + s * vector[1])) ** 2
+                       + (a[:, 1] * (-s * vector[0] + c * vector[1])) ** 2)
+
+    along_support, lateral_support = support(forward), support(normal)
+    previous = np.asarray(memory.get('progress_previous', np.zeros(2)), float)
+    bounds = memory.get('progress_bounds', [-.22, .22])
+    vmax = min(.22, bounds[1])
+    if vmax <= 0:
+        return abstain('no_forward_reference')
+    y0 = float(np.dot(state[:2] - goals[0, :2], normal))
+    dy0 = float(previous[0] * np.dot([np.cos(state[2]), np.sin(state[2])], normal))
+    passed_now = np.dot(state[:2] - center[0], forward) > along_support[0] + .12
+    if old is not None and not old['returning'] and passed_now:
+        old = dict(old, start=now, y0=y0, dy0=dy0, target=0., duration=6., returning=True)
+    if old is not None and old['returning'] and now - old['start'] >= old['duration'] and abs(y0) < .035:
+        memory.pop('spatial_selected', None)
+        return abstain('returned_to_timed_path')
+    descriptors = [dict(name=obs['name'], start=now, y0=y0, dy0=dy0, target=0., duration=6., returning=False, side=0)]
+    for side in (1, -1):
+        for extra in (.12, .22, .32):
+            offset = float(lateral_support.max() + extra)
+            for duration in (4.5, 6., 7.5):
+                descriptors.append(dict(name=obs['name'], start=now, y0=y0, dy0=dy0,
+                                        target=side * offset, duration=duration, returning=False, side=side))
+    if old is not None:
+        descriptors.append(old)
+    count = len(descriptors)
+    start = np.array([d['start'] for d in descriptors])
+    duration = np.array([d['duration'] for d in descriptors])
+    initial_y = np.array([d['y0'] for d in descriptors])
+    initial_dy = np.array([d['dy0'] for d in descriptors])
+    target_y = np.array([d['target'] for d in descriptors])
+    returning = np.array([d['returning'] for d in descriptors])
+    return_at = np.full(count, np.inf)
+    states = np.empty((count, steps + 1, 3)); states[:, 0] = state
+    controls = np.empty((count, steps, 2)); last = np.tile(previous, (count, 1))
+
+    def curve(age, length, begin_y, begin_dy, end_y):
+        q = np.clip(age / length, 0., 1.)
+        blend = 10*q**3 - 15*q**4 + 6*q**5
+        derivative = (30*q**2 - 60*q**3 + 30*q**4) / length
+        basis = q - 6*q**3 + 8*q**4 - 3*q**5
+        basis_derivative = 1 - 18*q**2 + 32*q**3 - 15*q**4
+        value = begin_y + (end_y-begin_y)*blend + length*begin_dy*basis
+        rate = (end_y-begin_y)*derivative + begin_dy*basis_derivative
+        return value, np.where(age >= length, 0., rate)
+
+    for j in range(steps):
+        _check_preview_budget(config)
+        age = now + times[j+1] - start
+        desired_y, desired_dy = curve(age, duration, initial_y, initial_dy, target_y)
+        future_passed = ((states[:, j, :2] - center[j]) @ forward > along_support[j] + .12)
+        capture = future_passed & (~returning) & (now + times[j] - start >= duration) & ~np.isfinite(return_at)
+        return_at[capture] = times[j]
+        future_return = np.isfinite(return_at)
+        if future_return.any():
+            ry, rv = curve(times[j+1]-return_at[future_return], 6., target_y[future_return], 0., 0.)
+            desired_y[future_return], desired_dy[future_return] = ry, rv
+        along_error = (targets[j+1] - states[:, j, :2]) @ forward
+        across = (states[:, j, :2] - targets[j+1]) @ normal
+        # Positive speed belongs to candidate construction only. The actual
+        # optimizer and emergency control retain their original signed bounds.
+        vx = np.clip(speed + .6*along_error, .10, vmax)
+        vy = desired_dy + 1.2*(desired_y - across)
+        velocity = vx[:, None]*forward + vy[:, None]*normal
+        angle = np.arctan2(velocity[:, 1], velocity[:, 0])
+        error = np.arctan2(np.sin(angle-states[:, j, 2]), np.cos(angle-states[:, j, 2]))
+        v = np.minimum(vmax, np.linalg.norm(velocity, axis=1))*np.maximum(np.cos(error), 0.)
+        w = np.clip(3.*error, -min(.9, config['omega_max']), min(.9, config['omega_max']))
+        controls[:, j] = last + (dt/(.2+dt))*(np.column_stack((v, w))-last)
+        controls[:, j, 0] = np.clip(controls[:, j, 0], max(0., bounds[0]), vmax)
+        controls[:, j, 1] = np.clip(controls[:, j, 1], -config['omega_max'], config['omega_max'])
+        if config['delta_limit']:
+            controls[:, j] = np.clip(controls[:, j], last-[config['delta_v'], config['delta_w']], last+[config['delta_v'], config['delta_w']])
+        states[:, j+1, 2] = states[:, j, 2] + dt*controls[:, j, 1]
+        states[:, j+1, :2] = states[:, j, :2] + dt*controls[:, j, 0, None]*np.column_stack((np.cos(states[:, j+1, 2]), np.sin(states[:, j+1, 2])))
+        last = controls[:, j]
+    _check_preview_budget(config)
+
+    def values(batch, length):
+        delta = states[None, :, :length, :2] - batch.centers[:, None]
+        c, s = batch.cosine[:, None], batch.sine[:, None]
+        local = np.stack((c*delta[..., 0]+s*delta[..., 1], -s*delta[..., 0]+c*delta[..., 1]), axis=-1)
+        return batch.axes[:, None, :, 1]*(np.sqrt(np.sum((local/batch.axes[:, None])**2, axis=-1)+1e-12)-1)-config['margin']
+
+    soft_h = values(packed, steps+1)
+    hard = obstacle_batch(obstacles, n+1, config['gamma']); hard_h = values(hard, n+1)
+    residual = hard_h[:, :, 1:] - (1-hard.gamma[:, None, None])*hard_h[:, :, :-1]
+    travelled = np.cumsum(np.abs(controls[:, :, 0]), axis=1)*dt
+    travelled = np.column_stack((np.zeros(count), travelled))
+    window = min(steps, max(1, round(1./dt)))
+    minimum_speed = ((travelled[:, window:] - travelled[:, :-window])/(window*dt)).min(axis=1)
+    valid = ((soft_h.min(axis=(0, 2)) >= .01) & (residual.min(axis=(0, 2)) >= -2e-6) & (minimum_speed >= .09))
+    if old is None and valid[0]:
+        return abstain('nominal_preview_clear')
+    valid[0] = False
+    if not valid.any():
+        memory['spatial_summary'] = dict(mode='no_valid_spatial_reference', candidates=count)
+        return _legacy_continuous_guidance(state, goals, obstacles, config, memory)
+    error = states[:, :, :2] - targets[None]
+    score = np.mean(np.sum(error**2, axis=2), axis=1) + .2*np.sum(error[:, -1]**2, axis=1)
+    score += .02*np.sum(np.diff(controls[:, :, 1], axis=1)**2, axis=1)
+    chosen = count-1 if old is not None and valid[-1] else int(np.argmin(np.where(valid, score, np.inf)))
+    selected = descriptors[chosen]
+    memory['spatial_selected'] = dict(selected)
+    memory['guide_index'] = next(i for i, o in enumerate(obstacles) if o['name'] == obs['name'])
+    prefix = controls[chosen, :n]; predicted = states[chosen, :n+1]
+    vectors = prefix[:, :1]*np.column_stack((np.cos(predicted[1:, 2]), np.sin(predicted[1:, 2])))
+    memory['progress_plan'] = dict(controls=prefix.copy(), states=predicted.copy(), plan_controls=vectors.copy(), mode='spatial')
+    memory['spatial_summary'] = dict(mode='return' if selected['returning'] else 'side_shift_hold',
+        side=selected['side'], obstacle=obs['name'], candidates=count, valid=int(valid.sum()),
+        target_offset=selected['target'], duration=selected['duration'], phase_age=now-selected['start'],
+        kept=old is not None and chosen==count-1, minimum_preview_speed=float(minimum_speed[chosen]),
+        hard_steps=n, soft_seconds=steps*dt, far_axes='held_final_hard_envelope')
+    return vectors, 1., predicted[1:, 2].copy()
+
+
 def continuous_guidance(state,goals,obstacles,config,memory):
     if config.get('suppress_guidance',False):
         memory.pop('progress_plan',None);memory.pop('guide_index',None)
@@ -890,6 +1051,7 @@ def continuous_guidance(state,goals,obstacles,config,memory):
         memory['progress_summary']=dict(mode='disabled',decision_id=memory.get('progress_counter',0))
         return np.zeros((config['horizon'],2)),0.
     if config.get('rear_pass',False):return rear_pass_guidance(state,goals,obstacles,config,memory)
+    if config.get('spatial_pass',False):return spatial_pass_guidance(state,goals,obstacles,config,memory)
     if config.get('progress_guidance',False):return progress_guidance(state,goals,obstacles,config,memory)
     return _legacy_continuous_guidance(state,goals,obstacles,config,memory)
 
@@ -1270,6 +1432,11 @@ class CachedMPCProblem:
 class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
+        if config.get('spatial_pass',False) and (not config.get('execution_backup',False)
+                or config.get('suppress_guidance',False) or config.get('rear_pass',False)
+                or config.get('progress_guidance',False) or config.get('prediction_risk',False)
+                or config.get('constraint_mode','dcbf')!='dcbf'):
+            raise ValueError('Spatial pass requires checked backup and original DCBF without competing reference candidates')
         if config.get('rear_pass',False) and (not config.get('execution_backup',False) or config.get('suppress_guidance',False)
                 or config.get('progress_guidance',False) or config.get('predictive_bypass',False)
                 or config.get('prediction_risk',False) or config.get('constraint_mode','dcbf')!='dcbf'):
@@ -1367,7 +1534,7 @@ class MPCSolverManager:
         memory=self.robot_memory.setdefault(label,dict(positions=deque(maxlen=11),cooldown=0,preferred=1,hold=0))
         memory['positions'].append(state[:2].copy())
         memory['cooldown']=max(0,memory['cooldown']-1)
-        if cfg.get('progress_guidance',False) or cfg.get('rear_pass',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
+        if cfg.get('progress_guidance',False) or cfg.get('rear_pass',False) or cfg.get('spatial_pass',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
         signature=tuple((o.get('name',str(i)),o.get('gamma',cfg['gamma'])) for i,o in enumerate(obstacles))
         usable=last is not None and np.shape(last.get('controls'))==(n,2)
         shift=min(n,max(1,int(shift)))
@@ -1524,6 +1691,7 @@ class MPCSolverManager:
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         if cfg.get('rear_pass',False):record['rear_pass']=dict(memory.get('rear_summary',{}))
+        if cfg.get('spatial_pass',False):record['spatial_pass']=dict(memory.get('spatial_summary',{}))
         if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
         self.histories.setdefault(label,[]).append(record);self.last_records[label]=record
         if best is None:

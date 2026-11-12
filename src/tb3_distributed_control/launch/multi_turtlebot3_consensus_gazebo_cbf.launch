@@ -8,6 +8,7 @@
   <arg name="dynamic_scenario" default="none" />
   <arg name="active_experiment" default="false" />
   <arg name="local_reference_mode" default="timed" />
+  <arg name="spatial_pass" default="false" />
   <arg name="world_name" default="$(eval find('tb3_distributed_control') + '/worlds/' + ('consensus_obstacle_1.world' if arg('dynamic_scenario') == 'none' else 'consensus_dynamic_obstacles.world'))" />
   <!-- Empty output_dir creates a unique timestamped experiment in data_collect. -->
   <arg name="output_dir" default="" />
@@ -112,6 +113,7 @@
   <param name="/cbf/dynamic_scenario" value="$(arg dynamic_scenario)" />
   <param name="/cbf/trajectory_type" value="$(arg trajectory_type)" />
   <param name="/cbf/local_reference_mode" value="$(arg local_reference_mode)" />
+  <param name="/cbf/mpc/spatial_pass" value="$(arg spatial_pass)" />
   <param name="/cbf/scenario/ready" value="false" />
   <rosparam command="load" file="$(find tb3_distributed_control)/config/cbf_dynamic_scenarios.yaml" ns="/cbf/scenarios" />
   <rosparam command="load" file="$(find tb3_distributed_control)/config/cbf_active_avoidance_scenarios.yaml" ns="/cbf/scenarios" />
