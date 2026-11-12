@@ -923,7 +923,9 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     elapsed = stamp-last_stamp if stamp > last_stamp > 0. else dt
     now = memory.get('spatial_time', -dt) + elapsed
     memory.update(spatial_stamp=stamp, spatial_time=now)
-    active = [o for o in obstacles if o.get('name') != 'inactive']
+    # Peer motion is checked in the original hard prefix below. Do not extend
+    # a neighbour's instantaneous turn/velocity into an 8 s shared plan.
+    active = [o for o in obstacles if o.get('name') != 'inactive' and not o.get('peer', False)]
     extended = progress_obstacles(active, times, config)
     packed = obstacle_batch(extended, steps + 1, config['gamma'])
     focus = next(i for i, o in enumerate(active) if o['name'] == obs['name'])

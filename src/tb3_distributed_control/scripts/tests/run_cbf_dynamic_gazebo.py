@@ -15,13 +15,14 @@ import numpy as np
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from evaluate_cbf_active_motion import evaluate_run as evaluate_active_run
+from evaluate_cbf_team_motion import evaluate_team_run
 from run_cbf_gazebo import free_port,stop
 
 
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--scenario',default='crossing',choices=['crossing','head_on','overtaking','maneuver','mixed','accelerating_crossing','decelerating_crossing','stop_go_crossing','active_head_on','active_overtaking','active_oblique_crossing'])
-    parser.add_argument('--robots',type=int,default=1,choices=[1,5])
+    parser.add_argument('--robots',type=int,default=1,choices=[1,2,5])
     parser.add_argument('--gazebo-seed',type=int,default=None)
     parser.add_argument('--duration',type=float,default=32.)
     parser.add_argument('--spatial-pass',choices=['true','false'],default='false')
@@ -62,7 +63,8 @@ def main():
     args=parser.parse_args();out=Path(args.output).resolve()
     active=args.scenario.startswith('active_')
     if args.local_reference_mode=='nearest_line' and args.robots!=1:parser.error('Nearest reference is single-robot only')
-    if active and args.robots!=1:parser.error('Active-motion protocol currently requires one robot')
+    if active and args.robots not in (1,2):parser.error('Active-motion protocol requires single or two-robot experiment')
+    if args.robots==2 and not active:parser.error('Two-robot entry currently requires a qualified active scene')
     if active and args.duration!=40.:parser.error('Frozen active-motion protocol requires duration=40')
     if any(out.glob('tb3_*.csv')) or (out/'evaluation.json').exists():
         raise FileExistsError('Existing experiment: choose a new output directory')
@@ -72,7 +74,7 @@ def main():
     manifest={}
     for relative in ['scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py','scripts/leader_node.py',
             'scripts/cbf_dynamic_scenario.py','scripts/cbf_spawn_checked.py','scripts/cbf_experiment_results.py','config/cbf_dynamic_scenarios.yaml',
-            'scripts/cbf_active_monitor.py','scripts/evaluate_cbf_active_motion.py','config/cbf_active_avoidance_scenarios.yaml','config/cbf_active_avoidance_protocol.yaml',
+            'scripts/cbf_active_monitor.py','scripts/evaluate_cbf_team_motion.py','config/cbf_two_robot_protocol.yaml','launch/two_turtlebot3_cbf_dynamic.launch','scripts/evaluate_cbf_active_motion.py','config/cbf_active_avoidance_scenarios.yaml','config/cbf_active_avoidance_protocol.yaml',
             '纯仿真代码/mpc_dcbf_cached_solver.py','launch/multi_turtlebot3_consensus_gazebo_cbf.launch',
             'launch/single_turtlebot3_cbf_dynamic.launch','launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch',
             'scripts/tests/run_cbf_dynamic_gazebo.py']:
@@ -120,7 +122,8 @@ def main():
             rospy.Subscriber('/gazebo/model_states',ModelStates,models,queue_size=1),
             rospy.Subscriber('/system/shutdown',Bool,lambda m:completed.append(time.monotonic()) if m.data else None)]
         for i in range(args.robots):subscribers.append(rospy.Subscriber('/tb3_%d/cbf_diagnostics'%i,String,diagnostic,callback_args=i,queue_size=1))
-        name='single_turtlebot3_cbf_dynamic.launch' if args.robots==1 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch'
+        name=('single_turtlebot3_cbf_dynamic.launch' if args.robots==1 else 'two_turtlebot3_cbf_dynamic.launch'
+              if args.robots==2 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch')
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),'active_experiment:='+str(active).lower(),'local_reference_mode:='+args.local_reference_mode,'spatial_pass:='+args.spatial_pass,
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
@@ -221,18 +224,21 @@ def main():
     result['transport_geometry_configured']=(bool(json.loads(metadata_path.read_text()).get('transport_geometry',False))==result['transport_geometry']) if metadata_path.exists() else False
     result['adaptive_recovery_configured']=(bool(json.loads(metadata_path.read_text()).get('adaptive_recovery',False))==result['adaptive_recovery']) if metadata_path.exists() else False
     result['no_truth_input_passed']=bool(audit) and not any(topic in audit for topic in ('/gazebo/model_states','/cbf/scenario/truth','/gazebo/set_model_state'))
+    result['own_scan_only']=all(sorted(topic for topic,members in audit.items()
+        if '/tb3_controller_cbf_'+str(i) in members and topic.endswith('/scan'))==['/tb3_'+str(i)+'/scan'] for i in range(args.robots))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
-        and result['spatial_pass_configured'] and result['local_reference_configured'] and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['seed_policy_configured'] and result['horizon_configured'] and result['rear_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
+        and result['own_scan_only'] and result['spatial_pass_configured'] and result['local_reference_configured'] and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['seed_policy_configured'] and result['horizon_configured'] and result['rear_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
         and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and np.isfinite(s['window_final_error']) and s['window_final_error']<.25
                 for s in result['robot_statistics'].values()))
     if active:
         result['base_passed']=result['passed']
-        try:continuous=evaluate_active_run(out,base_passed=result['base_passed'])
+        try:continuous=(evaluate_team_run(out,base_passed=result['base_passed']) if args.robots==2
+                        else evaluate_active_run(out,base_passed=result['base_passed']))
         except Exception as exc:continuous=dict(passed=False,failed_checks=['active_evaluation_error'],error=str(exc))
         (out/'active_evaluation.json').write_text(json.dumps(continuous,indent=2,allow_nan=False))
-        result.update(acceptance_protocol='active_motion_v1',active_motion=continuous,passed=continuous['passed'])
+        result.update(acceptance_protocol='two_robot_motion_v1' if args.robots==2 else 'active_motion_v1',active_motion=continuous,passed=continuous['passed'])
     (out/'evaluation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2),flush=True)
     if not result['passed']:raise SystemExit(1)
 

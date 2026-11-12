@@ -43,7 +43,7 @@ def audit(directory):
             quality=int(r['reference_quality']);qualities[str(quality)]=qualities.get(str(quality),0)+1
             t=r['evaluation_time']
             if quality in (1,3) and 0<=t<=float(meta.get('total_time',1e9)):
-                if meta['trajectory_type']=='line':leader=np.array([.4+.15*t,0.]);velocity=np.array([.15,0.])
+                if meta['trajectory_type']=='line':leader=np.asarray(meta.get('leader_initial_position',[.4,0.]))+np.array([.15*t,0.]);velocity=np.array([.15,0.])
                 elif meta['trajectory_type']=='eight_slow_slow':
                     leader=np.array([2.5*np.sin(t/15),.3+2.5*np.sin(t/30)])
                     velocity=np.array([2.5/15*np.cos(t/15),2.5/30*np.cos(t/30)])

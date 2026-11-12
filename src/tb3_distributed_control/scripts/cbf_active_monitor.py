@@ -12,12 +12,15 @@ from gazebo_msgs.msg import ModelStates
 from std_msgs.msg import Bool
 from tb3_distributed_control.msg import LeaderHistoryData
 from evaluate_cbf_active_motion import evaluate_run
+from evaluate_cbf_team_motion import evaluate_team_run
 
 
 class Monitor:
     def __init__(self):
         self.lock=threading.RLock();self.origin=None;self.closed=False;self.last=-1.;self.worker=None
-        if len(rospy.get_param('/cbf/robot_names'))!=1:raise ValueError('Active monitor is single robot only')
+        self.names=rospy.get_param('/cbf/robot_names')
+        if len(self.names)!=1 and not (len(self.names)==2 and rospy.get_param('/cbf/two_robot_experiment',False)):
+            raise ValueError('Active monitor requires single or explicit two-robot experiment')
         scenario=rospy.get_param('/cbf/dynamic_scenario');specs=rospy.get_param('/cbf/scenarios/'+scenario)
         if len(specs)!=1:raise ValueError('Active monitor requires one actor')
         self.actor=specs[0]['name']
@@ -26,7 +29,7 @@ class Monitor:
             if run_id and rospy.has_param(key):break
             rospy.sleep(.05)
         self.path=Path(rospy.get_param(key));self.stream=(self.path/'active_truth.csv').open('x',newline='')
-        fields=['ros_time','time','tb3_0_x','tb3_0_y',self.actor+'_x',self.actor+'_y']
+        fields=['ros_time','time']+[n+'_'+axis for n in self.names+[self.actor] for axis in ('x','y')]
         self.writer=csv.DictWriter(self.stream,fieldnames=fields);self.writer.writeheader()
         self.subs=[rospy.Subscriber('/leader/history',LeaderHistoryData,self.leader,queue_size=1),
             rospy.Subscriber('/gazebo/model_states',ModelStates,self.models,queue_size=1),
@@ -41,16 +44,16 @@ class Monitor:
         with self.lock:
             if self.closed or self.origin is None:return
             now=rospy.get_time()
-            if now-self.last<.045 or not all(n in msg.name for n in ('tb3_0',self.actor)):return
+            if now-self.last<.045 or not all(n in msg.name for n in self.names+[self.actor]):return
             row=dict(ros_time=now,time=now-self.origin)
-            for name in ('tb3_0',self.actor):
+            for name in self.names+[self.actor]:
                 pose=msg.pose[msg.name.index(name)].position;row[name+'_x']=pose.x;row[name+'_y']=pose.y
             self.writer.writerow(row);self.stream.flush();self.last=now
 
     def report(self):
         deadline=time.monotonic()+30.
         while time.monotonic()<deadline and not rospy.is_shutdown() and not (self.path/'RESULTS_SAVED').exists():time.sleep(.05)
-        try:result=evaluate_run(self.path)
+        try:result=(evaluate_run(self.path) if len(self.names)==1 else evaluate_team_run(self.path))
         except Exception as exc:result=dict(passed=False,failed_checks=['evaluation_error'],error=str(exc))
         with (self.path/'active_motion_report.json').open('x') as f:json.dump(result,f,indent=2,allow_nan=False)
         rospy.loginfo('Active avoidance evaluation: passed=%s, failed=%s',result['passed'],result.get('failed_checks'))
