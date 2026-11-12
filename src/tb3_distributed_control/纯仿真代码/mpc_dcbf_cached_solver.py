@@ -906,17 +906,22 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
         return abstain('nominal_hold')
     forward = feed / speed
     normal = np.array([-forward[1], forward[0]])
-    moving = [o for o in obstacles if o.get('dynamic', False) and not o.get('peer', False)]
+    # Slow movers may remain below the KF motion classifier threshold. A
+    # stationary/undecided occupied envelope still warrants spatial avoidance;
+    # use its original forecast, without inventing a velocity or changing KF.
+    moving = [o for o in obstacles if o.get('name') != 'inactive' and not o.get('peer', False)]
     if not moving:
         memory.pop('spatial_selected', None)
-        return abstain('no_dynamic_target')
+        return abstain('no_observed_target')
     old = memory.get('spatial_selected')
     obs = next((o for o in moving if old is not None and o['name'] == old['name']), None)
     if obs is None:
         old = None
         obs = min(moving, key=lambda o: np.linalg.norm(state[:2] - o['center']) - o['a'])
     stamp = max(((o.get('guidance_motion') or {}).get('stamp', 0.) for o in moving))
-    now = float(stamp) if stamp > memory.get('spatial_stamp', -1.) else memory.get('spatial_time', -dt) + dt
+    last_stamp = memory.get('spatial_stamp', 0.)
+    elapsed = stamp-last_stamp if stamp > last_stamp > 0. else dt
+    now = memory.get('spatial_time', -dt) + elapsed
     memory.update(spatial_stamp=stamp, spatial_time=now)
     active = [o for o in obstacles if o.get('name') != 'inactive']
     extended = progress_obstacles(active, times, config)
@@ -1572,6 +1577,7 @@ class MPCSolverManager:
         except PreviewBudgetExceeded:
             memory.pop('progress_plan',None)
             if cfg.get('rear_pass',False):memory['rear_summary']=dict(mode='budget_abstain')
+            if cfg.get('spatial_pass',False):memory['spatial_summary']=dict(mode='budget_abstain')
             memory['progress_summary']=dict(mode='budget_deferred',decision_id=memory.get('progress_counter',0))
             guidance=np.zeros((n,2)),0.;preview_budget_hit=True
         preview_ms=1000*(time.perf_counter()-preview_begin)

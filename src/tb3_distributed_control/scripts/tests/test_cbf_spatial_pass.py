@@ -24,6 +24,22 @@ def inputs():
 
 
 class SpatialPassChecks(unittest.TestCase):
+    def test_unclassified_slow_mover_is_not_ignored_and_clock_epoch_does_not_jump(self):
+        cfg,state,goals,obs,memory = inputs()
+        obs[0]['dynamic']=False
+        obs[0].pop('guidance_motion')
+        obs[0]['prediction_centers']=np.tile(obs[0]['center'],(11,1))
+        answer=continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertEqual(answer[1],1.)
+        self.assertEqual(memory['spatial_summary']['mode'],'side_shift_hold')
+        command=memory['progress_plan']['controls'][0].copy()
+        state=rollout(state,command[None],.1)[1];goals[:,0]+=.015;memory['progress_previous']=command
+        obs[0]['dynamic']=True
+        obs[0]['guidance_motion']=dict(stamp=1000.,weights=[1.],models=[dict(
+            mode='cv',position=obs[0]['center'].tolist(),velocity=[.05,0.],acceleration=[0.,0.],tau=1.)])
+        continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertLess(memory['spatial_summary'].get('phase_age',0.),.2)
+
     def test_slow_same_lane_target_causes_early_side_shift_with_valid_original_prefix(self):
         cfg,state,goals,obs,memory = inputs(); before = goals.copy()
         vectors,level,headings = continuous_guidance(state,goals,obs,cfg,memory)
