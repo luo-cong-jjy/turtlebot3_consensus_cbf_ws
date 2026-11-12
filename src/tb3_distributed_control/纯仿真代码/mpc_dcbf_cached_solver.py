@@ -1028,6 +1028,10 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     if old is None and valid[0]:
         return abstain('nominal_preview_clear')
     valid[0] = False
+    same_side = (np.array([d['side'] for d in descriptors]) == old['side']) if old is not None else np.ones(count, dtype=bool)
+    same_side_valid = valid & same_side
+    if old is not None and same_side_valid.any():
+        valid = same_side_valid
     if not valid.any():
         memory['spatial_summary'] = dict(mode='no_valid_spatial_reference', candidates=count)
         return _legacy_continuous_guidance(state, goals, obstacles, config, memory)
@@ -1045,6 +1049,8 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
         side=selected['side'], obstacle=obs['name'], candidates=count, valid=int(valid.sum()),
         target_offset=selected['target'], duration=selected['duration'], phase_age=now-selected['start'],
         kept=old is not None and chosen==count-1, minimum_preview_speed=float(minimum_speed[chosen]),
+        same_side_candidates=int(same_side_valid.sum()),
+        side_changed=old is not None and selected['side']!=old['side'],
         hard_steps=n, soft_seconds=steps*dt, far_axes='held_final_hard_envelope')
     return vectors, 1., predicted[1:, 2].copy()
 
