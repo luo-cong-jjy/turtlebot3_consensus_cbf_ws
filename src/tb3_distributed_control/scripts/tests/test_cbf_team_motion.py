@@ -9,9 +9,22 @@ from evaluate_cbf_team_motion import evaluate_team
 from qualify_cbf_team_scenes import qualify
 from test_cbf_spatial_pass import inputs
 from mpc_dcbf_cached_solver import continuous_guidance
+from mpc_dcbf_cached_solver import CachedMPCProblem
 
 
 class TeamMotionChecks(unittest.TestCase):
+    def test_failed_long_preview_can_only_return_a_valid_labeled_hard_prefix(self):
+        cfg,state,goals,obs,memory=inputs();cfg['spatial_prefix_retention']=True
+        obs.append(dict(name='distant_approach',center=np.array([10.,0.]),a=3.,b=3.,theta=0.,
+            dynamic=True,prediction_centers=np.column_stack((10.-.15*np.arange(11),np.zeros(11))),
+            guidance_motion=dict(stamp=0.,weights=[1.],models=[dict(mode='cv',position=[10.,0.],
+                velocity=[-1.5,0.],acceleration=[0.,0.],tau=1.)])))
+        continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertEqual(memory['spatial_summary']['preview_scope'],'original_hard_prefix_only')
+        self.assertLess(memory['spatial_summary']['extended_preview_min_h'],0.)
+        self.assertTrue(CachedMPCProblem(cfg,2,False).validate(memory['progress_plan'],state,obs,
+            [-.22,.22],memory['progress_previous']))
+
     def test_measured_transverse_motion_can_override_an_early_wrong_side(self):
         cfg,state,goals,obs,memory=inputs();cfg['spatial_rear_preference']=True
         center=np.array([2.3,.85]);velocity=np.array([-.04,-.1])

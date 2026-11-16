@@ -1046,6 +1046,7 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     window = min(steps, max(1, round(1./dt)))
     minimum_speed = ((travelled[:, window:] - travelled[:, :-window])/(window*dt)).min(axis=1)
     valid = ((soft_h.min(axis=(0, 2)) >= .01) & (residual.min(axis=(0, 2)) >= -2e-6) & (minimum_speed >= .09))
+    prefix_scope = False
     if old is None and valid[0]:
         return abstain('nominal_preview_clear')
     valid[0] = False
@@ -1056,6 +1057,18 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
         valid=rear_valid
     elif old is not None and same_side_valid.any():
         valid = same_side_valid
+    if config.get('spatial_prefix_retention',False) and not valid.any():
+        # The extended preview is only a ranking hypothesis. Its failure must
+        # not erase a feasible original hard prefix or silently certify its
+        # unverified tail. A checked short plan remains subject to the SAME
+        # final MPC/backup validation and emergency behavior.
+        valid=((residual.min(axis=(0,2))>=-2e-6) & (hard_h.min(axis=(0,2))>=-2e-6)
+               & (np.mean(np.abs(controls[:,:n,0]),axis=1)>=.09))
+        valid[0]=False
+        preferred=valid & (np.array([d['side'] for d in descriptors])==crossing_side)
+        if crossing_side is not None and preferred.any():valid=preferred
+        elif old is not None and (valid & same_side).any():valid &= same_side
+        prefix_scope=bool(valid.any())
     if not valid.any():
         memory['spatial_summary'] = dict(mode='no_valid_spatial_reference', candidates=count)
         return _legacy_continuous_guidance(state, goals, obstacles, config, memory)
@@ -1081,6 +1094,9 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
         same_side_candidates=int(same_side_valid.sum()),
         crossing_side_preference=crossing_side,
         rear_motion_candidates=int(rear_valid.sum()),
+        preview_scope='original_hard_prefix_only' if prefix_scope else 'extended_preview_qualified',
+        hard_prefix_mean_speed=float(np.abs(prefix[:,0]).mean()),
+        extended_preview_min_h=float(soft_h[:,chosen].min()),
         side_changed=old is not None and selected['side']!=old['side'],
         hard_steps=n, soft_seconds=steps*dt, far_axes='held_final_hard_envelope')
     return vectors, 1., predicted[1:, 2].copy()
