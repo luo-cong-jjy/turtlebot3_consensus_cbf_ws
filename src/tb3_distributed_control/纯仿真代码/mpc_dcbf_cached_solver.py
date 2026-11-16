@@ -938,6 +938,18 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
                        + (a[:, 1] * (-s * vector[0] + c * vector[1])) ** 2)
 
     along_support, lateral_support = support(forward), support(normal)
+    crossing_side = None
+    if config.get('spatial_rear_preference',False):
+        velocity = (center[1]-center[0])/dt
+        transverse = float(velocity@normal)
+        lateral_position = float((center[0]-goals[0,:2])@normal)
+        prior = memory.get('spatial_crossing')
+        if (abs(transverse)>.06 and abs(transverse)>.75*np.linalg.norm(velocity)
+                and lateral_position*transverse<0 and abs(lateral_position)>lateral_support[0]+.10):
+            prior=dict(name=obs['name'],side=int(-np.sign(transverse)))
+            memory['spatial_crossing']=prior
+        if prior is not None and prior['name']==obs['name']:
+            crossing_side=prior['side']
     previous = np.asarray(memory.get('progress_previous', np.zeros(2)), float)
     bounds = memory.get('progress_bounds', [-.22, .22])
     vmax = min(.22, bounds[1])
@@ -1039,7 +1051,10 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     valid[0] = False
     same_side = (np.array([d['side'] for d in descriptors]) == old['side']) if old is not None else np.ones(count, dtype=bool)
     same_side_valid = valid & same_side
-    if old is not None and same_side_valid.any():
+    rear_valid = valid & (np.array([d['side'] for d in descriptors])==crossing_side)
+    if crossing_side is not None and rear_valid.any():
+        valid=rear_valid
+    elif old is not None and same_side_valid.any():
         valid = same_side_valid
     if not valid.any():
         memory['spatial_summary'] = dict(mode='no_valid_spatial_reference', candidates=count)
@@ -1064,6 +1079,8 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
         geometry_contracted=contracted_index is not None and chosen==contracted_index,
         minimum_preview_speed=float(minimum_speed[chosen]),
         same_side_candidates=int(same_side_valid.sum()),
+        crossing_side_preference=crossing_side,
+        rear_motion_candidates=int(rear_valid.sum()),
         side_changed=old is not None and selected['side']!=old['side'],
         hard_steps=n, soft_seconds=steps*dt, far_axes='held_final_hard_envelope')
     return vectors, 1., predicted[1:, 2].copy()

@@ -581,6 +581,8 @@ class ExperimentRecorder:
             dynamic_prediction=rospy.get_param('/cbf/dynamic_prediction',False),
             active_experiment=rospy.get_param('/cbf/active_experiment',False),
             two_robot_experiment=rospy.get_param('/cbf/two_robot_experiment',False),
+            spatial_rear_preference=(rospy.get_param('/cbf/two_robot_experiment',False)
+                and rospy.get_param('/cbf/mpc/spatial_pass',False)),
             leader_initial_position=[rospy.get_param('/tb3_virtual_leader/leader_node/leader_init_x',.4),
                 rospy.get_param('/tb3_virtual_leader/leader_node/leader_init_y',0.)],
             active_protocol=rospy.get_param('/cbf/active_protocol',{}),
