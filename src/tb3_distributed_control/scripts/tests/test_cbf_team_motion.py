@@ -14,7 +14,7 @@ from mpc_dcbf_cached_solver import continuous_guidance
 class TeamMotionChecks(unittest.TestCase):
     def test_measured_transverse_motion_can_override_an_early_wrong_side(self):
         cfg,state,goals,obs,memory=inputs();cfg['spatial_rear_preference']=True
-        center=np.array([1.35,.8]);velocity=np.array([-.04,-.1])
+        center=np.array([2.3,.85]);velocity=np.array([-.04,-.1])
         obs[0].update(center=center,prediction_centers=center+np.arange(11)[:,None]*.1*velocity)
         obs[0]['guidance_motion']['models'][0].update(position=center.tolist(),velocity=velocity.tolist())
         memory['spatial_selected']=dict(name='actor',start=0.,y0=0.,dy0=0.,target=-.5,
@@ -22,6 +22,18 @@ class TeamMotionChecks(unittest.TestCase):
         continuous_guidance(state,goals,obs,cfg,memory)
         self.assertEqual(memory['spatial_summary']['crossing_side_preference'],1)
         self.assertEqual(memory['spatial_summary']['side'],1)
+
+    def test_rear_preference_does_not_force_an_infeasible_route(self):
+        cfg,state,goals,obs,memory=inputs();cfg['spatial_rear_preference']=True
+        center=np.array([1.35,.8]);velocity=np.array([-.04,-.1])
+        obs[0].update(center=center,prediction_centers=center+np.arange(11)[:,None]*.1*velocity)
+        obs[0]['guidance_motion']['models'][0].update(position=center.tolist(),velocity=velocity.tolist())
+        memory['spatial_selected']=dict(name='actor',start=0.,y0=0.,dy0=0.,target=-.5,
+            duration=6.,returning=False,side=-1)
+        continuous_guidance(state,goals,obs,cfg,memory)
+        self.assertEqual(memory['spatial_summary']['crossing_side_preference'],1)
+        self.assertEqual(memory['spatial_summary']['rear_motion_candidates'],0)
+        self.assertEqual(memory['spatial_summary']['side'],-1)
 
     @classmethod
     def setUpClass(cls):cls.q=qualify()
