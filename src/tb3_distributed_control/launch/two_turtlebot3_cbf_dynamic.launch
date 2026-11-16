@@ -48,6 +48,7 @@
   <include file="$(find tb3_distributed_control)/launch/multi_turtlebot3_consensus_gazebo_cbf.launch">
     <arg name="world_name" value="$(find tb3_distributed_control)/worlds/consensus_dynamic_obstacles.world" />
     <arg name="robot_count" value="2" />
+    <arg name="rviz_config" value="$(find tb3_distributed_control)/rviz/tb3_cbf_two.rviz" />
     <arg name="formation_radius" value="0.5" />
     <arg name="trajectory_type" value="line" />
     <arg name="leader_init_x" value="0.0" />
