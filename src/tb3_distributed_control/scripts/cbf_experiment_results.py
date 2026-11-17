@@ -583,8 +583,8 @@ class ExperimentRecorder:
             two_robot_experiment=rospy.get_param('/cbf/two_robot_experiment',False),
             spatial_rear_preference=(rospy.get_param('/cbf/two_robot_experiment',False)
                 and rospy.get_param('/cbf/mpc/spatial_pass',False)),
-            spatial_prefix_retention=(rospy.get_param('/cbf/two_robot_experiment',False)
-                and rospy.get_param('/cbf/mpc/spatial_pass',False)),
+            spatial_prefix_retention=(rospy.get_param('/cbf/mpc/spatial_pass',False) and
+                (rospy.get_param('/cbf/two_robot_experiment',False) or rospy.get_param('/cbf/mpc/spatial_prefix_retention',False))),
             leader_initial_position=[rospy.get_param('/tb3_virtual_leader/leader_node/leader_init_x',.4),
                 rospy.get_param('/tb3_virtual_leader/leader_node/leader_init_y',0.)],
             active_protocol=rospy.get_param('/cbf/active_protocol',{}),
@@ -594,6 +594,8 @@ class ExperimentRecorder:
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
             local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed'),
             spatial_pass=rospy.get_param('/cbf/mpc/spatial_pass',False),
+            spatial_compiled_rollout=rospy.get_param('/cbf/mpc/spatial_compiled_rollout',False),
+            spatial_timeout_carry=rospy.get_param('/cbf/mpc/spatial_timeout_carry',False),
             spatial_guidance_weights=({'velocity':3000.,'heading':8.}
                 if rospy.get_param('/cbf/mpc/spatial_pass',False) else None),
             adaptive_recovery=rospy.get_param('/cbf/adaptive_recovery',False),

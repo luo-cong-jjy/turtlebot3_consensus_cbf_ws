@@ -760,7 +760,8 @@ class TurtleBot3CBFController:
             self.cfg['guide_velocity_weight']=3000.
             self.cfg['guide_heading_weight']=8.
             self.cfg['spatial_rear_preference']=bool(rospy.get_param('/cbf/two_robot_experiment',False))
-            self.cfg['spatial_prefix_retention']=bool(rospy.get_param('/cbf/two_robot_experiment',False))
+            self.cfg['spatial_prefix_retention']=bool(rospy.get_param('/cbf/two_robot_experiment',False)
+                or self.cfg.get('spatial_prefix_retention',False))
         self.local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed')
         if self.local_reference_mode not in ('timed','nearest_line'):
             raise ValueError('Unknown local reference mode')

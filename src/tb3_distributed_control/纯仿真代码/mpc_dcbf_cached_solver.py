@@ -883,6 +883,140 @@ def rear_pass_guidance(state,goals,obstacles,config,memory):
     return vectors,1.,predicted[1:n+1,2].copy()
 
 
+_SPATIAL_ROLLOUT_FUNCTIONS={}
+
+
+def _spatial_rollout_function(count,steps,dt,allow_build=True):
+    """CasADi evaluation graph for the SAME reference recurrence, not an NLP.
+
+    Construction is confined to startup/offline work. Online evaluation runs
+    inside CasADi's native engine; it has no solver, new variables or new model.
+    """
+    key=(count,steps,float(dt))
+    if key in _SPATIAL_ROLLOUT_FUNCTIONS:return _SPATIAL_ROLLOUT_FUNCTIONS[key]
+    if not allow_build:raise PreviewBudgetExceeded('Reference evaluation graph was not warmed')
+    initial=ca.MX.sym('initial',3);previous=ca.MX.sym('previous',2)
+    targets=ca.MX.sym('targets',steps+1,2);center=ca.MX.sym('center',steps+1,2)
+    support=ca.MX.sym('support',steps+1);forward=ca.MX.sym('forward',2);normal=ca.MX.sym('normal',2)
+    descriptor=ca.MX.sym('descriptor',count,6);limits=ca.MX.sym('limits',8)
+    start,duration,y0,dy0,target,returning=[descriptor[:,i] for i in range(6)]
+    lower,upper,omega,delta_enabled,dv,dw,speed,now=[limits[i] for i in range(8)]
+    vmax=ca.fmin(.22,upper)
+    clip=lambda x,lo,hi:ca.fmin(ca.fmax(x,lo),hi)
+
+    def curve(age,length,begin_y,begin_dy,end_y):
+        q=clip(age/length,0.,1.)
+        blend=10*q**3-15*q**4+6*q**5
+        derivative=(30*q**2-60*q**3+30*q**4)/length
+        basis=q-6*q**3+8*q**4-3*q**5
+        basis_derivative=1-18*q**2+32*q**3-15*q**4
+        value=begin_y+ca.times(end_y-begin_y,blend)+ca.times(length*begin_dy,basis)
+        rate=ca.times(end_y-begin_y,derivative)+ca.times(begin_dy,basis_derivative)
+        return value,ca.if_else(age>=length,0.,rate)
+
+    p=ca.repmat(initial.T,count,1);last=ca.repmat(previous.T,count,1)
+    captured=ca.MX.zeros(count,1);return_at=ca.MX.zeros(count,1);states=[p];controls=[]
+    for j in range(steps):
+        desired_y,desired_dy=curve(now+(j+1)*dt-start,duration,y0,dy0,target)
+        passed=ca.mtimes(p[:,:2]-ca.repmat(center[j,:],count,1),forward)>support[j]+.12
+        capture=ca.logic_and(ca.logic_and(passed,returning<.5),
+            ca.logic_and(now+j*dt-start>=duration,ca.logic_not(captured)))
+        return_at=ca.if_else(capture,j*dt,return_at);captured=ca.logic_or(captured,capture)
+        ry,rv=curve((j+1)*dt-return_at,6.,target,0.,0.)
+        desired_y=ca.if_else(captured,ry,desired_y);desired_dy=ca.if_else(captured,rv,desired_dy)
+        along=ca.mtimes(ca.repmat(targets[j+1,:],count,1)-p[:,:2],forward)
+        across=ca.mtimes(p[:,:2]-ca.repmat(targets[j+1,:],count,1),normal)
+        vx=clip(speed+.6*along,.10,vmax);vy=desired_dy+1.2*(desired_y-across)
+        velocity=ca.mtimes(vx,forward.T)+ca.mtimes(vy,normal.T)
+        angle=ca.atan2(velocity[:,1],velocity[:,0])
+        error=ca.atan2(ca.sin(angle-p[:,2]),ca.cos(angle-p[:,2]))
+        v=ca.times(ca.fmin(vmax,ca.sqrt(ca.sum2(velocity**2))),ca.fmax(ca.cos(error),0.))
+        w=clip(3.*error,-ca.fmin(.9,omega),ca.fmin(.9,omega))
+        raw=last+(dt/(.2+dt))*(ca.horzcat(v,w)-last)
+        u=ca.horzcat(clip(raw[:,0],ca.fmax(0.,lower),vmax),clip(raw[:,1],-omega,omega))
+        bounded_delta=ca.horzcat(clip(u[:,0],last[:,0]-dv,last[:,0]+dv),
+                                 clip(u[:,1],last[:,1]-dw,last[:,1]+dw))
+        u=ca.if_else(delta_enabled>.5,bounded_delta,u)
+        heading=p[:,2]+dt*u[:,1]
+        point=p[:,:2]+dt*ca.times(ca.repmat(u[:,0],1,2),ca.horzcat(ca.cos(heading),ca.sin(heading)))
+        p=ca.horzcat(point,heading);last=u;states.append(p);controls.append(u)
+    function=ca.Function('spatial_reference_%d_%d'%(count,steps),
+        [initial,previous,targets,center,support,forward,normal,descriptor,limits],
+        [ca.horzcat(*states),ca.horzcat(*controls)])
+    _SPATIAL_ROLLOUT_FUNCTIONS[key]=function
+    return function
+
+
+def warm_spatial_rollouts(config):
+    steps=max(config['horizon'],round(config.get('spatial_preview_seconds',8.)/config['dt']))
+    for count in (19,20,21):_spatial_rollout_function(count,steps,config['dt'])
+
+
+def _spatial_rollout_compiled(state,previous,targets,center,along_support,forward,normal,speed,now,
+                              start,duration,initial_y,initial_dy,target_y,returning,bounds,config,steps):
+    _check_preview_budget(config)
+    function=_spatial_rollout_function(len(start),steps,config['dt'],
+        allow_build=config.get('_preview_deadline') is None)
+    descriptors=np.column_stack((start,duration,initial_y,initial_dy,target_y,returning))
+    limits=[*bounds,config['omega_max'],float(config['delta_limit']),config['delta_v'],config['delta_w'],speed,now]
+    states,controls=function(state,previous,targets,center,along_support,forward,normal,descriptors,limits)
+    _check_preview_budget(config)
+    return (np.asarray(states).reshape(len(start),steps+1,3),
+            np.asarray(controls).reshape(len(start),steps,2))
+
+
+def _spatial_rollout_numpy(state,previous,targets,center,along_support,forward,normal,speed,now,
+                           start,duration,initial_y,initial_dy,target_y,returning,bounds,config,steps):
+    count=len(start);dt=config['dt'];times=np.arange(steps+1)*dt;vmax=min(.22,bounds[1])
+    return_at = np.full(count, np.inf)
+    states = np.empty((count, steps + 1, 3)); states[:, 0] = state
+    controls = np.empty((count, steps, 2)); last = np.tile(previous, (count, 1))
+
+    def curve(age, length, begin_y, begin_dy, end_y):
+        q = np.clip(age / length, 0., 1.)
+        blend = 10*q**3 - 15*q**4 + 6*q**5
+        derivative = (30*q**2 - 60*q**3 + 30*q**4) / length
+        basis = q - 6*q**3 + 8*q**4 - 3*q**5
+        basis_derivative = 1 - 18*q**2 + 32*q**3 - 15*q**4
+        value = begin_y + (end_y-begin_y)*blend + length*begin_dy*basis
+        rate = (end_y-begin_y)*derivative + begin_dy*basis_derivative
+        return value, np.where(age >= length, 0., rate)
+
+    for j in range(steps):
+        _check_preview_budget(config)
+        age = now + times[j+1] - start
+        desired_y, desired_dy = curve(age, duration, initial_y, initial_dy, target_y)
+        future_passed = ((states[:, j, :2] - center[j]) @ forward > along_support[j] + .12)
+        capture = future_passed & (~returning) & (now + times[j] - start >= duration) & ~np.isfinite(return_at)
+        return_at[capture] = times[j]
+        future_return = np.isfinite(return_at)
+        if future_return.any():
+            ry, rv = curve(times[j+1]-return_at[future_return], 6., target_y[future_return], 0., 0.)
+            desired_y[future_return], desired_dy[future_return] = ry, rv
+        along_error = (targets[j+1] - states[:, j, :2]) @ forward
+        across = (states[:, j, :2] - targets[j+1]) @ normal
+        # Positive speed belongs to candidate construction only. The actual
+        # optimizer and emergency control retain their original signed bounds.
+        vx = np.clip(speed + .6*along_error, .10, vmax)
+        vy = desired_dy + 1.2*(desired_y - across)
+        velocity = vx[:, None]*forward + vy[:, None]*normal
+        angle = np.arctan2(velocity[:, 1], velocity[:, 0])
+        error = np.arctan2(np.sin(angle-states[:, j, 2]), np.cos(angle-states[:, j, 2]))
+        v = np.minimum(vmax, np.linalg.norm(velocity, axis=1))*np.maximum(np.cos(error), 0.)
+        w = np.clip(3.*error, -min(.9, config['omega_max']), min(.9, config['omega_max']))
+        controls[:, j] = last + (dt/(.2+dt))*(np.column_stack((v, w))-last)
+        controls[:, j, 0] = np.clip(controls[:, j, 0], max(0., bounds[0]), vmax)
+        controls[:, j, 1] = np.clip(controls[:, j, 1], -config['omega_max'], config['omega_max'])
+        if config['delta_limit']:
+            controls[:, j] = np.clip(controls[:, j], last-[config['delta_v'], config['delta_w']], last+[config['delta_v'], config['delta_w']])
+        states[:, j+1, 2] = states[:, j, 2] + dt*controls[:, j, 1]
+        states[:, j+1, :2] = states[:, j, :2] + dt*controls[:, j, 0, None]*np.column_stack((np.cos(states[:, j+1, 2]), np.sin(states[:, j+1, 2])))
+        last = controls[:, j]
+    _check_preview_budget(config)
+
+    return states,controls
+
+
 def spatial_pass_guidance(state, goals, obstacles, config, memory):
     """Early bounded side-shift/hold/return candidates for CV dynamic scenes.
 
@@ -986,51 +1120,10 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     initial_dy = np.array([d['dy0'] for d in descriptors])
     target_y = np.array([d['target'] for d in descriptors])
     returning = np.array([d['returning'] for d in descriptors])
-    return_at = np.full(count, np.inf)
-    states = np.empty((count, steps + 1, 3)); states[:, 0] = state
-    controls = np.empty((count, steps, 2)); last = np.tile(previous, (count, 1))
-
-    def curve(age, length, begin_y, begin_dy, end_y):
-        q = np.clip(age / length, 0., 1.)
-        blend = 10*q**3 - 15*q**4 + 6*q**5
-        derivative = (30*q**2 - 60*q**3 + 30*q**4) / length
-        basis = q - 6*q**3 + 8*q**4 - 3*q**5
-        basis_derivative = 1 - 18*q**2 + 32*q**3 - 15*q**4
-        value = begin_y + (end_y-begin_y)*blend + length*begin_dy*basis
-        rate = (end_y-begin_y)*derivative + begin_dy*basis_derivative
-        return value, np.where(age >= length, 0., rate)
-
-    for j in range(steps):
-        _check_preview_budget(config)
-        age = now + times[j+1] - start
-        desired_y, desired_dy = curve(age, duration, initial_y, initial_dy, target_y)
-        future_passed = ((states[:, j, :2] - center[j]) @ forward > along_support[j] + .12)
-        capture = future_passed & (~returning) & (now + times[j] - start >= duration) & ~np.isfinite(return_at)
-        return_at[capture] = times[j]
-        future_return = np.isfinite(return_at)
-        if future_return.any():
-            ry, rv = curve(times[j+1]-return_at[future_return], 6., target_y[future_return], 0., 0.)
-            desired_y[future_return], desired_dy[future_return] = ry, rv
-        along_error = (targets[j+1] - states[:, j, :2]) @ forward
-        across = (states[:, j, :2] - targets[j+1]) @ normal
-        # Positive speed belongs to candidate construction only. The actual
-        # optimizer and emergency control retain their original signed bounds.
-        vx = np.clip(speed + .6*along_error, .10, vmax)
-        vy = desired_dy + 1.2*(desired_y - across)
-        velocity = vx[:, None]*forward + vy[:, None]*normal
-        angle = np.arctan2(velocity[:, 1], velocity[:, 0])
-        error = np.arctan2(np.sin(angle-states[:, j, 2]), np.cos(angle-states[:, j, 2]))
-        v = np.minimum(vmax, np.linalg.norm(velocity, axis=1))*np.maximum(np.cos(error), 0.)
-        w = np.clip(3.*error, -min(.9, config['omega_max']), min(.9, config['omega_max']))
-        controls[:, j] = last + (dt/(.2+dt))*(np.column_stack((v, w))-last)
-        controls[:, j, 0] = np.clip(controls[:, j, 0], max(0., bounds[0]), vmax)
-        controls[:, j, 1] = np.clip(controls[:, j, 1], -config['omega_max'], config['omega_max'])
-        if config['delta_limit']:
-            controls[:, j] = np.clip(controls[:, j], last-[config['delta_v'], config['delta_w']], last+[config['delta_v'], config['delta_w']])
-        states[:, j+1, 2] = states[:, j, 2] + dt*controls[:, j, 1]
-        states[:, j+1, :2] = states[:, j, :2] + dt*controls[:, j, 0, None]*np.column_stack((np.cos(states[:, j+1, 2]), np.sin(states[:, j+1, 2])))
-        last = controls[:, j]
-    _check_preview_budget(config)
+    args=(state,previous,targets,center,along_support,forward,normal,speed,now,
+          start,duration,initial_y,initial_dy,target_y,returning,bounds,config,steps)
+    states,controls=(_spatial_rollout_compiled(*args) if config.get('spatial_compiled_rollout',False)
+                     else _spatial_rollout_numpy(*args))
 
     def values(batch, length):
         delta = states[None, :, :length, :2] - batch.centers[:, None]
@@ -1487,9 +1580,20 @@ class CachedMPCProblem:
         return True
 
 
+def checked_spatial_guidance_carry(problem,state,obstacles,bounds,previous,controls,config):
+    """Re-anchor and revalidate a full short prefix against CURRENT inputs."""
+    controls=np.asarray(controls,float).copy()
+    states=rollout(state,controls,config['dt'])
+    vectors=controls[:,:1]*np.column_stack((np.cos(states[1:,2]),np.sin(states[1:,2])))
+    candidate=dict(controls=controls,states=states,plan_controls=vectors)
+    if not problem.validate(candidate,state,obstacles,bounds,previous):return None
+    return candidate
+
+
 class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
+        if config.get('spatial_compiled_rollout',False):warm_spatial_rollouts(config)
         if config.get('spatial_pass',False) and (not config.get('execution_backup',False)
                 or config.get('suppress_guidance',False) or config.get('rear_pass',False)
                 or config.get('progress_guidance',False) or config.get('prediction_risk',False)
@@ -1619,7 +1723,7 @@ class MPCSolverManager:
             prepared,checked,screen_valid=self._screen_backup(problem,state,goals,obstacles,bounds,
                 previous,plan,guess,(np.zeros((n,2)),0.),command_deadline)
             prepare_ms=1000*(time.perf_counter()-prepare_begin)
-        preview_begin=time.perf_counter();preview_budget_hit=False
+        preview_begin=time.perf_counter();preview_budget_hit=False;timeout_carry=False
         preview_config=(dict(cfg,bounded_local_reference=cfg.get('bounded_local_reference',True),
             align_reference_hypotheses=cfg.get('align_reference_hypotheses',True),
             predictive_obstruction=cfg.get('predictive_obstruction',cfg.get('predictive_bypass',False)),
@@ -1633,6 +1737,16 @@ class MPCSolverManager:
             if cfg.get('spatial_pass',False):memory['spatial_summary']=dict(mode='budget_abstain')
             memory['progress_summary']=dict(mode='budget_deferred',decision_id=memory.get('progress_counter',0))
             guidance=np.zeros((n,2)),0.;preview_budget_hit=True
+            if (cfg.get('spatial_timeout_carry',False) and cfg.get('spatial_pass',False)
+                    and usable and time.perf_counter()<deadline-.005):
+                carried=checked_spatial_guidance_carry(problem,state,obstacles,bounds,previous,guess,cfg)
+                if carried is not None:
+                    memory['progress_plan']=carried
+                    guidance=carried['plan_controls'],1.,carried['states'][1:,2].copy()
+                    memory['spatial_summary']=dict(mode='budget_validated_carry',
+                        preview_scope='original_hard_prefix_only',validated_steps=n,
+                        min_model_slack=carried.get('min_slack'))
+                    timeout_carry=True
         preview_ms=1000*(time.perf_counter()-preview_begin)
         if execution_backup and time.perf_counter()<deadline-.005:
             prepare_begin=time.perf_counter()
@@ -1751,6 +1865,7 @@ class MPCSolverManager:
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         if cfg.get('rear_pass',False):record['rear_pass']=dict(memory.get('rear_summary',{}))
         if cfg.get('spatial_pass',False):record['spatial_pass']=dict(memory.get('spatial_summary',{}))
+        if cfg.get('spatial_timeout_carry',False):record['spatial_timeout_carry']=timeout_carry
         if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
         self.histories.setdefault(label,[]).append(record);self.last_records[label]=record
         if best is None:

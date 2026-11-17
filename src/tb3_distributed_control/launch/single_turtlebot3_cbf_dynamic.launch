@@ -3,6 +3,9 @@
   <arg name="active_experiment" default="false" />
   <arg name="local_reference_mode" default="timed" />
   <arg name="spatial_pass" default="false" />
+  <arg name="spatial_compiled_rollout" default="false" />
+  <arg name="spatial_timeout_carry" default="false" />
+  <arg name="spatial_prefix_retention" default="false" />
   <arg name="total_time" default="32" />
   <arg name="gui" default="true" />
   <arg name="open_rviz" default="true" />
@@ -59,6 +62,9 @@
     <arg name="active_experiment" value="$(arg active_experiment)" />
     <arg name="local_reference_mode" value="$(arg local_reference_mode)" />
     <arg name="spatial_pass" value="$(arg spatial_pass)" />
+    <arg name="spatial_compiled_rollout" value="$(arg spatial_compiled_rollout)" />
+    <arg name="spatial_timeout_carry" value="$(arg spatial_timeout_carry)" />
+    <arg name="spatial_prefix_retention" value="$(arg spatial_prefix_retention)" />
     <arg name="ca_jerk_density" value="$(arg ca_jerk_density)" />
     <arg name="ca_acceleration_variance" value="$(arg ca_acceleration_variance)" />
     <arg name="moving_frame_projection" value="$(arg moving_frame_projection)" />
