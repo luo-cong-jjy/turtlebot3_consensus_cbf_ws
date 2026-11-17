@@ -13,6 +13,12 @@
   <arg name="robot0_init_y" default="0.0" />
   <arg name="robot1_init_x" default="0.2" />
   <arg name="robot1_init_y" default="0.4" />
+  <arg name="robot2_init_x" default="-0.2" />
+  <arg name="robot2_init_y" default="0.2" />
+  <arg name="robot3_init_x" default="-0.3" />
+  <arg name="robot3_init_y" default="-0.3" />
+  <arg name="robot4_init_x" default="0.2" />
+  <arg name="robot4_init_y" default="-0.3" />
   <arg name="local_reference_mode" default="timed" />
   <arg name="spatial_pass" default="false" />
   <arg name="spatial_compiled_rollout" default="false" />
@@ -205,7 +211,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_2/odom" />
-    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_2 -x -0.2 -y 0.2 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_2 -x $(arg robot2_init_x) -y $(arg robot2_init_y) -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_2" output="screen" if="$(eval int(arg('robot_count')) > 2)">
     <param name="robot_id" value="2" />
@@ -219,7 +225,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_3/odom" />
-    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_3 -x -0.3 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_3 -x $(arg robot3_init_x) -y $(arg robot3_init_y) -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_3" output="screen" if="$(eval int(arg('robot_count')) > 3)">
     <param name="robot_id" value="3" />
@@ -233,7 +239,7 @@
       <param name="publish_frequency" value="30" />
     </node>
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 world tb3_4/odom" />
-    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_4 -x 0.2 -y -0.3 -z 0.01 -Y 0 -param robot_description" />
+    <node pkg="tb3_distributed_control" type="cbf_spawn_checked.py" name="spawn_urdf" args="-urdf -model tb3_4 -x $(arg robot4_init_x) -y $(arg robot4_init_y) -z 0.01 -Y 0 -param robot_description" />
   </group>
   <node pkg="tb3_distributed_control" type="tb3_controller_node_cbf.py" name="tb3_controller_cbf_4" output="screen" if="$(eval int(arg('robot_count')) > 4)">
     <param name="robot_id" value="4" />
