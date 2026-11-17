@@ -1,0 +1,1029 @@
+{
+  "stage": "single_repeatability_2026-11-17",
+  "verified_at_utc": "2026-11-17T08:44:16.309605+00:00",
+  "branch": "research/single-repeatability-2026-11-17",
+  "parent_commit": "cbf7a584a9e80c08bb9be5b30d59ef1e5b6c429e",
+  "algorithm_commit": "1a4c79f9d24c159255800fb2cf3183d199f7cfd7",
+  "tests": {
+    "count": 200,
+    "passed": true
+  },
+  "build_passed": true,
+  "launch_parameter_expansion_passed": true,
+  "frozen_original_plan_sha256": "2252931a0dd3729e406204f2cfeaff0e00810782c15a452a5f6ce504e78e2996",
+  "frozen_final_schedule_sha256": "75f6af13bdc0e0568422a261c50bd93a2e209cdaed171dfb5bf43ef9385b29bb",
+  "unchanged_sources": {
+    "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+    "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+    "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+    "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+    "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+    "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+    "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f"
+  },
+  "root_controller_sha256": "9f4fb045b7ed76a12738891b750d4dec6cd1968ed13f51627bca7a74e61d3094",
+  "backend_equivalence": {
+    "passed": true,
+    "maximum_reference_difference": 5.551115123125783e-16,
+    "disagreements": 0,
+    "runs": [
+      {
+        "directory": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/双机器人绕行_2026-11-12/single_v5_regression",
+        "trace_sha256": "100df2b5bc1d515100f2e52f0db826b5a1141c365bcf6b6eeea4732cd4080af6",
+        "cycles": 400,
+        "numpy_median_ms": 10.26865400490351,
+        "numpy_p95_ms": 15.358182412455776,
+        "native_median_ms": 2.467284502927214,
+        "native_p95_ms": 4.133185514365323
+      },
+      {
+        "directory": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/双机器人绕行_2026-11-12/single_v5_repeat",
+        "trace_sha256": "b7b124f08bc2a996690c92c4134a88ef45a6c6365d2f6454bb05970d3d47926b",
+        "cycles": 400,
+        "numpy_median_ms": 10.090560506796464,
+        "numpy_p95_ms": 11.401284002931789,
+        "native_median_ms": 2.4124259944073856,
+        "native_p95_ms": 4.05273913347628
+      }
+    ],
+    "source_sha256": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+    "scope": "Same measured input sequences; reference memory replayed without wall deadlines, warmup excluded. Not actual callback timing or a closed-loop success proof."
+  },
+  "legacy_profile_regression": {
+    "passed": true,
+    "cycles": 400,
+    "maximum_reference_difference": 0.0,
+    "preserved_model_components": {
+      "CachedMPCProblem": true,
+      "first_step_mask": true,
+      "barrier_values": true
+    },
+    "interpretation": "Same recorded single-robot inputs, frozen V5 vs current reference functions.\n\nNo wall deadline is imposed in this algebraic regression check. It does not\nprove closed-loop reproducibility or erase a failed actual repeat.\n",
+    "frozen_commit": "9104bf8",
+    "source_directory": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/单机重复性_2026-11-17/legacy_v5_current_211"
+  },
+  "runs": [
+    {
+      "id": "candidate_overtaking_211_r1",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.1365156347349652,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.004054307565407351,
+      "minimum_linear_swept_proxy_clearance": 0.22359737865485424,
+      "fault_stop_count": 0,
+      "position_rmse": 0.3251351174267368,
+      "omega_total_variation": 9.387640149948645,
+      "maximum_lateral_displacement": 0.6933316874766091,
+      "control_p95_ms": 74.30943537328857,
+      "control_max_ms": 89.49348400346935,
+      "preview_p95_ms": 13.343212558538653,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 1,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": false,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "feasible_iterate": 6,
+        "ok": 394
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "877afe6886f3fc58e4833060d2fa8a8b3beb2eb6e468516a6ec101a721350e6d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "06295b946271f2205ed3034a95cdd0b04a0798c19b75061a90f474001813b9d2",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "b512d6aca34fe8a02a199e1d91fd47b814ff8af4ee9d263954e6bfba05309567",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e5e5982f7018f8bbe00c568a5353e93d387ded1954acf80ab1dcee21bd2a7e0b",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "930d983b74aba84be868badbde5f01112bba1dbaa450b115d1c0e61f7ce7d2e3",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "6c44aacb166e683b2bfca7d1f5c37f21dab6d0305805ad8fdf8be6bc58e4abb9",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "56d2e27994ce0bb6f4766eb1ed7e5f2a1a43795bb2c8103d61890527ddefe3e1"
+      },
+      "evaluation_sha256": "214e1b0f63c05f9873815498481f50e5a16728607a5096f9adecda45dd453557",
+      "truth_sha256": "3dbd290a2d5fac772eb9436c8c1735986a27f298c6decc0c6013625b08a4ef98",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 372,
+            "reference_quality_counts": {
+              "3": 3,
+              "1": 397
+            },
+            "max_nominal_analytic_residual": 1.7763568394002505e-15,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.013070080175879888,
+            "max_plan_execution_error": 0.0495759587026195,
+            "max_nominal_error_during_plan_samples": 0.6936967929557486
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "compiled_only_211",
+      "completed": true,
+      "passed": false,
+      "failed_checks": [
+        "no_fault_stop"
+      ],
+      "minimum_rolling_speed": 0.13360177915929627,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.0009863327249931809,
+      "minimum_linear_swept_proxy_clearance": 0.22597634550866724,
+      "fault_stop_count": 1,
+      "position_rmse": 0.3064564495567219,
+      "omega_total_variation": 17.703071988632786,
+      "maximum_lateral_displacement": 0.6471784971346701,
+      "control_p95_ms": 75.4823414463317,
+      "control_max_ms": 108.35309798130766,
+      "preview_p95_ms": 13.517733255866915,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 0,
+      "native": true,
+      "timeout_carry": false,
+      "prefix_retention": false,
+      "runtime_guard": false,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "ok": 390,
+        "late_fallback_stop": 1,
+        "feasible_iterate": 9
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "877afe6886f3fc58e4833060d2fa8a8b3beb2eb6e468516a6ec101a721350e6d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "06295b946271f2205ed3034a95cdd0b04a0798c19b75061a90f474001813b9d2",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "b512d6aca34fe8a02a199e1d91fd47b814ff8af4ee9d263954e6bfba05309567",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "e5e5982f7018f8bbe00c568a5353e93d387ded1954acf80ab1dcee21bd2a7e0b",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "930d983b74aba84be868badbde5f01112bba1dbaa450b115d1c0e61f7ce7d2e3",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "6c44aacb166e683b2bfca7d1f5c37f21dab6d0305805ad8fdf8be6bc58e4abb9",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "56d2e27994ce0bb6f4766eb1ed7e5f2a1a43795bb2c8103d61890527ddefe3e1"
+      },
+      "evaluation_sha256": "8954b24ea3d8bc73b634b01a7cc59efd68a650a20645cb9273fd3f02bb1be4e7",
+      "truth_sha256": "ab2b46a5ea8637302f20b554055886378c79dabdbd3796fbbe229da7868a6cde",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 399,
+        "uncertified_other_statuses": 1,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 398,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.012101731616893988,
+            "max_plan_execution_error": 0.041794914506943656,
+            "max_nominal_error_during_plan_samples": 0.647364923891524
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "final_head_on_211",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.12442387737759653,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.0010511345016910889,
+      "minimum_linear_swept_proxy_clearance": 0.2353354693797483,
+      "fault_stop_count": 0,
+      "position_rmse": 0.2889581842988336,
+      "omega_total_variation": 10.139294731519248,
+      "maximum_lateral_displacement": 0.626008144551987,
+      "control_p95_ms": 67.91606696788222,
+      "control_max_ms": 91.0416700062342,
+      "preview_p95_ms": 14.2984589911066,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 0,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": true,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "feasible_iterate": 118,
+        "ok": 283
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "4956f09236d6de976e884a9e6ee2ee0826b0aea65a88e11983c4d346b2390ca9",
+      "truth_sha256": "72f2171b55178dd0ad9ee5ec2b960559e558862458a88e60dd8a4c3033b6b054",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 401,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 401,
+            "prior_plan_samples_audited": 400,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 400
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.010811052503986014,
+            "max_plan_execution_error": 0.03744428816445145,
+            "max_nominal_error_during_plan_samples": 0.6261703427463015
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "final_oblique_211",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.13956964979528097,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.002038012228969919,
+      "minimum_linear_swept_proxy_clearance": 0.30447288443745985,
+      "fault_stop_count": 0,
+      "position_rmse": 0.2400519377033254,
+      "omega_total_variation": 8.852784988850962,
+      "maximum_lateral_displacement": 0.5757471998912816,
+      "control_p95_ms": 65.90914604021236,
+      "control_max_ms": 92.67231001285836,
+      "preview_p95_ms": 12.427654990460724,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 1,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": true,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "feasible_iterate": 68,
+        "ok": 333
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "f46b66d98666a32227cfe0c006ce235fc5c33b1faacb436c5a1f93d8f6d23cbb",
+      "truth_sha256": "0e5b5ce216236067d0d4efe939b8c1728fe471a558e79f2ce7f950fbec93a588",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 401,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 401,
+            "prior_plan_samples_audited": 393,
+            "reference_quality_counts": {
+              "0": 1,
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.009485934510443148,
+            "max_plan_execution_error": 0.04210682150557991,
+            "max_nominal_error_during_plan_samples": 0.586301287686099
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "final_overtaking_211_r1",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.13913351205610658,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.0034693760774460263,
+      "minimum_linear_swept_proxy_clearance": 0.20668729887902465,
+      "fault_stop_count": 0,
+      "position_rmse": 0.31726494896158314,
+      "omega_total_variation": 11.563337808103308,
+      "maximum_lateral_displacement": 0.6469725274949744,
+      "control_p95_ms": 66.90140787686686,
+      "control_max_ms": 86.9916650117375,
+      "preview_p95_ms": 13.22534750506747,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 0,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": true,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "ok": 303,
+        "feasible_iterate": 97
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "de9d0a569c5ca160e7a76cf1654ce8d8722ba8d73fc0451c7fbb8912877d111a",
+      "truth_sha256": "5c4076a7ac1d16fa7da1602e2b1e7549ffc7250cae9ab5c76ca7d53a1d7c7230",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 391,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.012092600427440162,
+            "max_plan_execution_error": 0.04264105953636201,
+            "max_nominal_error_during_plan_samples": 0.6472927043865881
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "final_overtaking_211_r2",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14088118836794505,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.001213521050738741,
+      "minimum_linear_swept_proxy_clearance": 0.23722697781182817,
+      "fault_stop_count": 0,
+      "position_rmse": 0.33665980890770686,
+      "omega_total_variation": 9.729413021666051,
+      "maximum_lateral_displacement": 0.7175192930585361,
+      "control_p95_ms": 66.79296240909022,
+      "control_max_ms": 93.11918198363855,
+      "preview_p95_ms": 13.429849979002029,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 0,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": true,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "ok": 283,
+        "feasible_iterate": 117
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "0634f4449fd2a8f6929531f1513428a3c50272d35ef635d3970f78601e1e5df2",
+      "truth_sha256": "1cd9b4bc374c0225797e65e875f484836720bc9bd4a511846d4a08f826934b7d",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 394,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.012189676773750255,
+            "max_plan_execution_error": 0.041724670160761715,
+            "max_nominal_error_during_plan_samples": 0.7179230081488736
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "final_overtaking_211_r3",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.1400803122163481,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.0013779493682755967,
+      "minimum_linear_swept_proxy_clearance": 0.21657181717514357,
+      "fault_stop_count": 0,
+      "position_rmse": 0.3132830680083459,
+      "omega_total_variation": 9.998744325239144,
+      "maximum_lateral_displacement": 0.6749761496815267,
+      "control_p95_ms": 69.24362973077221,
+      "control_max_ms": 90.64705501077697,
+      "preview_p95_ms": 13.941012971918097,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 1,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": true,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "feasible_iterate": 102,
+        "ok": 298
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "7bff12838e61b5a9abb0191069294f080ede22121ae919a3f39f776ae6b26cdb",
+      "truth_sha256": "0e0555c3762f83d0e9ff2e61e5214f3e4e62321a0935326a48e853dc9e7008bf",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 399,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 1.7763568394002505e-15,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.011943706730307254,
+            "max_plan_execution_error": 0.040518319181610474,
+            "max_nominal_error_during_plan_samples": 0.6753069982948874
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "final_overtaking_239",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14301313812532435,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 7.579887142648026e-05,
+      "minimum_linear_swept_proxy_clearance": 0.19466833138012413,
+      "fault_stop_count": 0,
+      "position_rmse": 0.30952120110502657,
+      "omega_total_variation": 13.111020457728701,
+      "maximum_lateral_displacement": 0.628725151114614,
+      "control_p95_ms": 68.10388686426448,
+      "control_max_ms": 97.40506997331977,
+      "preview_p95_ms": 14.261229831026865,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 0,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": true,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "feasible_iterate": 108,
+        "ok": 292
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "77423b110344ad098694b2560804f95ca89201581c74962d87623251631da4d5",
+      "truth_sha256": "04ae3c303084a5fa547a07b97dea73440a0e5b980b55fd7d9018830d33633605",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 398,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.012010301882325545,
+            "max_plan_execution_error": 0.04269453733301079,
+            "max_nominal_error_during_plan_samples": 0.6289616478017154
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "final_overtaking_307",
+      "completed": true,
+      "passed": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.1223561512201905,
+      "longest_standstill_seconds": 0.0,
+      "total_standstill_seconds": 0.0,
+      "final_position_error": 0.001389205553783041,
+      "minimum_linear_swept_proxy_clearance": 0.2205298359123949,
+      "fault_stop_count": 0,
+      "position_rmse": 0.31682157176182935,
+      "omega_total_variation": 10.22682456100645,
+      "maximum_lateral_displacement": 0.6576887699107636,
+      "control_p95_ms": 67.79596055566797,
+      "control_max_ms": 85.12398099992424,
+      "preview_p95_ms": 13.01363448728807,
+      "preview_budget_hits": 0,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 0,
+      "native": true,
+      "timeout_carry": true,
+      "prefix_retention": true,
+      "runtime_guard": true,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "ok": 281,
+        "feasible_iterate": 119
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "353a0429fcafd464c9c4de5976e0967dfcb9cbafb86708c3036c0c1bdf1cd473",
+      "truth_sha256": "a6e5ad23eea9b02917b2cfcfa549b09397ad172c71e6960dcc039aa055f66a86",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 393,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 1.7763568394002505e-15,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.012257339303201878,
+            "max_plan_execution_error": 0.041738164194362014,
+            "max_nominal_error_during_plan_samples": 0.6579556170520638
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    },
+    {
+      "id": "legacy_v5_current_211",
+      "completed": true,
+      "passed": false,
+      "failed_checks": [
+        "no_sustained_standstill",
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance"
+      ],
+      "minimum_rolling_speed": 0.02376846441934144,
+      "longest_standstill_seconds": 0.27500000000000036,
+      "total_standstill_seconds": 0.8260000000000005,
+      "final_position_error": 0.0021696343242963013,
+      "minimum_linear_swept_proxy_clearance": 0.12500974707013934,
+      "fault_stop_count": 0,
+      "position_rmse": 0.6062778579505752,
+      "omega_total_variation": 142.85531863391574,
+      "maximum_lateral_displacement": 0.5118781127462333,
+      "control_p95_ms": 79.78107410017398,
+      "control_max_ms": 84.63295799447224,
+      "preview_p95_ms": 25.43864816543646,
+      "preview_budget_hits": 106,
+      "validated_timeout_carries": 0,
+      "prefix_only_reference_cycles": 0,
+      "native": false,
+      "timeout_carry": false,
+      "prefix_retention": false,
+      "runtime_guard": false,
+      "own_scan_only": true,
+      "no_truth_input_passed": true,
+      "statuses": {
+        "feasible_iterate": 48,
+        "ok": 349,
+        "validated_one_step": 3
+      },
+      "source_hashes": {
+        "scripts/tb3_controller_node_cbf.py": "19bb03053b8e48e2cc2879c5124697be7f56a68e1e636a5c96ed3abd0bfcbd9d",
+        "scripts/cbf_mpc_core.py": "a378f9224ec07c36b86ae15bf65944fc3a4c66d0fa8917f5b0d1eb96a4738fe1",
+        "scripts/leader_node_cbf.py": "892e5ba79df2401f468e2ea1a2e19c94f6ee51a92b6bebf614524192bfdc0f41",
+        "scripts/leader_node.py": "3c2939c2fe71c006550ea47356d47c1b3c637c66b91555a3d6adb2eafffa1fbd",
+        "scripts/cbf_dynamic_scenario.py": "9e66f644bb622c9c7e8d15ab5e831c287f67dd33558c0a820227e4683976d87a",
+        "scripts/cbf_spawn_checked.py": "cc534fa67c913b87e4c43b95fe1743c42e51fe24d14fb3e0a8970033a2f7041f",
+        "scripts/cbf_experiment_results.py": "4a8be38398adb95f1e8c384a7fea574054850eee7b0e9a2745bb024e4ddcced8",
+        "config/cbf_dynamic_scenarios.yaml": "f7cf40b221efb9acf9df1da079b10a372375a0cd04d5456e5f83ce00318fde1f",
+        "scripts/cbf_active_monitor.py": "a26e968cce71508804ba997714dce7d79973b28bd18e3c518bbc1d28df2ec043",
+        "scripts/evaluate_cbf_team_motion.py": "c4c7e1cae7c8f5d88fc163b8a44d8ca79f69c34ca3482de2c722039084d76f68",
+        "config/cbf_two_robot_protocol.yaml": "48c77fbab5b7ff01e5867c147a40a45df4d0e60244dcc87f118b76b74456135d",
+        "launch/two_turtlebot3_cbf_dynamic.launch": "36232084ab6cab85d8b4bc14faa093650e33d858c10819b6557cfb39ff61644a",
+        "scripts/evaluate_cbf_active_motion.py": "6a5a2d69bd1ae6a0109ca7b14a4f8125b1973af2aa3a6cae62f98e92bf4d2084",
+        "config/cbf_active_avoidance_scenarios.yaml": "fd950138711ae855f7e24bf7980abcca864f087346fb0bf0836c1ad34f8848c1",
+        "config/cbf_active_avoidance_protocol.yaml": "8eb9c415c0a8b0a721f36c9fc2a2b25e44351ea41b7930aecf88410d54e4dacc",
+        "纯仿真代码/mpc_dcbf_cached_solver.py": "4fde390d1f82210e0b4a848f95722816700165589adddfc71e4e0326a12b3db8",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf.launch": "c299d63e1bdab2bb2ead4750ab5efc4c07a4a86064a91244c5bf0e5ff456e656",
+        "launch/single_turtlebot3_cbf_dynamic.launch": "3751a4bb7b15a98863cd6690fe2a9b34be8c8673ac9be7f4b41e54f320bb81f4",
+        "launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch": "d2c9c56408012d903aa04ba4d0b98c0bfb517a98ac633a9b8730f85f07a3ecc2",
+        "scripts/tests/run_cbf_dynamic_gazebo.py": "e191129d735a9a156ae24c54d50ab6b2687c63f938ab685d4f5afdf24c64dde9"
+      },
+      "evaluation_sha256": "59f6851d3b14185c879fdfa095fe054d391c4e71bc51b811c3cc3afd2af234a0",
+      "truth_sha256": "b05f8eca8f3fbaeb140eec4f7d88286fc954bbaa9355ca046b567f35ce6db85f",
+      "model_replay": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 400,
+            "prior_plan_samples_audited": 307,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.014767239691406054,
+            "max_plan_execution_error": 0.04706639044413937,
+            "max_nominal_error_during_plan_samples": 1.156830152744497
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      }
+    }
+  ],
+  "final_cases": [
+    "final_overtaking_211_r1",
+    "final_overtaking_211_r2",
+    "final_overtaking_211_r3",
+    "final_overtaking_239",
+    "final_overtaking_307",
+    "final_head_on_211",
+    "final_oblique_211"
+  ],
+  "paired_baseline": "legacy_v5_current_211",
+  "prior_failure_copies": [
+    "prior_single_failures/single_v5_regression",
+    "prior_single_failures/single_v5_repeat"
+  ],
+  "summary": {
+    "actual_attempts": 10,
+    "actual_completed": 10,
+    "final_passed": 7,
+    "final_attempts": 7,
+    "prototype_deadline_failure_preserved": true,
+    "adopted_first_steps_replayed": 4001,
+    "all_metric_and_model_audits_passed": true
+  },
+  "limits": [
+    "Seven cases are finite headless simulation; viewed development seeds/repeats are not statistical or universal reliability",
+    "Original 100 ms cutoff and motion acceptance remain; a 97.41 ms observed maximum does not guarantee hard realtime under higher load",
+    "Native backend equivalence excludes warmup and wall deadlines; it is not a closed-loop proof",
+    "Timeout carry had zero actual activations in these final runs; fresh-model rejection and timeout path were verified by forced tests",
+    "Candidate combines native evaluation, checked carry, short-prefix retention and completion reserve; closed-loop gains cannot be assigned to one switch",
+    "Only original N10 constraints revalidated; short prefixes do not certify held-axis 8s tail",
+    "Solver IPOPT, absolute speed bounds, observer, timed leader and schema2 errors unchanged",
+    "No new two/five-robot, variable-speed obstacle, curve or physical validation in this stage"
+  ]
+}

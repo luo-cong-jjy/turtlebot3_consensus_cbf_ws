@@ -12,19 +12,19 @@ import mpc_dcbf_cached_solver as core
 
 class ReferenceRuntimeChecks(unittest.TestCase):
     def test_completion_reserve_moves_nlp_deadline_earlier_without_changing_validation(self):
-        import time
         cfg=default_config();cfg.update(spatial_pass=True,execution_backup=True,realtime=True,
             fallback_reserve=.035,nlp_wall_time=.065,manager_wall_time=.085)
         manager=core.MPCSolverManager(cfg);problem=core.CachedMPCProblem(cfg,0,False)
         problem.solve=Mock(side_effect=RuntimeError('forced NLP failure'))
         manager.problems[(0,False)]=problem
         u=np.tile([.15,0.],(10,1));goals=np.zeros((11,3));goals[:,0]=.015*np.arange(11)
-        begin=time.perf_counter()
-        with patch.object(core,'continuous_guidance',return_value=(np.zeros((10,2)),0.)):
+        begin=100.
+        with patch.object(core.time,'perf_counter',return_value=begin),\
+                patch.object(core,'continuous_guidance',return_value=(np.zeros((10,2)),0.)):
             result=manager.solve(np.zeros(3),goals,[],[-.22,.22],dict(controls=u,plan_controls=u),
                 'robot',applied_previous=u[0],deadline=begin+.097)
         requested=problem.solve.call_args.kwargs['deadline']
-        self.assertLessEqual(requested,begin+.052)
+        self.assertAlmostEqual(requested,begin+.050,places=10)
         self.assertTrue(problem.validate(result,np.zeros(3),[],[-.22,.22],u[0]))
 
     def test_native_graph_matches_numpy_for_sizes_return_phases_and_delta_bounds(self):
