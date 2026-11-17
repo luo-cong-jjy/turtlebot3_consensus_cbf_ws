@@ -791,7 +791,7 @@ class TurtleBot3CBFController:
         self.control_budget=float(rospy.get_param('/cbf/control_budget_ms',100.))/1000.
         self.cfg['nlp_wall_time']=float(rospy.get_param('/cbf/nlp_budget_ms',65.))/1000.
         self.cfg['manager_wall_time']=max(.010,self.control_budget-.015)
-        self.cfg['fallback_reserve']=.010
+        self.cfg['fallback_reserve']=.035 if self.cfg.get('spatial_runtime_guard',False) else .010
         self.cfg['dual_warm_start']=bool(rospy.get_param('/cbf/dual_warm_start',True))
         self.cfg['stagger_callbacks']=bool(rospy.get_param('/cbf/stagger_callbacks',True))
         if self.cfg['predictive_bypass'] and not (self.cfg['progress_guidance'] and self.cfg['execution_backup'] and self.cfg['realtime']):

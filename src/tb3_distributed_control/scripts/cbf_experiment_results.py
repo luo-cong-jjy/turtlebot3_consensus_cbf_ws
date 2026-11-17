@@ -596,6 +596,7 @@ class ExperimentRecorder:
             spatial_pass=rospy.get_param('/cbf/mpc/spatial_pass',False),
             spatial_compiled_rollout=rospy.get_param('/cbf/mpc/spatial_compiled_rollout',False),
             spatial_timeout_carry=rospy.get_param('/cbf/mpc/spatial_timeout_carry',False),
+            spatial_runtime_guard=rospy.get_param('/cbf/mpc/spatial_runtime_guard',False),
             spatial_guidance_weights=({'velocity':3000.,'heading':8.}
                 if rospy.get_param('/cbf/mpc/spatial_pass',False) else None),
             adaptive_recovery=rospy.get_param('/cbf/adaptive_recovery',False),

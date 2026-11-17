@@ -11,6 +11,7 @@
     <arg name="spatial_pass" value="true" />
     <arg name="spatial_compiled_rollout" value="true" />
     <arg name="spatial_timeout_carry" value="true" />
+    <arg name="spatial_runtime_guard" value="true" />
     <arg name="spatial_prefix_retention" value="true" />
     <arg name="local_reference_mode" value="timed" />
     <arg name="prediction_mode" value="cv" />
