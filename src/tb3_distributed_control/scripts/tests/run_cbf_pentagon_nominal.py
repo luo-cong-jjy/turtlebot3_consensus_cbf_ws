@@ -46,7 +46,7 @@ def main():
         from gazebo_msgs.msg import ModelStates
         from std_msgs.msg import Bool
         from tb3_distributed_control.msg import LeaderHistoryData
-        rospy.init_node('pentagon_nominal_evaluator',anonymous=True,disable_signals=True);rospy.set_param('/use_sim_time',True)
+        rospy.set_param('/use_sim_time',True);rospy.init_node('pentagon_nominal_evaluator',anonymous=True,disable_signals=True)
         def leader(msg):
             if not origins:origins.append(msg.ros_timestamp-msg.trajectory_time)
         def models(msg):
@@ -79,7 +79,9 @@ def main():
             w=csv.DictWriter(f,fieldnames=list(truth[0]));w.writeheader();w.writerows(truth)
         t=np.array([r['time'] for r in truth]);positions=np.array([[[r['tb3_%d_x'%i],r['tb3_%d_y'%i]] for r in truth] for i in range(5)])
         offsets=.4*np.column_stack((np.cos(2*np.pi*np.arange(5)/5),np.sin(2*np.pi*np.arange(5)/5)))
-        selected=(t>=5)&(t<=29);endpoint=int(np.argmin(abs(t-30)))
+        selected=(t>=5)&(t<=29)
+        if not selected.any():raise ValueError('Independent truth does not cover the frozen simulation-time window')
+        endpoint=int(np.argmin(abs(t-30)))
         minimum_peer=min(float(np.linalg.norm(positions[i]-positions[j],axis=1).min()-.26) for i in range(5) for j in range(i))
         maximum_pair_error=max(float(np.linalg.norm((positions[i]-positions[j])[:, :]-offsets[i]+offsets[j],axis=1)[selected].max()) for i in range(5) for j in range(i))
         for i in range(5):
@@ -95,6 +97,7 @@ def main():
             no_fault_stop=all(m['fault_stops']==0 for m in metrics.values()),no_external_robot_duplicates=all(m['max_external_constraints']==0 for m in metrics.values()),
             own_scan_only=all(sorted(topic for topic,nodes in audit.items() if '/tb3_controller_cbf_'+str(i) in nodes and topic.endswith('/scan'))==['/tb3_%d/scan'%i] for i in range(5)),
             no_truth_input=bool(audit) and not any(t in audit for t in ('/gazebo/model_states','/cbf/scenario/truth')))
+    checks={k:bool(v) for k,v in checks.items()}
     result=dict(passed=failure is None and bool(checks) and all(checks.values()),failure=failure,checks=checks,robots=metrics,
         minimum_peer_proxy_clearance=minimum_peer,maximum_relative_shape_error_after_warmup=maximum_pair_error,
         frozen_limits=dict(duration=30.,window=[5.,29.],maximum_position_and_pair_error=.10,maximum_final_position_error=.05),

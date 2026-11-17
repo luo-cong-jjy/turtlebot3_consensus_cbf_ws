@@ -58,8 +58,8 @@ def main():
         from tf.transformations import euler_from_quaternion
         import tb3_controller_node_cbf as geometry
         from mpc_dcbf_cached_solver import barrier_values
-        rospy.init_node('pentagon_sensor_auditor',anonymous=True,disable_signals=True)
         rospy.set_param('/use_sim_time',True)
+        rospy.init_node('pentagon_sensor_auditor',anonymous=True,disable_signals=True)
         buffer=tf2_ros.Buffer(cache_time=rospy.Duration(5.));listener=tf2_ros.TransformListener(buffer)
         lock=threading.RLock();histories={i:deque(maxlen=200) for i in range(5)};scans={};processed={};subscribers=[]
         def odom(msg,i):

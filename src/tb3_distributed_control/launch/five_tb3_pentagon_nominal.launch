@@ -17,6 +17,7 @@
     <arg name="spatial_pass" value="false" />
     <arg name="peer_safety" value="true" />
     <arg name="execution_backup" value="true" />
+    <arg name="spatial_runtime_guard" value="true" />
     <arg name="log_mpc_inputs" value="true" />
     <arg name="robot0_init_x" value="0.4000000000" />
     <arg name="robot0_init_y" value="0.0000000000" />
