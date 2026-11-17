@@ -1017,6 +1017,14 @@ def _spatial_rollout_numpy(state,previous,targets,center,along_support,forward,n
     return states,controls
 
 
+def spatial_lateral_extras(config):
+    """Planning clearance choices outside the unchanged inflated safe ellipse."""
+    levels=np.asarray(config.get('spatial_lateral_extras',(.12,.22,.32)),float)
+    if levels.shape!=(3,) or not np.isfinite(levels).all() or np.any(levels<0) or np.any(np.diff(levels)<0):
+        raise ValueError('Expected three finite nonnegative ordered spatial_lateral_extras')
+    return levels
+
+
 def spatial_pass_guidance(state, goals, obstacles, config, memory):
     """Early bounded side-shift/hold/return candidates for CV dynamic scenes.
 
@@ -1025,6 +1033,7 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     prefix is screened here and revalidated by the MPC/backup manager.
     """
     n, dt = config['horizon'], config['dt']
+    extra_levels=spatial_lateral_extras(config)
     steps = max(n, int(round(config.get('spatial_preview_seconds', 8.) / dt)))
     times = np.arange(steps + 1) * dt
     targets = progress_targets(goals, times, dt)
@@ -1099,14 +1108,14 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
         return abstain('returned_to_timed_path')
     descriptors = [dict(name=obs['name'], start=now, y0=y0, dy0=dy0, target=0., duration=6., returning=False, side=0)]
     for side in (1, -1):
-        for extra in (.12, .22, .32):
+        for extra in extra_levels:
             offset = float(lateral_support.max() + extra)
             for duration in (4.5, 6., 7.5):
                 descriptors.append(dict(name=obs['name'], start=now, y0=y0, dy0=dy0,
                                         target=side * offset, duration=duration, returning=False, side=side))
     contracted_index = None
     if old is not None and not old['returning']:
-        requested = old['side'] * float(lateral_support.max() + .12)
+        requested = old['side'] * float(lateral_support.max() + extra_levels[0])
         if abs(requested) < abs(old['target']) - 1e-6:
             target = old['target'] + float(np.clip(requested-old['target'], -.06*elapsed, .06*elapsed))
             contracted_index = len(descriptors)
@@ -1181,6 +1190,7 @@ def spatial_pass_guidance(state, goals, obstacles, config, memory):
     memory['spatial_summary'] = dict(mode='return' if selected['returning'] else 'side_shift_hold',
         side=selected['side'], obstacle=obs['name'], candidates=count, valid=int(valid.sum()),
         target_offset=selected['target'], duration=selected['duration'], phase_age=now-selected['start'],
+        lateral_extras=extra_levels.tolist(),lateral_support_max=float(lateral_support.max()),
         kept=old is not None and chosen in (count-1, contracted_index),
         geometry_contracted=contracted_index is not None and chosen==contracted_index,
         minimum_preview_speed=float(minimum_speed[chosen]),
@@ -1593,6 +1603,7 @@ def checked_spatial_guidance_carry(problem,state,obstacles,bounds,previous,contr
 class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
+        if config.get('spatial_pass',False):spatial_lateral_extras(config)
         if config.get('spatial_compiled_rollout',False):warm_spatial_rollouts(config)
         if config.get('spatial_pass',False) and (not config.get('execution_backup',False)
                 or config.get('suppress_guidance',False) or config.get('rear_pass',False)

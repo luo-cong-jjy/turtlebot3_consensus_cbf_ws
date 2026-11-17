@@ -5,6 +5,7 @@
   <arg name="spatial_pass" default="false" />
   <arg name="spatial_compiled_rollout" default="false" />
   <arg name="spatial_timeout_carry" default="false" />
+  <arg name="spatial_lateral_extras" default="[0.12,0.22,0.32]" />
   <arg name="spatial_runtime_guard" default="false" />
   <arg name="spatial_prefix_retention" default="false" />
   <arg name="total_time" default="32" />
@@ -65,6 +66,7 @@
     <arg name="spatial_pass" value="$(arg spatial_pass)" />
     <arg name="spatial_compiled_rollout" value="$(arg spatial_compiled_rollout)" />
     <arg name="spatial_timeout_carry" value="$(arg spatial_timeout_carry)" />
+    <arg name="spatial_lateral_extras" value="$(arg spatial_lateral_extras)" />
     <arg name="spatial_runtime_guard" value="$(arg spatial_runtime_guard)" />
     <arg name="spatial_prefix_retention" value="$(arg spatial_prefix_retention)" />
     <arg name="ca_jerk_density" value="$(arg ca_jerk_density)" />

@@ -17,6 +17,7 @@
   <arg name="spatial_pass" default="false" />
   <arg name="spatial_compiled_rollout" default="false" />
   <arg name="spatial_timeout_carry" default="false" />
+  <arg name="spatial_lateral_extras" default="[0.12,0.22,0.32]" />
   <arg name="spatial_runtime_guard" default="false" />
   <arg name="spatial_prefix_retention" default="false" />
   <arg name="world_name" default="$(eval find('tb3_distributed_control') + '/worlds/' + ('consensus_obstacle_1.world' if arg('dynamic_scenario') == 'none' else 'consensus_dynamic_obstacles.world'))" />
@@ -126,6 +127,7 @@
   <param name="/cbf/mpc/spatial_pass" value="$(arg spatial_pass)" />
   <param name="/cbf/mpc/spatial_compiled_rollout" value="$(arg spatial_compiled_rollout)" type="bool" />
   <param name="/cbf/mpc/spatial_timeout_carry" value="$(arg spatial_timeout_carry)" type="bool" />
+  <rosparam param="/cbf/mpc/spatial_lateral_extras" subst_value="true">$(arg spatial_lateral_extras)</rosparam>
   <param name="/cbf/mpc/spatial_runtime_guard" value="$(arg spatial_runtime_guard)" type="bool" />
   <param name="/cbf/mpc/spatial_prefix_retention" value="$(arg spatial_prefix_retention)" type="bool" />
   <param name="/cbf/scenario/ready" value="false" />
