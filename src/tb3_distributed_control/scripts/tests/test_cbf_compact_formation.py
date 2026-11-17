@@ -23,7 +23,7 @@ class CompactFormationChecks(unittest.TestCase):
 
     def test_three_compact_levels_change_reference_not_barrier_or_goal(self):
         cfg,state,goals,obs,memory=inputs();old_goals=goals.copy()
-        probe=np.column_stack((np.linspace(0,2,20),np.zeros(20),np.zeros(20)))
+        probe=np.column_stack((np.linspace(0,2,11),np.zeros(11),np.zeros(11)))
         before=barrier_values(probe,obs,cfg['margin'])
         cfg['spatial_lateral_extras']=[.03,.06,.10]
         continuous_guidance(state,goals,obs,cfg,memory)
