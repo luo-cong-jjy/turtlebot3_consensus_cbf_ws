@@ -9,7 +9,7 @@
     <arg name="total_time" value="40" />
     <arg name="active_experiment" value="true" />
     <arg name="spatial_pass" value="true" />
-    <arg name="spatial_lateral_extras" value="[0.03,0.06,0.10]" />
+    <arg name="spatial_lateral_extras" value="[0.06,0.10,0.16]" />
     <arg name="spatial_compiled_rollout" value="true" />
     <arg name="spatial_timeout_carry" value="true" />
     <arg name="spatial_runtime_guard" value="true" />
