@@ -1,0 +1,974 @@
+{
+  "results": [
+    {
+      "name": "baseline_overtaking_211",
+      "passed": true,
+      "enabled": false,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.13835011492926386,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.2225484190068972,
+      "final_error": 0.0016262550642737984,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6872532213789692,
+      "integrated_abs_lateral": 8.323624769920224,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.00372719854408717,
+          "rows": 400,
+          "last_time": 39.995,
+          "statuses": {
+            "feasible_iterate": 29,
+            "ok": 371
+          },
+          "timing_p95_ms": 63.00865382945629,
+          "timing_max_ms": 76.14639500388876,
+          "final_error": 0.00372719854408717,
+          "dynamic_cycles": 280,
+          "max_estimated_speed": 0.07884199074870074
+        }
+      },
+      "gate_replay_applicable": false,
+      "gate_replay_passed": null,
+      "gate_records": 0,
+      "inactive_cycles": 0,
+      "latched_cycles": 0,
+      "triggered_cycles": 0,
+      "first_trigger": null,
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "head_on_211",
+      "passed": false,
+      "enabled": true,
+      "failed_checks": [
+        "no_sustained_standstill",
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance",
+        "no_fault_stop"
+      ],
+      "minimum_rolling_speed": 0.04632744661547883,
+      "longest_standstill_seconds": 0.2759999999999998,
+      "swept_proxy_clearance_min": 0.15190000242783452,
+      "final_error": 0.0006035296185406282,
+      "fault_stop_count": 1,
+      "maximum_lateral_displacement": 0.5435123387006506,
+      "integrated_abs_lateral": 3.185869072763242,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0008935271229818144,
+          "rows": 400,
+          "last_time": 39.991,
+          "statuses": {
+            "late_fallback_stop": 1,
+            "ok": 266,
+            "feasible_iterate": 133
+          },
+          "timing_p95_ms": 67.91210518276785,
+          "timing_max_ms": 103.55063795577735,
+          "final_error": 0.0008935271229818144,
+          "dynamic_cycles": 234,
+          "max_estimated_speed": 0.07369235095665982
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 211,
+      "latched_cycles": 89,
+      "triggered_cycles": 100,
+      "first_trigger": {
+        "time": 7.090999999999999,
+        "current_min_h": 0.46688596322575804,
+        "predicted_min_h": 0.19477424919930136,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "oblique_211",
+      "passed": false,
+      "enabled": true,
+      "failed_checks": [
+        "no_sustained_standstill",
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance",
+        "spatial_detour_observed"
+      ],
+      "minimum_rolling_speed": 0.03447877779906827,
+      "longest_standstill_seconds": 0.2759999999999998,
+      "swept_proxy_clearance_min": 0.16449474834766553,
+      "final_error": 6.818333672044847e-05,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.20184361503176362,
+      "integrated_abs_lateral": 1.2527103225992955,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0015181885041368676,
+          "rows": 401,
+          "last_time": 40.082,
+          "statuses": {
+            "ok": 285,
+            "feasible_iterate": 113,
+            "validated_one_step": 3
+          },
+          "timing_p95_ms": 69.333371007815,
+          "timing_max_ms": 92.01962302904576,
+          "final_error": 0.001607607231535555,
+          "dynamic_cycles": 268,
+          "max_estimated_speed": 0.12095402715001703
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 401,
+      "inactive_cycles": 220,
+      "latched_cycles": 86,
+      "triggered_cycles": 95,
+      "first_trigger": {
+        "time": 5.282,
+        "current_min_h": 0.4887727532152659,
+        "predicted_min_h": 0.21789223129336183,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "overtaking_211_r1",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14289769961763987,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.2057112493952536,
+      "final_error": 0.00168089493609563,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6182535001434609,
+      "integrated_abs_lateral": 6.8226204871532685,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.00027418444407549823,
+          "rows": 401,
+          "last_time": 40.03700000000001,
+          "statuses": {
+            "ok": 368,
+            "feasible_iterate": 33
+          },
+          "timing_p95_ms": 63.774552021641284,
+          "timing_max_ms": 85.71289997780696,
+          "final_error": 0.00029681690537078164,
+          "dynamic_cycles": 248,
+          "max_estimated_speed": 0.08489692201335758
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 401,
+      "inactive_cycles": 205,
+      "latched_cycles": 68,
+      "triggered_cycles": 128,
+      "first_trigger": {
+        "time": 2.3370000000000006,
+        "current_min_h": 0.43395129729282866,
+        "predicted_min_h": 0.21375552662460057,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "overtaking_211_r2",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14107925970709534,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.20985341915845762,
+      "final_error": 0.0025858319999513732,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6525747401022599,
+      "integrated_abs_lateral": 6.98037396667304,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.00434862049146088,
+          "rows": 400,
+          "last_time": 39.974000000000004,
+          "statuses": {
+            "feasible_iterate": 37,
+            "ok": 363
+          },
+          "timing_p95_ms": 65.76923138054552,
+          "timing_max_ms": 94.47770001133904,
+          "final_error": 0.00434862049146088,
+          "dynamic_cycles": 266,
+          "max_estimated_speed": 0.08404929799604761
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 206,
+      "latched_cycles": 68,
+      "triggered_cycles": 126,
+      "first_trigger": {
+        "time": 2.474,
+        "current_min_h": 0.4231683841262134,
+        "predicted_min_h": 0.20284851020227668,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "overtaking_239",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.12413155787756125,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.2151760153285635,
+      "final_error": 0.010879877051918932,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.60563100616127,
+      "integrated_abs_lateral": 6.678430316037344,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.009093961611283384,
+          "rows": 400,
+          "last_time": 39.99200000000001,
+          "statuses": {
+            "feasible_iterate": 114,
+            "ok": 285,
+            "validated_one_step": 1
+          },
+          "timing_p95_ms": 70.11757772124838,
+          "timing_max_ms": 89.08595400862396,
+          "final_error": 0.009093961611283384,
+          "dynamic_cycles": 282,
+          "max_estimated_speed": 0.08538783439561086
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 206,
+      "latched_cycles": 68,
+      "triggered_cycles": 126,
+      "first_trigger": {
+        "time": 2.5919999999999996,
+        "current_min_h": 0.42676071077814093,
+        "predicted_min_h": 0.20824303821094237,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v2_baseline_overtaking_211",
+      "passed": true,
+      "enabled": false,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14132333277098175,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.20363602893915184,
+      "final_error": 0.0011124986151521178,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6984960176190006,
+      "integrated_abs_lateral": 8.2111547220757,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0033557142047654733,
+          "rows": 400,
+          "last_time": 39.996,
+          "statuses": {
+            "ok": 290,
+            "feasible_iterate": 110
+          },
+          "timing_p95_ms": 67.13802578742614,
+          "timing_max_ms": 85.94174595782533,
+          "final_error": 0.0033557142047654733,
+          "dynamic_cycles": 278,
+          "max_estimated_speed": 0.07951717165919853
+        }
+      },
+      "gate_replay_applicable": false,
+      "gate_replay_passed": null,
+      "gate_records": 0,
+      "inactive_cycles": 0,
+      "latched_cycles": 0,
+      "triggered_cycles": 0,
+      "first_trigger": null,
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v2_head_on_211",
+      "passed": false,
+      "enabled": true,
+      "failed_checks": [
+        "total_standstill_within_measurement_tolerance",
+        "no_crawling_time_avoidance"
+      ],
+      "minimum_rolling_speed": 0.04791995308388852,
+      "longest_standstill_seconds": 0.18399999999999928,
+      "swept_proxy_clearance_min": 0.13870968398688177,
+      "final_error": 0.0010991090345606421,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.5148957101260804,
+      "integrated_abs_lateral": 2.7349311233503313,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.000864163922076135,
+          "rows": 400,
+          "last_time": 39.995,
+          "statuses": {
+            "ok": 345,
+            "feasible_iterate": 55
+          },
+          "timing_p95_ms": 62.766454525990405,
+          "timing_max_ms": 88.11155799776316,
+          "final_error": 0.000864163922076135,
+          "dynamic_cycles": 227,
+          "max_estimated_speed": 0.07702187632456817
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 207,
+      "latched_cycles": 92,
+      "triggered_cycles": 101,
+      "first_trigger": {
+        "time": 7.094999999999999,
+        "current_min_h": 0.47600842899230067,
+        "predicted_min_h": 0.207044759415908,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v2_oblique_211",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.12243254338074672,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.24669529073069113,
+      "final_error": 0.0014425580213842028,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.5801061105577804,
+      "integrated_abs_lateral": 4.525589992772551,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0011044711079383227,
+          "rows": 401,
+          "last_time": 40.08699999999999,
+          "statuses": {
+            "ok": 316,
+            "feasible_iterate": 85
+          },
+          "timing_p95_ms": 68.48968600388616,
+          "timing_max_ms": 82.74969295598567,
+          "final_error": 0.0011827682413926616,
+          "dynamic_cycles": 265,
+          "max_estimated_speed": 0.126695328964419
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 401,
+      "inactive_cycles": 255,
+      "latched_cycles": 91,
+      "triggered_cycles": 55,
+      "first_trigger": {
+        "time": 5.287,
+        "current_min_h": 0.48734868164374234,
+        "predicted_min_h": 0.21592693725776602,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v2_overtaking_211_r1",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14378291127770915,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.23927145101277864,
+      "final_error": 0.00019497835143339457,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.641410417273388,
+      "integrated_abs_lateral": 7.0187738406283,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.001090560276896963,
+          "rows": 400,
+          "last_time": 39.983999999999995,
+          "statuses": {
+            "feasible_iterate": 100,
+            "ok": 300
+          },
+          "timing_p95_ms": 66.92922112997617,
+          "timing_max_ms": 79.70354298595339,
+          "final_error": 0.001090560276896963,
+          "dynamic_cycles": 265,
+          "max_estimated_speed": 0.08461007158791617
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 206,
+      "latched_cycles": 66,
+      "triggered_cycles": 128,
+      "first_trigger": {
+        "time": 2.484,
+        "current_min_h": 0.4151013004286904,
+        "predicted_min_h": 0.19732594164572592,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v2_overtaking_211_r2",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14142247054981905,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.2866202141898732,
+      "final_error": 0.0022232662369409137,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.7135821514419853,
+      "integrated_abs_lateral": 7.357529674948454,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0031406633405370605,
+          "rows": 401,
+          "last_time": 40.089000000000006,
+          "statuses": {
+            "feasible_iterate": 84,
+            "ok": 317
+          },
+          "timing_p95_ms": 66.29607599461451,
+          "timing_max_ms": 85.915127012413,
+          "final_error": 0.0029357157936030958,
+          "dynamic_cycles": 258,
+          "max_estimated_speed": 0.08275495281660916
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 401,
+      "inactive_cycles": 208,
+      "latched_cycles": 66,
+      "triggered_cycles": 127,
+      "first_trigger": {
+        "time": 2.489,
+        "current_min_h": 0.4378586959837565,
+        "predicted_min_h": 0.2198910335496454,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v2_overtaking_239",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14320810724703126,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.22384227388193517,
+      "final_error": 3.760459005471558e-05,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6775210208013001,
+      "integrated_abs_lateral": 7.16290458036719,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0022221303487579536,
+          "rows": 400,
+          "last_time": 39.99400000000001,
+          "statuses": {
+            "feasible_iterate": 77,
+            "ok": 323
+          },
+          "timing_p95_ms": 66.88319745881014,
+          "timing_max_ms": 99.44548999192193,
+          "final_error": 0.0022221303487579536,
+          "dynamic_cycles": 272,
+          "max_estimated_speed": 0.08273336908027484
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 399,
+      "inactive_cycles": 205,
+      "latched_cycles": 69,
+      "triggered_cycles": 125,
+      "first_trigger": {
+        "time": 2.2939999999999996,
+        "current_min_h": 0.42708650354972544,
+        "predicted_min_h": 0.21577713913351637,
+        "predicted_steps": 10,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [
+        {
+          "time": 7.994,
+          "mode": "budget_validated_carry",
+          "status": "feasible_iterate"
+        }
+      ],
+      "gate_errors": []
+    },
+    {
+      "name": "v3_baseline_head_on_211",
+      "passed": true,
+      "enabled": false,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14162337833038618,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.23184684899384184,
+      "final_error": 0.0011117014300947865,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6762445956039409,
+      "integrated_abs_lateral": 7.5450782837817645,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0024660197509183465,
+          "rows": 400,
+          "last_time": 39.99200000000001,
+          "statuses": {
+            "feasible_iterate": 41,
+            "ok": 359
+          },
+          "timing_p95_ms": 63.57071364764122,
+          "timing_max_ms": 78.3315789885819,
+          "final_error": 0.0024660197509183465,
+          "dynamic_cycles": 204,
+          "max_estimated_speed": 0.07839974813503883
+        }
+      },
+      "gate_replay_applicable": false,
+      "gate_replay_passed": null,
+      "gate_records": 0,
+      "inactive_cycles": 0,
+      "latched_cycles": 0,
+      "triggered_cycles": 0,
+      "first_trigger": null,
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v3_head_on_211_r1",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.12351262587697187,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.2841488610344503,
+      "final_error": 0.002765962531472104,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6348684688071927,
+      "integrated_abs_lateral": 4.817480506860291,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.004863508677779853,
+          "rows": 400,
+          "last_time": 39.995,
+          "statuses": {
+            "feasible_iterate": 29,
+            "ok": 371
+          },
+          "timing_p95_ms": 63.020114638493396,
+          "timing_max_ms": 82.30038802139461,
+          "final_error": 0.004863508677779853,
+          "dynamic_cycles": 208,
+          "max_estimated_speed": 0.07868217091475571
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 253,
+      "latched_cycles": 69,
+      "triggered_cycles": 78,
+      "first_trigger": {
+        "time": 6.094999999999999,
+        "current_min_h": 0.6788731011273715,
+        "predicted_min_h": 0.1887274921746464,
+        "predicted_steps": 20,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "hard_steps": 10,
+        "preview_seconds": 2.0,
+        "prediction_scope": "soft_mean_extension_held_hard_axes",
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v3_head_on_211_r2",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.12279625831199281,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.24770831824474066,
+      "final_error": 0.002251438478847687,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6046352719038958,
+      "integrated_abs_lateral": 4.607405592264937,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.004258478504646343,
+          "rows": 400,
+          "last_time": 40.001,
+          "statuses": {
+            "feasible_iterate": 55,
+            "ok": 345
+          },
+          "timing_p95_ms": 65.08474924194158,
+          "timing_max_ms": 92.14689303189516,
+          "final_error": 0.004258478504646343,
+          "dynamic_cycles": 225,
+          "max_estimated_speed": 0.07774014827426662
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 253,
+      "latched_cycles": 68,
+      "triggered_cycles": 79,
+      "first_trigger": {
+        "time": 6.101000000000001,
+        "current_min_h": 0.6865939344278585,
+        "predicted_min_h": 0.19854677703354412,
+        "predicted_steps": 20,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "hard_steps": 10,
+        "preview_seconds": 2.0,
+        "prediction_scope": "soft_mean_extension_held_hard_axes",
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v3_oblique_211",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.1419404430697795,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.32445163071165667,
+      "final_error": 0.0015514537695376265,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.5758128405131359,
+      "integrated_abs_lateral": 4.78491856649606,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0008831604127031067,
+          "rows": 400,
+          "last_time": 39.963,
+          "statuses": {
+            "feasible_iterate": 49,
+            "ok": 351
+          },
+          "timing_p95_ms": 63.802037251298295,
+          "timing_max_ms": 90.16820200486109,
+          "final_error": 0.0008831604127031067,
+          "dynamic_cycles": 265,
+          "max_estimated_speed": 0.12602810808508985
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 246,
+      "latched_cycles": 86,
+      "triggered_cycles": 68,
+      "first_trigger": {
+        "time": 4.463,
+        "current_min_h": 0.6707049375703883,
+        "predicted_min_h": 0.19942538359054662,
+        "predicted_steps": 20,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "hard_steps": 10,
+        "preview_seconds": 2.0,
+        "prediction_scope": "soft_mean_extension_held_hard_axes",
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    },
+    {
+      "name": "v3_overtaking_211",
+      "passed": true,
+      "enabled": true,
+      "failed_checks": [],
+      "minimum_rolling_speed": 0.14007658970365622,
+      "longest_standstill_seconds": 0.0,
+      "swept_proxy_clearance_min": 0.1898814795137162,
+      "final_error": 0.0018576012877204427,
+      "fault_stop_count": 0,
+      "maximum_lateral_displacement": 0.6945392602842839,
+      "integrated_abs_lateral": 8.152000679406406,
+      "robot_statistics": {
+        "0": {
+          "window_final_error": 0.0009962064106305724,
+          "rows": 400,
+          "last_time": 39.997,
+          "statuses": {
+            "ok": 368,
+            "feasible_iterate": 32
+          },
+          "timing_p95_ms": 64.25352837832175,
+          "timing_max_ms": 82.5333779794164,
+          "final_error": 0.0009962064106305724,
+          "dynamic_cycles": 274,
+          "max_estimated_speed": 0.07925609991839079
+        }
+      },
+      "gate_replay_applicable": true,
+      "gate_replay_passed": true,
+      "gate_records": 400,
+      "inactive_cycles": 184,
+      "latched_cycles": 59,
+      "triggered_cycles": 157,
+      "first_trigger": {
+        "time": 0.09699999999999998,
+        "current_min_h": 0.5021801248660342,
+        "predicted_min_h": 0.08375859800901092,
+        "predicted_steps": 20,
+        "triggered": true,
+        "threshold": 0.22,
+        "numerical_tolerance": 1e-09,
+        "hard_steps": 10,
+        "preview_seconds": 2.0,
+        "prediction_scope": "soft_mean_extension_held_hard_axes",
+        "active": true,
+        "latched": false,
+        "guide_level": 1.0
+      },
+      "missing_gate_records": [],
+      "gate_errors": []
+    }
+  ],
+  "note": "Gate replay checks exactly logged nominal prediction; physical clearance and hard model audits are separate. h is not exact Euclidean distance. Missing gate records are explicitly retained.",
+  "algorithm_commit": "a4ad9ba30f22d1855bf109a0f1752d6985648edb",
+  "branch": "research/single-trigger022-2026-11-18",
+  "actual_attempts": 17,
+  "actual_completed": 17,
+  "total_passed": 14,
+  "final_enabled_trials": 4,
+  "final_enabled_passed": 4,
+  "tests": {
+    "count": 213,
+    "passed": true
+  },
+  "build_passed": true,
+  "adopted_first_steps_replayed": 6803,
+  "all_17_metric_and_model_audits_passed": true,
+  "source_snapshot_validation": {
+    "baseline_overtaking_211": {
+      "algorithm_commit": "e3118c4",
+      "files": 22,
+      "passed": true
+    },
+    "head_on_211": {
+      "algorithm_commit": "e3118c4",
+      "files": 22,
+      "passed": true
+    },
+    "oblique_211": {
+      "algorithm_commit": "e3118c4",
+      "files": 22,
+      "passed": true
+    },
+    "overtaking_211_r1": {
+      "algorithm_commit": "e3118c4",
+      "files": 22,
+      "passed": true
+    },
+    "overtaking_211_r2": {
+      "algorithm_commit": "e3118c4",
+      "files": 22,
+      "passed": true
+    },
+    "overtaking_239": {
+      "algorithm_commit": "e3118c4",
+      "files": 22,
+      "passed": true
+    },
+    "v2_baseline_overtaking_211": {
+      "algorithm_commit": "7e3b4d6",
+      "files": 22,
+      "passed": true
+    },
+    "v2_head_on_211": {
+      "algorithm_commit": "7e3b4d6",
+      "files": 22,
+      "passed": true
+    },
+    "v2_oblique_211": {
+      "algorithm_commit": "7e3b4d6",
+      "files": 22,
+      "passed": true
+    },
+    "v2_overtaking_211_r1": {
+      "algorithm_commit": "7e3b4d6",
+      "files": 22,
+      "passed": true
+    },
+    "v2_overtaking_211_r2": {
+      "algorithm_commit": "7e3b4d6",
+      "files": 22,
+      "passed": true
+    },
+    "v2_overtaking_239": {
+      "algorithm_commit": "7e3b4d6",
+      "files": 22,
+      "passed": true
+    },
+    "v3_baseline_head_on_211": {
+      "algorithm_commit": "a4ad9ba",
+      "files": 22,
+      "passed": true
+    },
+    "v3_head_on_211_r1": {
+      "algorithm_commit": "a4ad9ba",
+      "files": 22,
+      "passed": true
+    },
+    "v3_head_on_211_r2": {
+      "algorithm_commit": "a4ad9ba",
+      "files": 22,
+      "passed": true
+    },
+    "v3_oblique_211": {
+      "algorithm_commit": "a4ad9ba",
+      "files": 22,
+      "passed": true
+    },
+    "v3_overtaking_211": {
+      "algorithm_commit": "a4ad9ba",
+      "files": 22,
+      "passed": true
+    }
+  },
+  "original_definitions": {
+    "parent": "2af9c929824389ed77e2f9af0ad2c869d09fce64",
+    "algorithm": "a4ad9ba30f22d1855bf109a0f1752d6985648edb",
+    "unchanged_model_ast": {
+      "CachedMPCProblem": true,
+      "first_step_mask": true,
+      "first_step_values": true,
+      "barrier_values": true,
+      "_batch_values": true,
+      "safety_residuals": true,
+      "rollout": true
+    },
+    "original_controller_sha256": "9f4fb045b7ed76a12738891b750d4dec6cd1968ed13f51627bca7a74e61d3094",
+    "main_commit": "0d6f9219b7e0a483a08cf12ea1f81e1521dc8c30",
+    "unchanged_files": {
+      "src/tb3_distributed_control/scripts/cbf_mpc_core.py": true,
+      "src/tb3_distributed_control/scripts/tb3_controller_node_cbf.py": true
+    }
+  },
+  "disabled_parent_replay": {
+    "parent": "2af9c92",
+    "frames": 400,
+    "maximum_guide_vector_difference": 0.0,
+    "level_mismatches": 0,
+    "passed": true,
+    "note": "Identical recorded inputs with activation disabled and legacy duration defaults; this is numerical compatibility, not new closed-loop repeatability proof."
+  },
+  "limitations": [
+    "Four finite headless single-robot active trials, CV and straight timed goal; not new multi-robot, curved, variable-speed or physical validation.",
+    "0.22 gates auxiliary guidance on scaled ellipse h; not fixed physical clearance or lateral offset. Peer hard constraints unchanged.",
+    "The 2 s extension holds final hard-window axes and is a soft decision approximation, not extended hard safety certification. Hard MPC stays N10/dt0.1.",
+    "One V2 budget carry record lacks activation fields; explicitly retained without fabricated values. Final V3 has none missing.",
+    "Three failed trials retained; no hard realtime or universal safety proof. Same-disk copies are not offsite backup; no raw data/papers uploaded."
+  ]
+}
