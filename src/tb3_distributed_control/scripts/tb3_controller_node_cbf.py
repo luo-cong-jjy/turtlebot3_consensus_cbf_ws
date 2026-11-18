@@ -39,7 +39,8 @@ if (PACKAGE / "纯仿真代码").is_dir():
 from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes, nearest_line_reference,
                           peer_obstacle, padded_obstacles,LeaderMetricTimeline,
                           accepted_plan_reference,sample_plan_reference,wrap_angle,METRICS_SCHEMA_VERSION)
-from mpc_dcbf_cached_solver import MPCSolverManager, CachedMPCProblem, barrier_values,adapt_negative_recovery
+from mpc_dcbf_cached_solver import (MPCSolverManager, CachedMPCProblem, barrier_values,
+    adapt_negative_recovery,obstacle_batch,progress_obstacles)
 from mpc_dcbf_static_obstacles import reference_covariance_matrices, reference_axis_inflation
 
 
@@ -725,6 +726,32 @@ def make_dynamic_tracker(*args,mode='cv',**kwargs):
     return ReliabilityEllipseTracker(*args,**kwargs) if mode=='adaptive' else DynamicEllipseTracker(*args,mode=mode,**kwargs)
 
 
+def prediction_region_geometry(obstacles, config, preview_seconds):
+    """Display-only h=0 regions from frozen solver inputs; never alter inputs.
+
+    MPC-D-CBF obs_kf.cpp visEllipse uses translucent ellipse cylinders.
+    Hard samples here use exact supplied MPC nodes. Extra mean/held-axis
+    nodes are explicitly soft, as in the trigger preview.
+    """
+    n,dt=config['horizon'],config['dt'];margin=config['margin']
+    selected=[o for o in obstacles if o.get('name')!='inactive' and not o.get('peer',False)]
+    if not selected:return []
+    hard=obstacle_batch(selected,n+1,config['gamma'])
+    stages=sorted(set((0,n//2,n)))
+    extra=max(n,int(round(preview_seconds/dt)))
+    soft=(obstacle_batch(progress_obstacles(selected,np.arange(extra+1)*dt,config),extra+1,config['gamma'])
+          if extra>n else None)
+    result=[]
+    for i,obs in enumerate(selected):
+        for stage in sorted(set(stages+([n+(extra-n)//2,extra] if soft is not None else []))):
+            batch=hard if stage<=n else soft
+            a,b=batch.axes[i,stage];factor=1.+margin/b
+            result.append(dict(id=int(obs['id']),name=obs['name'],stage=stage,seconds=stage*dt,
+                hard=stage<=n,center=batch.centers[i,stage].copy(),a=float(a*factor),b=float(b*factor),
+                theta=float(np.arctan2(batch.sine[i,stage],batch.cosine[i,stage]))))
+    return result
+
+
 class TurtleBot3CBFController:
     COLORS = ((0.1, 0.8, 1.0), (1.0, 0.35, 0.2), (0.3, 1.0, 0.3),
               (1.0, 0.3, 0.85), (0.8, 0.7, 0.2), (0.6, 0.4, 1.0))
@@ -891,6 +918,8 @@ class TurtleBot3CBFController:
             self.timer=rospy.Timer(rospy.Duration(self.dt),self.control,reset=True)
             self.geometry_timer=rospy.Timer(rospy.Duration(1.0/self.geometry_rate),self.process_scan,reset=True)
         self.watchdog_timer=rospy.Timer(rospy.Duration(.05),self.watchdog,reset=True)
+        self.prediction_timer=rospy.Timer(rospy.Duration(1./self.prediction_display_rate),
+                                         self.publish_prediction_regions,reset=True)
         rospy.loginfo('%s: unified MPC, N=%d, %d slots; CAPA absent',self.name,self.n,self.slots)
 
     def start_control_timer(self,_event):
@@ -979,6 +1008,15 @@ class TurtleBot3CBFController:
                                     if selected else None)
         self.display_peer_pub = (rospy.Publisher('/cbf/geometry/peers',MarkerArray,queue_size=1)
                                  if selected else None)
+        self.prediction_region_pub=rospy.Publisher(geometry_ns+'/prediction_regions',MarkerArray,queue_size=1)
+        self.display_prediction_pub=(rospy.Publisher('/cbf/geometry/prediction_regions',MarkerArray,queue_size=1)
+                                     if selected else None)
+        self.prediction_display_enabled=bool(get('/cbf/visualization/prediction_regions',True))
+        self.prediction_display_rate=float(get('/cbf/visualization/prediction_rate',4.))
+        if not np.isfinite(self.prediction_display_rate) or not 0<self.prediction_display_rate<=10.:
+            raise ValueError('Prediction display rate must be in (0,10] Hz')
+        self.prediction_view_input=None
+        self.prediction_visible_keys=set()
         self.raw_min_range = float('nan')
         self.obstacle_points = np.empty((0,2))
         self.obstacle_points_stamp = None
@@ -1268,6 +1306,58 @@ class TurtleBot3CBFController:
         marker.lifetime = rospy.Duration(max(0.6, self.scan_timeout))
         return marker
 
+    def publish_prediction_regions(self,_event):
+        """Low-rate RViz rendering outside the command/solver callback."""
+        if self.closed:return
+        if not (self.prediction_region_pub.get_num_connections() or
+                self.display_prediction_pub is not None and self.display_prediction_pub.get_num_connections()):return
+        snapshot=self.prediction_view_input
+        now=rospy.Time.now();regions=[]
+        if (self.prediction_display_enabled and snapshot is not None
+                and 0<=(now-snapshot[0]).to_sec()<=self.scan_timeout):
+            stamp,obstacles=snapshot
+            preview=(float(self.cfg.get('spatial_activation_preview_seconds',1.))
+                     if self.cfg.get('spatial_activation_threshold',-1.)>=0 else self.n*self.dt)
+            regions=prediction_region_geometry(obstacles,self.cfg,preview)
+        else:stamp=now
+        output=MarkerArray();visible=set();paths={}
+        for item in regions:
+            key=item['id'];stage=item['stage'];hard=item['hard']
+            namespace=('prediction_hard_' if hard else 'prediction_soft_')+str(stage)
+            if hard:
+                marker=self.geometry_marker(stamp,key,namespace,Marker.CYLINDER)
+                marker.pose.position.x,marker.pose.position.y=item['center']
+                marker.pose.position.z=.035
+                marker.pose.orientation.z=np.sin(item['theta']/2.)
+                marker.pose.orientation.w=np.cos(item['theta']/2.)
+                marker.scale.x,marker.scale.y,marker.scale.z=2*item['a'],2*item['b'],.035
+                marker.color.r,marker.color.g,marker.color.b,marker.color.a=(.05,.85,.30,.13)
+            else:
+                marker=self.geometry_marker(stamp,key,namespace,Marker.LINE_LIST)
+                marker.scale.x=.014
+                marker.color.r,marker.color.g,marker.color.b,marker.color.a=(1.,.68,.05,.75)
+                contour=Ellipse(*item['center'],item['a'],item['b'],item['theta'],0).contour()
+                marker.points=[Point(x=float(p[0]),y=float(p[1]),z=.075)
+                               for j in range(0,len(contour)-1,2) for p in contour[j:j+2]]
+            output.markers.append(marker);visible.add((namespace,key))
+            paths.setdefault(key,[]).append(item)
+        for key,nodes in paths.items():
+            for hard,namespace,color in ((True,'prediction_hard_path',(.1,.9,.4)),
+                                         (False,'prediction_soft_path',(1.,.68,.05))):
+                subset=([r for r in nodes if r['hard']] if hard else
+                        [r for r in nodes if not r['hard'] or r['stage']==self.n])
+                if len(subset)<2:continue
+                marker=self.geometry_marker(stamp,key,namespace,Marker.LINE_STRIP)
+                marker.scale.x=.016;marker.color.r,marker.color.g,marker.color.b=color;marker.color.a=.8
+                marker.points=[Point(x=float(r['center'][0]),y=float(r['center'][1]),z=.085) for r in subset]
+                output.markers.append(marker);visible.add((namespace,key))
+        for namespace,key in self.prediction_visible_keys-visible:
+            marker=self.geometry_marker(stamp,key,namespace,Marker.CYLINDER);marker.action=Marker.DELETE
+            output.markers.append(marker)
+        self.prediction_visible_keys=visible
+        self.prediction_region_pub.publish(output)
+        if self.display_prediction_pub is not None:self.display_prediction_pub.publish(output)
+
     def publish_geometry(self, stamp, points, ellipses, clusters):
         header = Header(stamp=stamp, frame_id=self.target_frame)
         if self.cloud_pub.get_num_connections():
@@ -1316,7 +1406,7 @@ class TurtleBot3CBFController:
                 output.markers.append(marker)
         self.visible_ids = current_ids
         for obs in by_id.values():
-            if not obs.get('dynamic',False):continue
+            if not self.geometry_debug or not obs.get('dynamic',False):continue
             marker=self.geometry_marker(stamp,obs['id'],'dynamic_prediction',Marker.LINE_STRIP)
             marker.scale.x=.025;marker.color.r=1.;marker.color.g=.45;marker.color.a=.9
             marker.points=[Point(x=float(p[0]),y=float(p[1]),z=.12) for p in obs['prediction_centers']]
@@ -1523,6 +1613,8 @@ class TurtleBot3CBFController:
             obstacles,self.recovery_record=adapt_negative_recovery(state,obstacles,(-.22,.22),previous_control,self.cfg)
         actual_obstacles=[o for o in obstacles if o['name']!='inactive']
         obstacles=padded_obstacles(obstacles,self.slots)
+        # Only retain the immutable inputs here; render on the separate timer.
+        self.prediction_view_input=(rospy.Time.from_sec(now),tuple(actual_obstacles))
         signature=[o['name'] for o in obstacles]
         memory=self.manager.robot_memory.get(self.name,{})
         index=memory.get('guide_index')
@@ -1698,6 +1790,7 @@ class TurtleBot3CBFController:
         if hasattr(self,'observer_timer'):self.observer_timer.shutdown()
         if hasattr(self,'watchdog_timer'):self.watchdog_timer.shutdown()
         if hasattr(self,'geometry_timer'):self.geometry_timer.shutdown()
+        if hasattr(self,'prediction_timer'):self.prediction_timer.shutdown()
         if hasattr(self,'control_start_timer'):self.control_start_timer.shutdown()
         if hasattr(self,'geometry_start_timer'):self.geometry_start_timer.shutdown()
         self.stop_motion()

@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -21,6 +22,9 @@ from run_cbf_gazebo import free_port,stop
 
 def main():
     parser=argparse.ArgumentParser()
+    parser.add_argument('--check-prediction-markers',action='store_true')
+    parser.add_argument('--open-rviz',action='store_true')
+    parser.add_argument('--capture-rviz',action='store_true',help='Capture only this test RViz window via its PID')
     parser.add_argument('--scenario',default='crossing',choices=['crossing','head_on','overtaking','maneuver','mixed','accelerating_crossing','decelerating_crossing','stop_go_crossing','active_head_on','active_overtaking','active_oblique_crossing'])
     parser.add_argument('--robots',type=int,default=1,choices=[1,2,5])
     parser.add_argument('--gazebo-seed',type=int,default=None)
@@ -94,7 +98,7 @@ def main():
             'scripts/cbf_active_monitor.py','scripts/evaluate_cbf_team_motion.py','config/cbf_two_robot_protocol.yaml','launch/two_turtlebot3_cbf_dynamic.launch','launch/single_turtlebot3_cbf_compact.launch','scripts/evaluate_cbf_active_motion.py','config/cbf_active_avoidance_scenarios.yaml','config/cbf_active_avoidance_protocol.yaml',
             '纯仿真代码/mpc_dcbf_cached_solver.py','launch/multi_turtlebot3_consensus_gazebo_cbf.launch',
             'launch/single_turtlebot3_cbf_dynamic.launch','launch/multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch',
-            'launch/single_turtlebot3_cbf_trigger022.launch','scripts/tests/run_cbf_dynamic_gazebo.py']:
+            'launch/single_turtlebot3_cbf_trigger022.launch','rviz/tb3_cbf.rviz','rviz/tb3_cbf_single.rviz','scripts/tests/run_cbf_dynamic_gazebo.py']:
         p=package/relative;shutil.copy2(p,sources/p.name);manifest[relative]=hashlib.sha256(p.read_bytes()).hexdigest()
     (sources/'sha256.json').write_text(json.dumps(manifest,indent=2))
     env=os.environ.copy();env.pop('ROS_HOSTNAME',None);env.pop('ROS_NAMESPACE',None)
@@ -102,6 +106,7 @@ def main():
         GAZEBO_MASTER_URI='http://127.0.0.1:'+str(free_port()),ROS_HOME=str(out/'ros'),ROS_LOG_DIR=str(out/'roslog'),
         GAZEBO_MODEL_DATABASE_URI='',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1',MPLBACKEND='Agg')
     os.environ.update(env);processes=[];streams=[];truth=[];begins=[];completed=[];last={};audit={};seed_info={}
+    marker_messages=[];capture_error=None;captured=False
     def launch(command,name):
         stream=(out/(name+'.log')).open('w');streams.append(stream)
         process=subprocess.Popen(command,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
@@ -120,6 +125,7 @@ def main():
         rospy.set_param('/use_sim_time',True)
         from gazebo_msgs.msg import ModelStates
         from std_msgs.msg import Bool,String
+        from visualization_msgs.msg import MarkerArray
         from tb3_distributed_control.msg import LeaderHistoryData
         rospy.init_node('cbf_dynamic_evaluator',anonymous=True,disable_signals=True)
         def lead(msg):
@@ -135,19 +141,44 @@ def main():
                     row[name+'_x']=p.x;row[name+'_y']=p.y
             truth.append(row)
         def diagnostic(msg,i):last[i]=json.loads(msg.data)
+        def prediction_markers(msg,observer):
+            marker_messages.append(dict(observer=observer,received=rospy.get_time(),markers=[dict(
+                stamp=m.header.stamp.to_sec(),frame=m.header.frame_id,ns=m.ns,id=m.id,type=m.type,action=m.action,
+                position=[m.pose.position.x,m.pose.position.y,m.pose.position.z],
+                orientation=[m.pose.orientation.x,m.pose.orientation.y,m.pose.orientation.z,m.pose.orientation.w],
+                scale=[m.scale.x,m.scale.y,m.scale.z],color=[m.color.r,m.color.g,m.color.b,m.color.a],
+                lifetime=m.lifetime.to_sec(),points=[[p.x,p.y,p.z] for p in m.points]) for m in msg.markers]))
         subscribers=[rospy.Subscriber('/leader/history',LeaderHistoryData,lead,queue_size=1),
             rospy.Subscriber('/gazebo/model_states',ModelStates,models,queue_size=1),
             rospy.Subscriber('/system/shutdown',Bool,lambda m:completed.append(time.monotonic()) if m.data else None)]
         for i in range(args.robots):subscribers.append(rospy.Subscriber('/tb3_%d/cbf_diagnostics'%i,String,diagnostic,callback_args=i,queue_size=1))
+        if args.check_prediction_markers:
+            for i in range(args.robots):subscribers.append(rospy.Subscriber('/tb3_%d/cbf_geometry/prediction_regions'%i,MarkerArray,prediction_markers,callback_args=str(i),queue_size=1))
+            subscribers.append(rospy.Subscriber('/cbf/geometry/prediction_regions',MarkerArray,prediction_markers,callback_args='selected',queue_size=1))
         name=('single_turtlebot3_cbf_dynamic.launch' if args.robots==1 else 'two_turtlebot3_cbf_dynamic.launch'
               if args.robots==2 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch')
-        process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:=false',
+        process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:='+str(args.open_rviz or args.capture_rviz).lower(),
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),'active_experiment:='+str(active).lower(),'local_reference_mode:='+args.local_reference_mode,'spatial_pass:='+args.spatial_pass,'spatial_lateral_extras:='+args.spatial_lateral_extras,'spatial_shift_durations:='+args.spatial_shift_durations,'spatial_activation_threshold:='+str(args.spatial_activation_threshold),'spatial_activation_preview_seconds:='+str(args.spatial_activation_preview_seconds),'spatial_compiled_rollout:='+args.spatial_compiled_rollout,'spatial_timeout_carry:='+args.spatial_timeout_carry,'spatial_runtime_guard:='+args.spatial_runtime_guard,'spatial_prefix_retention:='+args.spatial_prefix_retention,
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
             'prediction_mode:='+args.prediction_mode,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'execution_backup:='+args.execution_backup,'infeasible_escape:='+args.infeasible_escape,'predictive_bypass:='+args.predictive_bypass,'active_guidance_only:='+args.active_guidance_only,'prediction_risk:='+args.prediction_risk,'suppress_guidance:='+args.suppress_guidance,'risk_weight:='+str(args.risk_weight),'risk_clearance:='+str(args.risk_clearance),'risk_discount:='+str(args.risk_discount),'risk_tail_seconds:='+str(args.risk_tail_seconds),'constraint_mode:='+args.constraint_mode,'risk_penalty:='+args.risk_penalty,'wang_alpha:='+str(args.wang_alpha),'wang_mu:='+str(args.wang_mu),'wang_iota:='+str(args.wang_iota),'wang_radius:='+str(args.wang_radius),'mpc_horizon:='+str(args.mpc_horizon),'pending_seed_with_backup:='+args.pending_seed_with_backup,'log_mpc_inputs:='+args.log_mpc_inputs,'rear_pass:='+args.rear_pass,'rear_preview_seconds:='+str(args.rear_preview_seconds),'transport_geometry:='+args.transport_geometry,'adaptive_recovery:='+args.adaptive_recovery,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
             'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance],'launch')
         report=0.
         while time.monotonic()-wall<args.wall_timeout:
+            if args.capture_rviz and not captured and begins and rospy.get_time()-begins[0]>8.:
+                try:
+                    uri=server.lookupNode('/cbf_dynamic_test','/rviz')[2]
+                    pid=xmlrpc.client.ServerProxy(uri).getPid('/cbf_dynamic_test')[2]
+                    tree=subprocess.check_output(['xwininfo','-root','-tree'],text=True,timeout=2)
+                    candidates=[re.search(r'(0x[0-9a-f]+)',line).group(1) for line in tree.splitlines()
+                                if 'rviz' in line.lower() and re.search(r'0x[0-9a-f]+',line)]
+                    window=None
+                    for candidate in candidates:
+                        prop=subprocess.check_output(['xprop','-id',candidate,'_NET_WM_PID'],text=True,timeout=2)
+                        if re.search(r'=\s*'+str(pid)+r'\s*$',prop):window=candidate;break
+                    if window is None:raise RuntimeError('This test RViz window was not found')
+                    subprocess.run(['xwd','-silent','-id',window,'-out',str(out/'rviz_prediction.xwd')],check=True,timeout=3)
+                    captured=True
+                except Exception as exc:capture_error=str(exc);captured=True
             if begins and not audit:
                 _,_,graph=server.getSystemState('/cbf_dynamic_test')
                 audit={topic:members for topic,members in graph[1] if any('/tb3_controller_cbf_' in n for n in members)}
@@ -172,6 +203,19 @@ def main():
         for stream in streams:stream.close()
     result=dict(spatial_shift_durations=shift_durations,spatial_activation_threshold=args.spatial_activation_threshold,spatial_activation_preview_seconds=args.spatial_activation_preview_seconds,spatial_lateral_extras=extras,spatial_runtime_guard=args.spatial_runtime_guard=='true',spatial_prefix_retention=args.spatial_prefix_retention=='true' or args.robots==2 and args.spatial_pass=='true',spatial_compiled_rollout=args.spatial_compiled_rollout=='true',spatial_timeout_carry=args.spatial_timeout_carry=='true',spatial_pass=args.spatial_pass=='true',local_reference_mode=args.local_reference_mode,rear_pass=args.rear_pass=='true',rear_preview_seconds=args.rear_preview_seconds,mpc_horizon=args.mpc_horizon,pending_seed_with_backup=args.pending_seed_with_backup=='true',log_mpc_inputs=args.log_mpc_inputs=='true',constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
+    if args.check_prediction_markers:
+        with (out/'prediction_regions.jsonl').open('w') as f:
+            for row in marker_messages:f.write(json.dumps(row)+'\n')
+        hard=sum(m['type']==3 and m['action']==0 and m['ns'].startswith('prediction_hard_') for r in marker_messages for m in r['markers'])
+        soft=sum(m['type']==5 and m['action']==0 and m['ns'].startswith('prediction_soft_') for r in marker_messages for m in r['markers'])
+        observers={r['observer'] for r in marker_messages if r['markers']}
+        result['prediction_markers']=dict(messages=len(marker_messages),hard_cylinders=hard,soft_dashed_ellipses=soft,
+            observers=sorted(observers),passed=hard>0 and {'selected',*map(str,range(args.robots))}<=observers
+            and (args.spatial_activation_threshold<0 or args.spatial_activation_preview_seconds<=args.mpc_horizon*.1 or soft>0))
+    if args.capture_rviz:
+        if (out/'rviz_prediction.xwd').exists():
+            subprocess.run(['convert',str(out/'rviz_prediction.xwd'),str(out/'rviz_prediction.png')],check=True)
+        result['rviz_capture']=dict(passed=(out/'rviz_prediction.png').exists(),error=capture_error)
     if truth:
         fields=sorted(set().union(*(r.keys() for r in truth)))
         with (out/'gazebo_truth.csv').open('w',newline='') as stream:
@@ -248,6 +292,8 @@ def main():
     result['own_scan_only']=all(sorted(topic for topic,members in audit.items()
         if '/tb3_controller_cbf_'+str(i) in members and topic.endswith('/scan'))==['/tb3_'+str(i)+'/scan'] for i in range(args.robots))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
+        and (not args.check_prediction_markers or result['prediction_markers']['passed'])
+        and (not args.capture_rviz or result['rviz_capture']['passed'])
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
         and result['shift_durations_configured'] and result['activation_configured'] and result['lateral_extras_configured'] and result['spatial_backend_configured'] and result['own_scan_only'] and result['spatial_pass_configured'] and result['local_reference_configured'] and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['seed_policy_configured'] and result['horizon_configured'] and result['rear_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
