@@ -949,7 +949,8 @@ def _spatial_rollout_function(count,steps,dt,allow_build=True):
 
 def warm_spatial_rollouts(config):
     steps=max(config['horizon'],round(config.get('spatial_preview_seconds',8.)/config['dt']))
-    for count in (19,20,21):_spatial_rollout_function(count,steps,config['dt'])
+    counts=(19,20,21,23,24) if config.get('spatial_predictive_return',False) else (19,20,21)
+    for count in counts:_spatial_rollout_function(count,steps,config['dt'])
 
 
 def _spatial_rollout_compiled(state,previous,targets,center,along_support,forward,normal,speed,now,
@@ -1078,6 +1079,14 @@ def spatial_shift_durations(config):
     return values
 
 
+def spatial_return_durations(config):
+    values=np.asarray(config.get('spatial_return_durations',(3.,4.5,6.)),float)
+    if (values.shape!=(3,) or not np.isfinite(values).all()
+            or np.any(values<=0) or np.any(np.diff(values)<0)):
+        raise ValueError('Expected three finite positive ordered spatial_return_durations')
+    return values
+
+
 def spatial_pass_guidance(state,goals,obstacles,config,memory):
     threshold=float(config.get('spatial_activation_threshold',-1.))
     if threshold<0:return _spatial_pass_guidance_active(state,goals,obstacles,config,memory)
@@ -1181,9 +1190,23 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     y0 = float(np.dot(state[:2] - goals[0, :2], normal))
     dy0 = float(previous[0] * np.dot([np.cos(state[2]), np.sin(state[2])], normal))
     passed_now = np.dot(state[:2] - center[0], forward) > along_support[0] + .12
+    predictive_return=bool(config.get('spatial_predictive_return',False))
+    was_returning=old is not None and old['returning']
+    return_gate=dict(eligible=False,range_rate=None,separating_count=0,legacy_pass_clear=bool(passed_now))
+    if predictive_return and old is None:memory.pop('spatial_return_departure',None)
+    if predictive_return and old is not None:
+        relative=state[:2]-center[0]
+        relative_velocity=previous[0]*np.array([np.cos(state[2]),np.sin(state[2])])-(center[1]-center[0])/dt
+        rate=float(relative@relative_velocity/max(np.linalg.norm(relative),1e-9))
+        prior=memory.get('spatial_return_departure',{})
+        departure_count=(int(prior.get('count',0)) if prior.get('name')==obs['name'] else 0)+1 if rate>.01 else 0
+        memory['spatial_return_departure']=dict(name=obs['name'],count=min(departure_count,3))
+        return_gate.update(eligible=bool(was_returning or passed_now or departure_count>=2),
+                           range_rate=rate,separating_count=min(departure_count,3))
     if old is not None and not old['returning'] and passed_now:
         old = dict(old, start=now, y0=y0, dy0=dy0, target=0., duration=6., returning=True)
-    if old is not None and old['returning'] and now - old['start'] >= old['duration'] and abs(y0) < .035:
+    aligned=not predictive_return or abs(dy0)<.03
+    if old is not None and old['returning'] and now - old['start'] >= old['duration'] and abs(y0) < .035 and aligned:
         memory.pop('spatial_selected', None)
         return abstain('returned_to_timed_path')
     descriptors = [dict(name=obs['name'], start=now, y0=y0, dy0=dy0, target=0., duration=6., returning=False, side=0)]
@@ -1200,6 +1223,12 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
             target = old['target'] + float(np.clip(requested-old['target'], -.06*elapsed, .06*elapsed))
             contracted_index = len(descriptors)
             descriptors.append(dict(old, target=target))
+    return_indices=[]
+    if predictive_return and old is not None and return_gate['eligible']:
+        for length in spatial_return_durations(config):
+            return_indices.append(len(descriptors))
+            descriptors.append(dict(name=obs['name'],start=now,y0=y0,dy0=dy0,
+                target=0.,duration=float(length),returning=True,side=old['side']))
     if old is not None:
         descriptors.append(old)
     count = len(descriptors)
@@ -1228,6 +1257,7 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     window = min(steps, max(1, round(1./dt)))
     minimum_speed = ((travelled[:, window:] - travelled[:, :-window])/(window*dt)).min(axis=1)
     valid = ((soft_h.min(axis=(0, 2)) >= .01) & (residual.min(axis=(0, 2)) >= -2e-6) & (minimum_speed >= .09))
+    full_valid=valid.copy()
     prefix_scope = False
     if old is None and valid[0]:
         return abstain('nominal_preview_clear')
@@ -1246,6 +1276,9 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
         # final MPC/backup validation and emergency behavior.
         valid=((residual.min(axis=(0,2))>=-2e-6) & (hard_h.min(axis=(0,2))>=-2e-6)
                & (np.mean(np.abs(controls[:,:n,0]),axis=1)>=.09))
+        # Starting a new shortcut requires the full existing soft preview too.
+        # A merely valid hard prefix cannot authorize a new early return.
+        if return_indices:valid[return_indices] &= full_valid[return_indices]
         valid[0]=False
         preferred=valid & (np.array([d['side'] for d in descriptors])==crossing_side)
         if crossing_side is not None and preferred.any():valid=preferred
@@ -1257,7 +1290,11 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     error = states[:, :, :2] - targets[None]
     score = np.mean(np.sum(error**2, axis=2), axis=1) + .2*np.sum(error[:, -1]**2, axis=1)
     score += .02*np.sum(np.diff(controls[:, :, 1], axis=1)**2, axis=1)
-    if contracted_index is not None and valid[contracted_index]:
+    qualified_returns=[j for j in return_indices if valid[j] and full_valid[j]]
+    if qualified_returns:
+        chosen=(count-1 if was_returning and valid[-1] else
+                min(qualified_returns,key=lambda j:score[j]))
+    elif contracted_index is not None and valid[contracted_index]:
         chosen = contracted_index
     else:
         chosen = count-1 if old is not None and valid[-1] else int(np.argmin(np.where(valid, score, np.inf)))
@@ -1281,6 +1318,10 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
         hard_prefix_mean_speed=float(np.abs(prefix[:,0]).mean()),
         extended_preview_min_h=float(soft_h[:,chosen].min()),
         side_changed=old is not None and selected['side']!=old['side'],
+        return_gate=return_gate,return_candidates=len(return_indices),
+        return_full_qualified=len(qualified_returns),
+        selected_return_qualified=bool(selected['returning'] and full_valid[chosen]),
+        early_return_started=bool(not was_returning and chosen in qualified_returns and not passed_now),
         hard_steps=n, soft_seconds=steps*dt, far_axes='held_final_hard_envelope')
     return vectors, 1., predicted[1:, 2].copy()
 
@@ -1684,6 +1725,7 @@ class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
         spatial_shift_durations(config)
+        spatial_return_durations(config)
         activation=float(config.get('spatial_activation_threshold',-1.))
         seconds=float(config.get('spatial_activation_preview_seconds',1.))
         activation_limit=max(config['horizon']*config['dt'],float(config.get('spatial_preview_seconds',8.)))

@@ -25,6 +25,8 @@
   <arg name="spatial_timeout_carry" default="false" />
   <arg name="spatial_lateral_extras" default="[0.12,0.22,0.32]" />
   <arg name="spatial_shift_durations" default="[4.5,6.0,7.5]" />
+  <arg name="spatial_predictive_return" default="false" />
+  <arg name="spatial_return_durations" default="[3.0,4.5,6.0]" />
   <arg name="spatial_activation_threshold" default="-1.0" />
   <arg name="spatial_activation_preview_seconds" default="1.0" />
   <arg name="spatial_runtime_guard" default="false" />
@@ -139,6 +141,8 @@
   <param name="/cbf/mpc/spatial_timeout_carry" value="$(arg spatial_timeout_carry)" type="bool" />
   <rosparam param="/cbf/mpc/spatial_lateral_extras" subst_value="true">$(arg spatial_lateral_extras)</rosparam>
   <rosparam param="/cbf/mpc/spatial_shift_durations" subst_value="true">$(arg spatial_shift_durations)</rosparam>
+  <param name="/cbf/mpc/spatial_predictive_return" value="$(arg spatial_predictive_return)" type="bool" />
+  <rosparam param="/cbf/mpc/spatial_return_durations" subst_value="true">$(arg spatial_return_durations)</rosparam>
   <param name="/cbf/mpc/spatial_activation_threshold" value="$(arg spatial_activation_threshold)" />
   <param name="/cbf/mpc/spatial_activation_preview_seconds" value="$(arg spatial_activation_preview_seconds)" />
   <param name="/cbf/mpc/spatial_runtime_guard" value="$(arg spatial_runtime_guard)" type="bool" />
