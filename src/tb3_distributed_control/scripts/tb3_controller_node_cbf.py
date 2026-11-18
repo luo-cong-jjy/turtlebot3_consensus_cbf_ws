@@ -1445,13 +1445,16 @@ class TurtleBot3CBFController:
             self.record_points=(self.obstacle_points,self.obstacle_points_stamp)
             self.record_peer_count=sum(0 <= now-shape['stamp'] <= self.scan_timeout for shape in peer_shapes.values())
             if self.robot_id not in poses or stamp is None:
+                self.sensor_ready_since=None
                 self.stop_motion();return
             odom_stamp,state,_=poses[self.robot_id]
             self.snapshot_stamps=(odom_stamp,stamp)
             self.metric_context=self.capture_metric_context(odom_stamp,state)
             if now-odom_stamp>self.stale or now-stamp>self.stale:
+                self.sensor_ready_since=None
                 self.stop_motion();self.record(now,state,None,observed,0.,'stale_data',begin);return
             if len(poses)<len(self.names):
+                self.sensor_ready_since=None
                 self.stop_motion();return
             if not self.warmed:
                 since=getattr(self,'sensor_ready_since',None)
