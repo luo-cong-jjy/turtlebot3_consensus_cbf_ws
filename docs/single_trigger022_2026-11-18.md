@@ -39,3 +39,11 @@ TURTLEBOT3_MODEL=burger roslaunch tb3_distributed_control single_turtlebot3_cbf_
 ```
 
 可替换active_head_on或active_oblique_crossing。旧推荐入口single_turtlebot3_cbf_repeatability.launch保留不覆盖。
+
+## V3预测提前量匹配，第三批事前计划
+
+V2为7e3b4d6，五次触发开启4/5通过，斜向已改善，迎面仍失败（最低1 s速度0.04792 m/s，累计停住0.367 s，最长0.184 s，故障停车0）。V2同源码同时间族关闭触发的追越也通过。两批12次数据全部保留，不把消除一次截止停车当作迎面连续绕行已解决。
+
+仅缩短曲线不足以覆盖迎面较高的相对接近速度。V3新入口把辅助触发预览明确从1 s改为2 s，0.22 m判据不改，不是悄悄增大距离阈值。超出原N10的部分复用现有预测均值，保持原硬窗口末端半轴/方向，原1 s节点中心原样保留。记录soft_mean_extension_held_hard_axes，属于软决策假设，不是2 s硬安全认证；原MPC仍N10、dt=0.1，长尾不增加硬约束，不读取真值。通用入口的默认触发预览仍1 s，新入口允许显式传spatial_activation_preview_seconds:=1对照。
+
+第三批事前固定五次40 s实际Gazebo：迎面211两次、斜向211、追越211，以及同源码2 s设置但关闭触发的迎面211配对；其他参数和连续验收不变，目录v3_前缀。新增软预测范围/原硬窗口不变检查，共213项。若仍失败，保留负结果，不把0.22称普适可用标准。

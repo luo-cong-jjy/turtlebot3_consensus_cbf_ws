@@ -1035,26 +1035,38 @@ def spatial_activation_measurement(state,goals,obstacles,config,memory):
     threshold=float(config.get('spatial_activation_threshold',-1.))
     seconds=float(config.get('spatial_activation_preview_seconds',1.))
     if not np.isfinite(threshold) or threshold<0:raise ValueError('Expected nonnegative activation threshold')
-    if not np.isfinite(seconds) or not 0<=seconds<=config['horizon']*config['dt']+1e-9:
-        raise ValueError('Activation preview must stay within the original MPC window')
+    limit=max(config['horizon']*config['dt'],float(config.get('spatial_preview_seconds',8.)))
+    if not np.isfinite(seconds) or not 0<=seconds<=limit+1e-9:
+        raise ValueError('Activation preview must stay within the existing soft reference window')
     active=[o for o in obstacles if o.get('name')!='inactive' and not o.get('peer',False)]
     if not active:return dict(current_min_h=None,predicted_min_h=None,predicted_steps=0,triggered=False)
-    steps=min(config['horizon'],max(0,int(round(seconds/config['dt']))));dt=config['dt']
+    steps=max(0,int(round(seconds/config['dt'])));dt=config['dt']
+    times=np.arange(steps+1)*dt;targets=progress_targets(goals,times,dt)
+    forecast=active
+    if steps>config['horizon']:
+        # Auxiliary trigger only: extend existing means, hold final hard axes.
+        # Preserve supplied original MPC centres exactly at every hard node.
+        forecast=progress_obstacles(active,times,config)
+        original=obstacle_batch(active,config['horizon']+1,config['gamma'])
+        for i,obs in enumerate(forecast):
+            obs['prediction_centers'][:config['horizon']+1]=original.centers[i]
     bounds=memory.get('progress_bounds',[-.22,.22]);previous=np.asarray(memory.get('progress_previous',np.zeros(2)),float)
     point=np.asarray(state,float).copy();states=[point.copy()];last=previous.copy()
     for j in range(steps):
-        feed=(goals[j+1,:2]-goals[j,:2])/dt
-        desired=feed+1.2*(goals[j+1,:2]-point[:2])
+        feed=(targets[j+1]-targets[j])/dt
+        desired=feed+1.2*(targets[j+1]-point[:2])
         angle=np.arctan2(desired[1],desired[0]);error=np.arctan2(np.sin(angle-point[2]),np.cos(angle-point[2]))
         command=np.array([np.clip(np.linalg.norm(desired)*np.cos(error),*bounds),
                           np.clip(3.*error,-config['omega_max'],config['omega_max'])])
         command=last+(dt/(.2+dt))*(command-last)
         if config['delta_limit']:command=np.clip(command,last-[config['delta_v'],config['delta_w']],last+[config['delta_v'],config['delta_w']])
         point=rollout(point,command[None],dt)[1];states.append(point.copy());last=command
-    values=barrier_values(np.asarray(states),active,config['margin'])
+    values=barrier_values(np.asarray(states),forecast,config['margin'])
     current=float(values[:,0].min());predicted=float(values.min())
     return dict(current_min_h=current,predicted_min_h=predicted,predicted_steps=steps,
-                triggered=predicted<=threshold+1e-9,threshold=threshold,numerical_tolerance=1e-9)
+                triggered=predicted<=threshold+1e-9,threshold=threshold,numerical_tolerance=1e-9,
+                hard_steps=config['horizon'],preview_seconds=steps*dt,
+                prediction_scope='original_hard_window' if steps<=config['horizon'] else 'soft_mean_extension_held_hard_axes')
 
 
 def spatial_shift_durations(config):
@@ -1674,8 +1686,9 @@ class MPCSolverManager:
         spatial_shift_durations(config)
         activation=float(config.get('spatial_activation_threshold',-1.))
         seconds=float(config.get('spatial_activation_preview_seconds',1.))
+        activation_limit=max(config['horizon']*config['dt'],float(config.get('spatial_preview_seconds',8.)))
         if not np.isfinite(activation) or (activation>=0 and
-                (not np.isfinite(seconds) or not 0<=seconds<=config['horizon']*config['dt']+1e-9)):
+                (not np.isfinite(seconds) or not 0<=seconds<=activation_limit+1e-9)):
             raise ValueError('Invalid activation threshold or prediction window')
         if config.get('spatial_pass',False):spatial_lateral_extras(config)
         if config.get('spatial_compiled_rollout',False):warm_spatial_rollouts(config)

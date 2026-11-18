@@ -4,6 +4,7 @@
   <arg name="open_rviz" default="true" />
   <arg name="gazebo_seed" default="211" />
   <arg name="output_dir" default="" />
+  <arg name="spatial_activation_preview_seconds" default="2.0" />
   <include file="$(find tb3_distributed_control)/launch/single_turtlebot3_cbf_dynamic.launch">
     <arg name="scenario" value="$(arg scenario)" />
     <arg name="total_time" value="40" />
@@ -11,7 +12,7 @@
     <arg name="spatial_pass" value="true" />
     <arg name="spatial_shift_durations" value="[2.0,3.0,4.0]" />
     <arg name="spatial_activation_threshold" value="0.22" />
-    <arg name="spatial_activation_preview_seconds" value="1.0" />
+    <arg name="spatial_activation_preview_seconds" value="$(arg spatial_activation_preview_seconds)" />
     <arg name="spatial_compiled_rollout" value="true" />
     <arg name="spatial_timeout_carry" value="true" />
     <arg name="spatial_runtime_guard" value="true" />

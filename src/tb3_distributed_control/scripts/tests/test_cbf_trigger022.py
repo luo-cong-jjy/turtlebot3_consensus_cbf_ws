@@ -64,9 +64,18 @@ class Trigger022Checks(unittest.TestCase):
         self.assertTrue(memory['spatial_summary']['activation']['active'])
         self.assertTrue(memory['spatial_summary']['activation']['latched'])
 
-    def test_window_cannot_read_beyond_original_prediction(self):
-        cfg,state,goals,obs,memory=self.setup_gate();cfg['spatial_activation_preview_seconds']=2.
+    def test_window_cannot_exceed_existing_soft_preview(self):
+        cfg,state,goals,obs,memory=self.setup_gate();cfg['spatial_activation_preview_seconds']=9.
         with self.assertRaises(ValueError):MPCSolverManager(cfg)
+
+    def test_extended_trigger_is_soft_and_keeps_hard_window_unchanged(self):
+        cfg,state,goals,obs,memory=self.setup_gate()
+        cfg['spatial_activation_preview_seconds']=2.
+        result=spatial_activation_measurement(state,goals,obs,cfg,memory)
+        self.assertEqual(result['predicted_steps'],20)
+        self.assertEqual(result['hard_steps'],10);self.assertEqual(cfg['horizon'],10)
+        self.assertEqual(result['prediction_scope'],'soft_mean_extension_held_hard_axes')
+        self.assertLess(result['predicted_min_h'],result['current_min_h'])
 
     def test_shift_timing_validation_at_startup(self):
         cfg=default_config()
