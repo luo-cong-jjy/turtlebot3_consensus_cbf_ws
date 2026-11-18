@@ -1057,6 +1057,15 @@ def spatial_activation_measurement(state,goals,obstacles,config,memory):
                 triggered=predicted<=threshold+1e-9,threshold=threshold,numerical_tolerance=1e-9)
 
 
+def spatial_shift_durations(config):
+    """Three positive side-shift times; preserve compiled candidate dimensions."""
+    values=np.asarray(config.get('spatial_shift_durations',(4.5,6.,7.5)),float)
+    if (values.shape!=(3,) or not np.isfinite(values).all()
+            or np.any(values<=0) or np.any(np.diff(values)<0)):
+        raise ValueError('Expected three finite positive ordered spatial_shift_durations')
+    return values
+
+
 def spatial_pass_guidance(state,goals,obstacles,config,memory):
     threshold=float(config.get('spatial_activation_threshold',-1.))
     if threshold<0:return _spatial_pass_guidance_active(state,goals,obstacles,config,memory)
@@ -1092,6 +1101,7 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     """
     n, dt = config['horizon'], config['dt']
     extra_levels=spatial_lateral_extras(config)
+    shift_durations=spatial_shift_durations(config)
     steps = max(n, int(round(config.get('spatial_preview_seconds', 8.) / dt)))
     times = np.arange(steps + 1) * dt
     targets = progress_targets(goals, times, dt)
@@ -1168,7 +1178,7 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     for side in (1, -1):
         for extra in extra_levels:
             offset = float(lateral_support.max() + extra)
-            for duration in (4.5, 6., 7.5):
+            for duration in shift_durations:
                 descriptors.append(dict(name=obs['name'], start=now, y0=y0, dy0=dy0,
                                         target=side * offset, duration=duration, returning=False, side=side))
     contracted_index = None
@@ -1248,7 +1258,7 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     memory['spatial_summary'] = dict(mode='return' if selected['returning'] else 'side_shift_hold',
         side=selected['side'], obstacle=obs['name'], candidates=count, valid=int(valid.sum()),
         target_offset=selected['target'], duration=selected['duration'], phase_age=now-selected['start'],
-        lateral_extras=extra_levels.tolist(),lateral_support_max=float(lateral_support.max()),
+        lateral_extras=extra_levels.tolist(),shift_durations=shift_durations.tolist(),lateral_support_max=float(lateral_support.max()),
         kept=old is not None and chosen in (count-1, contracted_index),
         geometry_contracted=contracted_index is not None and chosen==contracted_index,
         minimum_preview_speed=float(minimum_speed[chosen]),
@@ -1661,6 +1671,7 @@ def checked_spatial_guidance_carry(problem,state,obstacles,bounds,previous,contr
 class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
+        spatial_shift_durations(config)
         activation=float(config.get('spatial_activation_threshold',-1.))
         seconds=float(config.get('spatial_activation_preview_seconds',1.))
         if not np.isfinite(activation) or (activation>=0 and

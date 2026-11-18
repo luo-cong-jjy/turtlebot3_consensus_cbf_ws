@@ -67,3 +67,19 @@ class Trigger022Checks(unittest.TestCase):
     def test_window_cannot_read_beyond_original_prediction(self):
         cfg,state,goals,obs,memory=self.setup_gate();cfg['spatial_activation_preview_seconds']=2.
         with self.assertRaises(ValueError):MPCSolverManager(cfg)
+
+    def test_shift_timing_validation_at_startup(self):
+        cfg=default_config()
+        for values in ([0,3,4],[3,2,4],[2,3],[2,float('nan'),4]):
+            cfg['spatial_shift_durations']=values
+            with self.assertRaises(ValueError):MPCSolverManager(cfg)
+
+    def test_fast_timing_keeps_native_and_numpy_reference_equal(self):
+        import copy
+        from mpc_dcbf_cached_solver import warm_spatial_rollouts
+        cfg,state,goals,obs,memory=inputs();cfg['spatial_shift_durations']=[2.,3.,4.]
+        a=continuous_guidance(state,goals,obs,cfg,copy.deepcopy(memory))
+        warm_spatial_rollouts(cfg);cfg['spatial_compiled_rollout']=True
+        b=continuous_guidance(state,goals,obs,cfg,copy.deepcopy(memory))
+        np.testing.assert_allclose(a[0],b[0],atol=1e-12,rtol=0)
+        self.assertEqual(a[1],b[1])

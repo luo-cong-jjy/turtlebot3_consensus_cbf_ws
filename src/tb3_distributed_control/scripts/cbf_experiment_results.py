@@ -598,6 +598,7 @@ class ExperimentRecorder:
             spatial_activation_threshold=rospy.get_param('/cbf/mpc/spatial_activation_threshold',-1.),
             spatial_activation_preview_seconds=rospy.get_param('/cbf/mpc/spatial_activation_preview_seconds',1.),
             spatial_lateral_extras=rospy.get_param('/cbf/mpc/spatial_lateral_extras',[.12,.22,.32]),
+            spatial_shift_durations=rospy.get_param('/cbf/mpc/spatial_shift_durations',[4.5,6.,7.5]),
             spatial_compiled_rollout=rospy.get_param('/cbf/mpc/spatial_compiled_rollout',False),
             spatial_timeout_carry=rospy.get_param('/cbf/mpc/spatial_timeout_carry',False),
             spatial_runtime_guard=rospy.get_param('/cbf/mpc/spatial_runtime_guard',False),

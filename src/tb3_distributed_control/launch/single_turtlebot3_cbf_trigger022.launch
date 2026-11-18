@@ -9,6 +9,7 @@
     <arg name="total_time" value="40" />
     <arg name="active_experiment" value="true" />
     <arg name="spatial_pass" value="true" />
+    <arg name="spatial_shift_durations" value="[2.0,3.0,4.0]" />
     <arg name="spatial_activation_threshold" value="0.22" />
     <arg name="spatial_activation_preview_seconds" value="1.0" />
     <arg name="spatial_compiled_rollout" value="true" />
