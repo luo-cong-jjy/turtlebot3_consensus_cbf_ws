@@ -13,7 +13,7 @@ from mpc_dcbf_cached_solver import obstacle_batch,progress_obstacles
 
 def audit(directory):
     path=Path(directory);inputs={};errors=[];checked=0;hard_count=0;soft_count=0;maximum_error=0.
-    shape_count=0;direction_count=0;velocity_labels=0
+    shape_count=0;direction_count=0;velocity_labels=0;center_markers=0
     for trace in sorted(path.glob('tb3_*_solver_trace.jsonl')):
         observer=trace.name.split('_')[1]
         times={int(r['cycle_id']):float(r['ros_time']) for r in csv.DictReader((path/('tb3_'+observer+'.csv')).open())}
@@ -34,12 +34,13 @@ def audit(directory):
             shape=marker['ns'].startswith('prediction_shape_') and marker['type']==4
             direction=marker['ns']=='prediction_motion_direction' and marker['type']==0
             velocity_label=marker['ns']=='prediction_velocity' and marker['type']==9
-            if not(hard or soft or shape or direction or velocity_label):continue
+            centers_marker=marker['ns']=='prediction_centers' and marker['type']==7
+            if not(hard or soft or shape or direction or velocity_label or centers_marker):continue
             stamp=marker['stamp'];input_time,snapshot=min(samples,key=lambda item:abs(item[0]-stamp))
             if abs(input_time-stamp)>2e-8:
                 errors.append(dict(stamp=stamp,error='No same-stamp solver input'));continue
             cfg=snapshot['config'];n=cfg['horizon']
-            stage=n if direction or velocity_label else int(marker['ns'].rsplit('_',1)[1])
+            stage=n if direction or velocity_label or centers_marker else int(marker['ns'].rsplit('_',1)[1])
             obs=next((o for o in snapshot['obstacles'] if not o.get('peer',False)
                       and o.get('name')=='tracked_'+str(marker['id'])),None)
             if obs is None:errors.append(dict(stamp=stamp,error='No same-ID solver obstacle'));continue
@@ -55,6 +56,16 @@ def audit(directory):
                 quat=marker['orientation'];angle=2*np.arctan2(quat[2],quat[3]);expected=np.arctan2(s,c)
                 residual=max(abs(actual-center).max(),abs(sizes-axes).max(),
                              abs(np.arctan2(np.sin(angle-expected),np.cos(angle-expected))))
+            elif centers_marker:
+                center_markers+=1
+                preview=cfg.get('spatial_activation_preview_seconds',1.) if cfg.get('spatial_activation_threshold',-1.)>=0 else n*cfg['dt']
+                extra=max(n,int(round(preview/cfg['dt'])));stages=[0,n//2,n]
+                extended=batch
+                if extra>n:
+                    stages += [n+(extra-n)//2,extra]
+                    extended=obstacle_batch(progress_obstacles([obs],np.arange(extra+1)*cfg['dt'],cfg),extra+1,cfg['gamma'])
+                expected=np.array([(batch if j<=n else extended).centers[0,j] for j in sorted(set(stages))])
+                residual=float(abs(np.asarray(marker['points'])[:,:2]-expected).max())
             elif direction or velocity_label:
                 start=batch.centers[0,0];v=(batch.centers[0,n]-start)/(n*cfg['dt']);speed=float(np.linalg.norm(v))
                 if direction:
@@ -81,6 +92,7 @@ def audit(directory):
     return dict(passed=checked>0 and hard_count>0 and not errors,checked_regions=checked,
         hard_regions=hard_count,soft_regions=soft_count,maximum_numeric_error=maximum_error,
         prediction_envelopes=shape_count,direction_icons=direction_count,velocity_labels=velocity_labels,
+        center_markers=center_markers,
         identical_local_selected_frames=duplicates,error_count=len(errors),first_error=errors[0] if errors else None,
         note='Display-to-input geometry audit only; does not certify future physical safety.')
 

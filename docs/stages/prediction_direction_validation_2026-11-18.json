@@ -1,0 +1,770 @@
+{
+  "tests": {
+    "count": 218,
+    "passed": true
+  },
+  "algorithm_conservativeness_reduced": false,
+  "prediction_accuracy_improved": false,
+  "visual_direction_clarity_verified": true,
+  "diagnosis": [
+    {
+      "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/RViz预测危险区域_2026-11-18/head_on_rviz_clean",
+      "source_stage_commit": "b44df10",
+      "time": 7.994999999999999,
+      "estimated_velocity": [
+        -0.05654093641508151,
+        -0.003453466449091589
+      ],
+      "truth_velocity_local_linear_fit": [
+        -0.06023019268678727,
+        0.0
+      ],
+      "estimated_speed": 0.05664630545065841,
+      "truth_speed": 0.06023019268678727,
+      "center_displacement_1s": [
+        -0.05654093641508151,
+        -0.003453466449091589
+      ],
+      "axes_before_vehicle_margin_0_1s": [
+        [
+          0.34516346719608193,
+          0.19612042951218023
+        ],
+        [
+          0.3837744144162021,
+          0.2415472044011274
+        ]
+      ],
+      "axes_safe_0_1s": [
+        [
+          0.5563582731964299,
+          0.31612042951218017
+        ],
+        [
+          0.5744325089452783,
+          0.3615472044011274
+        ]
+      ],
+      "vehicle_margin": 0.12,
+      "note": "One recorded frame per case; not a global velocity accuracy evaluation. Truth used offline only.",
+      "source_algorithm_commit": "2f8908e"
+    },
+    {
+      "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/RViz预测危险区域_2026-11-18/oblique_rviz_final",
+      "source_stage_commit": "b44df10",
+      "time": 7.982999999999999,
+      "estimated_velocity": [
+        -0.033500516869100494,
+        -0.05361532420288334
+      ],
+      "truth_velocity_local_linear_fit": [
+        -0.03964762723603299,
+        -0.09911906809008354
+      ],
+      "estimated_speed": 0.0632209428898144,
+      "truth_speed": 0.10675450343893714,
+      "center_displacement_1s": [
+        -0.033500516869100494,
+        -0.05361532420288334
+      ],
+      "axes_before_vehicle_margin_0_1s": [
+        [
+          0.3510470054811478,
+          0.19267288390978138
+        ],
+        [
+          0.3884419377126149,
+          0.23809387256728237
+        ]
+      ],
+      "axes_safe_0_1s": [
+        [
+          0.5696851438787801,
+          0.3126728839097814
+        ],
+        [
+          0.584217797136891,
+          0.35809387256728237
+        ]
+      ],
+      "vehicle_margin": 0.12,
+      "note": "One recorded frame per case; not a global velocity accuracy evaluation. Truth used offline only.",
+      "source_algorithm_commit": "bc8de67"
+    }
+  ],
+  "raw_center_diagnosis": {
+    "source": "../../四脚本对比证据/RViz预测危险区域_2026-11-18/oblique_rviz_final",
+    "window": [
+      7.5,
+      8.5
+    ],
+    "samples": 10,
+    "raw_fitted_center_velocity": [
+      0.0004871982456170064,
+      -0.05555093877807289
+    ],
+    "filtered_center_slope": [
+      -0.0030855042768270268,
+      -0.04590446350577366
+    ],
+    "raw_speed": 0.05555307517370874,
+    "filtered_center_slope_speed": 0.046008043931417296,
+    "interpretation": "Local geometry-centre motion is already biased relative to truth. This does not isolate a unique cause or prove a globally biased estimator."
+  },
+  "source_compatibility": {
+    "control": true,
+    "advance_observer": true,
+    "process_scan": true,
+    "record": true,
+    "watchdog": true,
+    "DynamicEllipseTracker": true,
+    "full_mpc_core": true
+  },
+  "source_snapshots": {
+    "head_on_direction": {
+      "commit": "fa29596",
+      "files": 24,
+      "passed": true
+    },
+    "oblique_direction": {
+      "commit": "fa29596",
+      "files": 24,
+      "passed": true
+    }
+  },
+  "actual_gui_trials": 2,
+  "controller_passed": 2,
+  "manual_screenshots_verified": true,
+  "checks": 4990,
+  "direction_icons": 450,
+  "velocity_labels": 454,
+  "center_marker_frames": 454,
+  "adopted_first_steps": 802,
+  "maximum_numeric_error": 2.6645352591003757e-15,
+  "trials": [
+    {
+      "name": "head_on_direction",
+      "evaluation": {
+        "spatial_shift_durations": [
+          2.0,
+          3.0,
+          4.0
+        ],
+        "spatial_activation_threshold": 0.22,
+        "spatial_activation_preview_seconds": 2.0,
+        "spatial_lateral_extras": [
+          0.12,
+          0.22,
+          0.32
+        ],
+        "spatial_runtime_guard": true,
+        "spatial_prefix_retention": true,
+        "spatial_compiled_rollout": true,
+        "spatial_timeout_carry": true,
+        "spatial_pass": true,
+        "local_reference_mode": "timed",
+        "rear_pass": false,
+        "rear_preview_seconds": 6.0,
+        "mpc_horizon": 10,
+        "pending_seed_with_backup": false,
+        "log_mpc_inputs": true,
+        "constraint_mode": "dcbf",
+        "risk_penalty": "clearance_quartic",
+        "wang_alpha": 1.0,
+        "wang_mu": 0.1,
+        "wang_iota": 0.02,
+        "wang_radius": 1.0,
+        "prediction_risk": false,
+        "suppress_guidance": false,
+        "risk_weight": 3.0,
+        "risk_clearance": 0.35,
+        "risk_discount": 0.5,
+        "risk_tail_seconds": 0.0,
+        "active_guidance_only": false,
+        "adaptive_recovery": false,
+        "transport_geometry": true,
+        "predictive_bypass": false,
+        "infeasible_escape": false,
+        "execution_backup": true,
+        "scenario": "active_head_on",
+        "robots": 1,
+        "gazebo_seed": 211,
+        "progress_guidance": false,
+        "progress_abstain": true,
+        "progress_hypotheses": true,
+        "prediction_mode": "cv",
+        "failure": null,
+        "completed": true,
+        "controller_subscriptions": {
+          "/clock": [
+            "/cbf_dynamic_evaluator_366258_1794995536473",
+            "/tb3_0/robot_state_publisher",
+            "/tb3_0/world_to_odom",
+            "/world_to_odom_global",
+            "/world_to_virtual_leader_odom",
+            "/rviz",
+            "/cbf_active_monitor",
+            "/cbf_dynamic_scenario",
+            "/cbf_experiment_results",
+            "/tb3_virtual_leader/leader_node",
+            "/gazebo",
+            "/tb3_controller_cbf_0"
+          ],
+          "/leader/history": [
+            "/cbf_dynamic_evaluator_366258_1794995536473",
+            "/cbf_experiment_results",
+            "/tb3_controller_cbf_0",
+            "/cbf_active_monitor",
+            "/cbf_dynamic_scenario"
+          ],
+          "/system/shutdown": [
+            "/cbf_dynamic_evaluator_366258_1794995536473",
+            "/cbf_experiment_results",
+            "/tb3_controller_cbf_0",
+            "/cbf_active_monitor",
+            "/cbf_dynamic_scenario"
+          ],
+          "/tb3_0/odom": [
+            "/tb3_controller_cbf_0"
+          ],
+          "/tf": [
+            "/tb3_controller_cbf_0",
+            "/rviz"
+          ],
+          "/tf_static": [
+            "/tb3_controller_cbf_0",
+            "/rviz"
+          ],
+          "/tb3_0/scan": [
+            "/tb3_controller_cbf_0",
+            "/rviz"
+          ],
+          "/tb3_virtual_leader/state": [
+            "/tb3_controller_cbf_0"
+          ]
+        },
+        "robot_statistics": {
+          "0": {
+            "window_final_error": 0.001151365353233527,
+            "rows": 401,
+            "last_time": 40.076,
+            "statuses": {
+              "feasible_iterate": 15,
+              "ok": 386
+            },
+            "timing_p95_ms": 54.02303801383823,
+            "timing_max_ms": 76.65751501917839,
+            "final_error": 0.0008839474232439887,
+            "dynamic_cycles": 206,
+            "max_estimated_speed": 0.07635187200310287
+          }
+        },
+        "prediction_markers": {
+          "messages": 324,
+          "hard_cylinders": 708,
+          "soft_dashed_ellipses": 472,
+          "observers": [
+            "0",
+            "selected"
+          ],
+          "passed": true
+        },
+        "rviz_capture": {
+          "passed": true,
+          "error": null
+        },
+        "body_radius_proxy": 0.13,
+        "dynamic_clearance_min": 0.2207395965597178,
+        "peer_clearance_min": 1000000000.0,
+        "static_clearance_min": 1000000000.0,
+        "truth_samples": 1032,
+        "clearance_note": "20 Hz actual Gazebo positions; circular body proxy, not a continuous collision proof.",
+        "gazebo_command": [
+          "gzserver",
+          "-e",
+          "ode",
+          "--seed",
+          "211",
+          "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/研究副本/ca_prediction_ws_2026-10-26/src/tb3_distributed_control/worlds/consensus_dynamic_obstacles.world",
+          "-s",
+          "/opt/ros/noetic/lib/libgazebo_ros_paths_plugin.so",
+          "-s",
+          "/opt/ros/noetic/lib/libgazebo_ros_api_plugin.so",
+          "__name:=gazebo",
+          "__log:=/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/预测方向与保守量诊断_2026-11-18/head_on_direction/roslog/bc7e0022-e335-11f1-8279-59f088b74066/gazebo-4.log"
+        ],
+        "seed_configured": true,
+        "progress_configured": true,
+        "execution_backup_configured": true,
+        "infeasible_escape_configured": true,
+        "predictive_bypass_configured": true,
+        "active_guidance_only_configured": true,
+        "risk_configured": true,
+        "core_mode_configured": true,
+        "rear_configured": true,
+        "horizon_configured": true,
+        "local_reference_configured": true,
+        "spatial_pass_configured": true,
+        "shift_durations_configured": true,
+        "lateral_extras_configured": true,
+        "activation_configured": true,
+        "spatial_backend_configured": true,
+        "seed_policy_configured": true,
+        "transport_geometry_configured": true,
+        "adaptive_recovery_configured": true,
+        "no_truth_input_passed": true,
+        "own_scan_only": true,
+        "passed": true,
+        "base_passed": true,
+        "acceptance_protocol": "active_motion_v1",
+        "active_motion": {
+          "passed": true,
+          "checks": {
+            "truth_covers_motion_window": true,
+            "task_endpoint_fresh": true,
+            "sampled_proxy_clearance_positive": true,
+            "linear_swept_proxy_clearance_positive": true,
+            "no_sustained_standstill": true,
+            "total_standstill_within_measurement_tolerance": true,
+            "no_crawling_time_avoidance": true,
+            "passed_actor": true,
+            "spatial_detour_observed": true,
+            "tracking_recovered": true,
+            "no_fault_stop": true
+          },
+          "failed_checks": [],
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "sampled_proxy_clearance_min": 0.2207395965597178,
+          "linear_swept_proxy_clearance_min": 0.2207395965597178,
+          "total_standstill_seconds": 0.0,
+          "longest_standstill_seconds": 0.0,
+          "minimum_rolling_speed": 0.1297387094224356,
+          "fault_stop_count": 0,
+          "first_forward_pass": {
+            "time": 11.725541234051805,
+            "position": [
+              2.0984812238661865,
+              -0.6228723311173715
+            ],
+            "lateral_offset": 0.6228723311173715
+          },
+          "endpoint_sample_time": 40.002,
+          "final_position_error": 0.0012291238221677448,
+          "observed_max_planar_speed": 0.22063915914722632,
+          "protocol": {
+            "version": "active_motion_v1_2026_11_10",
+            "duration": 40.0,
+            "reference_start": [
+              0.4,
+              0.0
+            ],
+            "reference_velocity": [
+              0.15,
+              0.0
+            ],
+            "body_radius": 0.13,
+            "maximum_speed": 0.22,
+            "maximum_yaw_rate": 2.84,
+            "motion_window": [
+              4.0,
+              39.0
+            ],
+            "stop_speed": 0.02,
+            "maximum_stop_episode": 0.25,
+            "maximum_total_stop": 0.3,
+            "rolling_window": 1.0,
+            "minimum_rolling_speed": 0.075,
+            "minimum_lateral_at_pass": 0.13,
+            "maximum_truth_gap": 0.25,
+            "endpoint_freshness": 0.15,
+            "maximum_final_position_error": 0.25,
+            "require_no_fault_stop": true,
+            "witness": {
+              "lateral_offset": 0.45,
+              "start_time": 3.0,
+              "outward_duration": 6.0,
+              "hold_duration": 8.0,
+              "return_duration": 6.0
+            }
+          },
+          "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/预测方向与保守量诊断_2026-11-18/head_on_direction",
+          "independent_truth_file": "gazebo_truth.csv",
+          "controller_records_finalized": true,
+          "base_passed": true
+        }
+      },
+      "display_audit": {
+        "passed": true,
+        "checked_regions": 2592,
+        "hard_regions": 708,
+        "soft_regions": 472,
+        "maximum_numeric_error": 2.6645352591003757e-15,
+        "prediction_envelopes": 708,
+        "direction_icons": 232,
+        "velocity_labels": 236,
+        "center_markers": 236,
+        "identical_local_selected_frames": 119,
+        "error_count": 0,
+        "first_error": null,
+        "note": "Display-to-input geometry audit only; does not certify future physical safety."
+      },
+      "model_audit": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 401,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metrics_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 401,
+            "prior_plan_samples_audited": 400,
+            "reference_quality_counts": {
+              "2": 2,
+              "1": 399
+            },
+            "max_nominal_analytic_residual": 8.881784197001252e-16,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.007515032821443487,
+            "max_plan_execution_error": 0.04342579679123169,
+            "max_nominal_error_during_plan_samples": 0.6337911621875779
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      },
+      "manual_screenshot_verified": true
+    },
+    {
+      "name": "oblique_direction",
+      "evaluation": {
+        "spatial_shift_durations": [
+          2.0,
+          3.0,
+          4.0
+        ],
+        "spatial_activation_threshold": 0.22,
+        "spatial_activation_preview_seconds": 2.0,
+        "spatial_lateral_extras": [
+          0.12,
+          0.22,
+          0.32
+        ],
+        "spatial_runtime_guard": true,
+        "spatial_prefix_retention": true,
+        "spatial_compiled_rollout": true,
+        "spatial_timeout_carry": true,
+        "spatial_pass": true,
+        "local_reference_mode": "timed",
+        "rear_pass": false,
+        "rear_preview_seconds": 6.0,
+        "mpc_horizon": 10,
+        "pending_seed_with_backup": false,
+        "log_mpc_inputs": true,
+        "constraint_mode": "dcbf",
+        "risk_penalty": "clearance_quartic",
+        "wang_alpha": 1.0,
+        "wang_mu": 0.1,
+        "wang_iota": 0.02,
+        "wang_radius": 1.0,
+        "prediction_risk": false,
+        "suppress_guidance": false,
+        "risk_weight": 3.0,
+        "risk_clearance": 0.35,
+        "risk_discount": 0.5,
+        "risk_tail_seconds": 0.0,
+        "active_guidance_only": false,
+        "adaptive_recovery": false,
+        "transport_geometry": true,
+        "predictive_bypass": false,
+        "infeasible_escape": false,
+        "execution_backup": true,
+        "scenario": "active_oblique_crossing",
+        "robots": 1,
+        "gazebo_seed": 211,
+        "progress_guidance": false,
+        "progress_abstain": true,
+        "progress_hypotheses": true,
+        "prediction_mode": "cv",
+        "failure": null,
+        "completed": true,
+        "controller_subscriptions": {
+          "/clock": [
+            "/cbf_dynamic_evaluator_367012_1794995590693",
+            "/tb3_0/robot_state_publisher",
+            "/tb3_0/world_to_odom",
+            "/world_to_odom_global",
+            "/world_to_virtual_leader_odom",
+            "/rviz",
+            "/cbf_dynamic_scenario",
+            "/cbf_active_monitor",
+            "/cbf_experiment_results",
+            "/tb3_virtual_leader/leader_node",
+            "/gazebo",
+            "/tb3_controller_cbf_0"
+          ],
+          "/leader/history": [
+            "/cbf_dynamic_evaluator_367012_1794995590693",
+            "/cbf_experiment_results",
+            "/tb3_controller_cbf_0",
+            "/cbf_active_monitor",
+            "/cbf_dynamic_scenario"
+          ],
+          "/system/shutdown": [
+            "/cbf_dynamic_evaluator_367012_1794995590693",
+            "/cbf_experiment_results",
+            "/tb3_controller_cbf_0",
+            "/cbf_active_monitor",
+            "/cbf_dynamic_scenario"
+          ],
+          "/tb3_0/odom": [
+            "/tb3_controller_cbf_0"
+          ],
+          "/tf": [
+            "/tb3_controller_cbf_0",
+            "/rviz"
+          ],
+          "/tf_static": [
+            "/tb3_controller_cbf_0",
+            "/rviz"
+          ],
+          "/tb3_0/scan": [
+            "/tb3_controller_cbf_0",
+            "/rviz"
+          ],
+          "/tb3_virtual_leader/state": [
+            "/tb3_controller_cbf_0"
+          ]
+        },
+        "robot_statistics": {
+          "0": {
+            "window_final_error": 0.003609661695312722,
+            "rows": 401,
+            "last_time": 40.095000000000006,
+            "statuses": {
+              "ok": 391,
+              "feasible_iterate": 10
+            },
+            "timing_p95_ms": 53.63916698843241,
+            "timing_max_ms": 71.48049504030496,
+            "final_error": 0.0035983733026107895,
+            "dynamic_cycles": 265,
+            "max_estimated_speed": 0.12928583959992673
+          }
+        },
+        "prediction_markers": {
+          "messages": 324,
+          "hard_cylinders": 654,
+          "soft_dashed_ellipses": 436,
+          "observers": [
+            "0",
+            "selected"
+          ],
+          "passed": true
+        },
+        "rviz_capture": {
+          "passed": true,
+          "error": null
+        },
+        "body_radius_proxy": 0.13,
+        "dynamic_clearance_min": 0.3340552226887937,
+        "peer_clearance_min": 1000000000.0,
+        "static_clearance_min": 1000000000.0,
+        "truth_samples": 1038,
+        "clearance_note": "20 Hz actual Gazebo positions; circular body proxy, not a continuous collision proof.",
+        "gazebo_command": [
+          "gzserver",
+          "-e",
+          "ode",
+          "--seed",
+          "211",
+          "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/研究副本/ca_prediction_ws_2026-10-26/src/tb3_distributed_control/worlds/consensus_dynamic_obstacles.world",
+          "-s",
+          "/opt/ros/noetic/lib/libgazebo_ros_paths_plugin.so",
+          "-s",
+          "/opt/ros/noetic/lib/libgazebo_ros_api_plugin.so",
+          "__name:=gazebo",
+          "__log:=/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/预测方向与保守量诊断_2026-11-18/oblique_direction/roslog/dcce28f2-e335-11f1-8279-59f088b74066/gazebo-4.log"
+        ],
+        "seed_configured": true,
+        "progress_configured": true,
+        "execution_backup_configured": true,
+        "infeasible_escape_configured": true,
+        "predictive_bypass_configured": true,
+        "active_guidance_only_configured": true,
+        "risk_configured": true,
+        "core_mode_configured": true,
+        "rear_configured": true,
+        "horizon_configured": true,
+        "local_reference_configured": true,
+        "spatial_pass_configured": true,
+        "shift_durations_configured": true,
+        "lateral_extras_configured": true,
+        "activation_configured": true,
+        "spatial_backend_configured": true,
+        "seed_policy_configured": true,
+        "transport_geometry_configured": true,
+        "adaptive_recovery_configured": true,
+        "no_truth_input_passed": true,
+        "own_scan_only": true,
+        "passed": true,
+        "base_passed": true,
+        "acceptance_protocol": "active_motion_v1",
+        "active_motion": {
+          "passed": true,
+          "checks": {
+            "truth_covers_motion_window": true,
+            "task_endpoint_fresh": true,
+            "sampled_proxy_clearance_positive": true,
+            "linear_swept_proxy_clearance_positive": true,
+            "no_sustained_standstill": true,
+            "total_standstill_within_measurement_tolerance": true,
+            "no_crawling_time_avoidance": true,
+            "passed_actor": true,
+            "spatial_detour_observed": true,
+            "tracking_recovered": true,
+            "no_fault_stop": true
+          },
+          "failed_checks": [],
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "sampled_proxy_clearance_min": 0.3340552226887937,
+          "linear_swept_proxy_clearance_min": 0.3340265888822546,
+          "total_standstill_seconds": 0.0,
+          "longest_standstill_seconds": 0.0,
+          "minimum_rolling_speed": 0.14170193498324624,
+          "fault_stop_count": 0,
+          "first_forward_pass": {
+            "time": 10.1929925350065,
+            "position": [
+              1.893036846304065,
+              0.526905366008076
+            ],
+            "lateral_offset": 0.526905366008076
+          },
+          "endpoint_sample_time": 39.989000000000004,
+          "final_position_error": 0.0019105144234273952,
+          "observed_max_planar_speed": 0.22439939381843876,
+          "protocol": {
+            "version": "active_motion_v1_2026_11_10",
+            "duration": 40.0,
+            "reference_start": [
+              0.4,
+              0.0
+            ],
+            "reference_velocity": [
+              0.15,
+              0.0
+            ],
+            "body_radius": 0.13,
+            "maximum_speed": 0.22,
+            "maximum_yaw_rate": 2.84,
+            "motion_window": [
+              4.0,
+              39.0
+            ],
+            "stop_speed": 0.02,
+            "maximum_stop_episode": 0.25,
+            "maximum_total_stop": 0.3,
+            "rolling_window": 1.0,
+            "minimum_rolling_speed": 0.075,
+            "minimum_lateral_at_pass": 0.13,
+            "maximum_truth_gap": 0.25,
+            "endpoint_freshness": 0.15,
+            "maximum_final_position_error": 0.25,
+            "require_no_fault_stop": true,
+            "witness": {
+              "lateral_offset": 0.45,
+              "start_time": 3.0,
+              "outward_duration": 6.0,
+              "hold_duration": 8.0,
+              "return_duration": 6.0
+            }
+          },
+          "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/预测方向与保守量诊断_2026-11-18/oblique_direction",
+          "independent_truth_file": "gazebo_truth.csv",
+          "controller_records_finalized": true,
+          "base_passed": true
+        }
+      },
+      "display_audit": {
+        "passed": true,
+        "checked_regions": 2398,
+        "hard_regions": 654,
+        "soft_regions": 436,
+        "maximum_numeric_error": 2.220446049250313e-15,
+        "prediction_envelopes": 654,
+        "direction_icons": 218,
+        "velocity_labels": 218,
+        "center_markers": 218,
+        "identical_local_selected_frames": 110,
+        "error_count": 0,
+        "first_error": null,
+        "note": "Display-to-input geometry audit only; does not certify future physical safety."
+      },
+      "model_audit": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 401,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metrics_audit": {
+        "passed": true,
+        "robots": {
+          "0": {
+            "rows": 401,
+            "prior_plan_samples_audited": 400,
+            "reference_quality_counts": {
+              "2": 1,
+              "1": 399,
+              "3": 1
+            },
+            "max_nominal_analytic_residual": 1.7763568394002505e-15,
+            "max_heading_analytic_residual": 0.0,
+            "mean_plan_execution_error": 0.007964472968193099,
+            "max_plan_execution_error": 0.04437006598680124,
+            "max_nominal_error_during_plan_samples": 0.5745198097517442
+          }
+        },
+        "checks": [
+          "pose/reference same timestamp",
+          "target-minus-actual heading sign",
+          "prior accepted plan trace reconstruction",
+          "no fabricated plan zero",
+          "no nominal/plan alias",
+          "analytic prescribed leader cross-check"
+        ]
+      },
+      "manual_screenshot_verified": true
+    }
+  ],
+  "original_controller_sha256": "9f4fb045b7ed76a12738891b750d4dec6cd1968ed13f51627bca7a74e61d3094",
+  "limitations": [
+    "Fixed 0.32 m direction ICON is not predicted travel distance; centres retain true predicted positions.",
+    "Only display and local measurement diagnosis improved. Underestimated dynamic motion remains unresolved.",
+    "Two finite single-robot GUI cases; not new multi-robot/real-robot or hard realtime proof.",
+    "Truth used offline only. Safety boundaries, predictor and all margins unchanged. Raw data/images remain local; same-disk archive is not offsite backup."
+  ]
+}
