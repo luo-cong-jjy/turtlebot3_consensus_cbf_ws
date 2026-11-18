@@ -593,6 +593,7 @@ class ExperimentRecorder:
             reliability_parameters=dict(dict(reliability_horizon=1.,score_tau=.5,weight_tau=.3,score_floor=.015,switch_ratio=.8,switch_hold=.6),
                 **rospy.get_param('/cbf/dynamic/reliability',{})),
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
+            log_cluster_points=rospy.get_param('/cbf/dynamic/log_cluster_points',False),
             local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed'),
             spatial_pass=rospy.get_param('/cbf/mpc/spatial_pass',False),
             spatial_activation_threshold=rospy.get_param('/cbf/mpc/spatial_activation_threshold',-1.),

@@ -23,6 +23,7 @@ from run_cbf_gazebo import free_port,stop
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--check-prediction-markers',action='store_true')
+    parser.add_argument('--log-cluster-points',action='store_true',help='Local single-robot diagnostics only')
     parser.add_argument('--open-rviz',action='store_true')
     parser.add_argument('--capture-rviz',action='store_true',help='Capture only this test RViz window via its PID')
     parser.add_argument('--scenario',default='crossing',choices=['crossing','head_on','overtaking','maneuver','mixed','accelerating_crossing','decelerating_crossing','stop_go_crossing','active_head_on','active_overtaking','active_oblique_crossing'])
@@ -75,6 +76,7 @@ def main():
     parser.add_argument('--wall-timeout',type=float,default=240.)
     args=parser.parse_args();out=Path(args.output).resolve()
     active=args.scenario.startswith('active_')
+    if args.log_cluster_points and args.robots!=1:parser.error('Point recording is single-robot diagnostic only')
     try:
         extras=json.loads(args.spatial_lateral_extras)
         if np.shape(extras)!=(3,) or not np.isfinite(extras).all() or min(extras)<0 or np.any(np.diff(extras)<0):raise ValueError()
@@ -129,6 +131,7 @@ def main():
         from visualization_msgs.msg import MarkerArray
         from tb3_distributed_control.msg import LeaderHistoryData
         rospy.init_node('cbf_dynamic_evaluator',anonymous=True,disable_signals=True)
+        rospy.set_param('/cbf/dynamic/log_cluster_points',args.log_cluster_points)
         def lead(msg):
             if not begins:begins.append(msg.ros_timestamp-msg.trajectory_time)
         def models(msg):

@@ -975,6 +975,7 @@ class TurtleBot3CBFController:
         self.robot_exclusion_radius = float(get('~robot_exclusion_radius', 0.16))
         self.static_accumulation = bool(get('~static_accumulation', True))
         self.dynamic_prediction = bool(get('/cbf/dynamic_prediction',False))
+        self.log_cluster_points=bool(get('/cbf/dynamic/log_cluster_points',False))
         if self.dynamic_prediction:
             # External targets are associated frame by frame; never accumulate
             # their old locations into the static world representation.
@@ -1175,10 +1176,15 @@ class TurtleBot3CBFController:
                     for row,o in zip(rows,observed):row.update(model_weights=o['model_weights'].tolist(),
                         model_scores=o['model_scores'],selected_model=o['selected_model'],
                         score_count=o['score_count'],score_origin=o['score_origin'],model_switches=o['model_switches'])
-                self.predictions_pub.publish(String(data=json.dumps(dict(stamp=stamp.to_sec(),
+                prediction_message=dict(stamp=stamp.to_sec(),
                     observer=self.name,dt=self.dt,mode=self.dynamic_tracker.mode,tracks=rows,
                     measurements=[dict(center=[e.cx,e.cy],a=e.a,b=e.b,theta=e.theta,
-                        point_count=e.point_count) for e in fits]))))
+                        point_count=e.point_count,**(dict(points=cluster.tolist())
+                        if getattr(self,'log_cluster_points',False) else {})) for e,cluster in zip(fits,clusters)])
+                if getattr(self,'log_cluster_points',False):
+                    prediction_message.update(sensor_origin=[translation.x,translation.y],points_frame=self.target_frame,
+                        point_input_kind='voxel-downsampled non-peer obstacle cluster')
+                self.predictions_pub.publish(String(data=json.dumps(prediction_message)))
             self.publish_geometry(stamp, world_points, fits, clusters)
             self.processed_scan = scan
             self.last_success = now
