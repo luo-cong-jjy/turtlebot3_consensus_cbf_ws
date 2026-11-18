@@ -1,0 +1,1357 @@
+{
+  "parent_commit": "140e0a1",
+  "algorithm_commit": "d8adc3b",
+  "branch": "research/qualified-return-2026-11-18",
+  "accepted_for_current_single_robot_scenes": true,
+  "tests": {
+    "count": 223,
+    "passed": true
+  },
+  "actual_trials": 10,
+  "actual_passed": 10,
+  "new_enabled_trials": 7,
+  "new_enabled_passed": 7,
+  "baseline_trials": 3,
+  "gui_trials": 3,
+  "all_gui_passed": true,
+  "source_snapshot_validation": {
+    "head_on_baseline": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "head_on_new": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "head_on_new_gui": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "oblique_baseline": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "oblique_new": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "overtaking_baseline": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "overtaking_new": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "overtaking_new_239": {
+      "commit": "d8adc3b",
+      "files": 24,
+      "matched": true
+    },
+    "oblique_new_gui": {
+      "commit": "69374e9",
+      "files": 24,
+      "matched": true
+    },
+    "overtaking_new_gui": {
+      "commit": "69374e9",
+      "files": 24,
+      "matched": true
+    }
+  },
+  "metadata": {
+    "head_on_baseline": {
+      "enabled": false,
+      "gui": false,
+      "passed": true
+    },
+    "head_on_new": {
+      "enabled": true,
+      "gui": false,
+      "passed": true
+    },
+    "head_on_new_gui": {
+      "enabled": true,
+      "gui": true,
+      "passed": true
+    },
+    "oblique_baseline": {
+      "enabled": false,
+      "gui": false,
+      "passed": true
+    },
+    "oblique_new": {
+      "enabled": true,
+      "gui": false,
+      "passed": true
+    },
+    "overtaking_baseline": {
+      "enabled": false,
+      "gui": false,
+      "passed": true
+    },
+    "overtaking_new": {
+      "enabled": true,
+      "gui": false,
+      "passed": true
+    },
+    "overtaking_new_239": {
+      "enabled": true,
+      "gui": false,
+      "passed": true
+    },
+    "oblique_new_gui": {
+      "enabled": true,
+      "gui": true,
+      "passed": true
+    },
+    "overtaking_new_gui": {
+      "enabled": true,
+      "gui": true,
+      "passed": true
+    }
+  },
+  "unchanged_definitions": {
+    "CachedMPCProblem": true,
+    "barrier_values": true,
+    "safety_residuals": true,
+    "first_step_mask": true,
+    "first_step_values": true,
+    "rollout": true,
+    "_spatial_rollout_function": true,
+    "_spatial_rollout_numpy": true,
+    "_spatial_rollout_compiled": true,
+    "src/tb3_distributed_control/scripts/tb3_controller_node_cbf.py": true,
+    "src/tb3_distributed_control/scripts/cbf_mpc_core.py": true
+  },
+  "disabled_parent_replay": {
+    "parent": "140e0a1",
+    "frames": 401,
+    "maximum_guide_vector_difference": 0.0,
+    "level_mismatches": 0,
+    "passed": true,
+    "note": "Recorded identical-input numerical comparison; not a physical repeatability proof."
+  },
+  "adopted_first_steps": 4007,
+  "display_checks": 29060,
+  "all_metric_model_display_audits_passed": true,
+  "all_early_starts_full_preview_qualified": true,
+  "maximum_cycle_ms": 99.13188393693417,
+  "all_control_variation_reduced": false,
+  "maximum_lateral_offset_reduced_in_all_cases": false,
+  "comparisons": {
+    "head_on": {
+      "xy_recovery_time_saved": 1.5549999999999997,
+      "xy_delay_reduction_pct": 14.836687959503436,
+      "y_integral_reduction_pct": 19.307199797045396,
+      "omega_tv_change_pct": -10.587670029139343
+    },
+    "oblique": {
+      "xy_recovery_time_saved": 3.4730000000000043,
+      "xy_delay_reduction_pct": 33.50048216007717,
+      "y_integral_reduction_pct": 44.47979345992468,
+      "omega_tv_change_pct": 7.203044587449303
+    },
+    "overtaking": {
+      "xy_recovery_time_saved": 3.519000000000002,
+      "xy_delay_reduction_pct": 42.56285302912838,
+      "y_integral_reduction_pct": 50.577485908174644,
+      "omega_tv_change_pct": 15.18706711229906
+    }
+  },
+  "trials": {
+    "head_on_baseline": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/head_on_baseline",
+      "controller_passed": true,
+      "closest_approach_time": 10.609,
+      "settled_y_time": 18.906,
+      "settled_y_delay": 8.296999999999999,
+      "settled_xy_time": 18.906,
+      "settled_xy_delay": 8.296999999999999,
+      "post_cpa_integrated_abs_y": 3.6761348283768776,
+      "maximum_abs_y": 0.6249002570882909,
+      "omega_total_variation": 11.633524946617344,
+      "first_return": {
+        "time": 14.632000000000001,
+        "duration": 6.0
+      },
+      "early_return_starts": [],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.23404682405014837,
+        "linear_swept_proxy_clearance_min": 0.23403352567027386,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.12589788048299866,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 11.771569519607372,
+          "position": [
+            2.0957298139386498,
+            -0.620580977893469
+          ],
+          "lateral_offset": 0.620580977893469
+        },
+        "endpoint_sample_time": 39.99,
+        "final_position_error": 0.0004646356002820693,
+        "observed_max_planar_speed": 0.22067728807383064,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/head_on_baseline",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.0021292568687709145,
+        "rows": 401,
+        "last_time": 40.032,
+        "statuses": {
+          "feasible_iterate": 53,
+          "ok": 348
+        },
+        "timing_p95_ms": 65.67868206184357,
+        "timing_max_ms": 83.53019703645259,
+        "final_error": 0.002147194399167059,
+        "dynamic_cycles": 206,
+        "max_estimated_speed": 0.07547681541874933
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "head_on_new": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/head_on_new",
+      "controller_passed": true,
+      "closest_approach_time": 10.285,
+      "settled_y_time": 16.573,
+      "settled_y_delay": 6.288,
+      "settled_xy_time": 17.351,
+      "settled_xy_delay": 7.065999999999999,
+      "post_cpa_integrated_abs_y": 2.966376132253382,
+      "maximum_abs_y": 0.6696794237581672,
+      "omega_total_variation": 10.40180571251189,
+      "first_return": {
+        "time": 11.245999999999999,
+        "duration": 6.0
+      },
+      "early_return_starts": [
+        {
+          "time": 11.245999999999999,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        },
+        {
+          "time": 11.446000000000002,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        }
+      ],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.23093218130601773,
+        "linear_swept_proxy_clearance_min": 0.23093218130601773,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.14216615357546614,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 11.649262861908982,
+          "position": [
+            2.1015558092060678,
+            -0.6337630058760874
+          ],
+          "lateral_offset": 0.6337630058760874
+        },
+        "endpoint_sample_time": 39.992000000000004,
+        "final_position_error": 0.0029129925536185933,
+        "observed_max_planar_speed": 0.22480662077489952,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/head_on_new",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.004123821145655429,
+        "rows": 401,
+        "last_time": 40.04600000000001,
+        "statuses": {
+          "feasible_iterate": 11,
+          "ok": 390
+        },
+        "timing_p95_ms": 59.268082957714796,
+        "timing_max_ms": 73.96290893666446,
+        "final_error": 0.004299197329264811,
+        "dynamic_cycles": 214,
+        "max_estimated_speed": 0.07252929494942259
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "head_on_new_gui": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/head_on_new_gui",
+      "controller_passed": true,
+      "closest_approach_time": 10.559999999999999,
+      "settled_y_time": 16.066,
+      "settled_y_delay": 5.506,
+      "settled_xy_time": 17.072,
+      "settled_xy_delay": 6.5120000000000005,
+      "post_cpa_integrated_abs_y": 2.4352533423746605,
+      "maximum_abs_y": 0.6198322439493459,
+      "omega_total_variation": 10.536876748573441,
+      "first_return": {
+        "time": 12.926999999999998,
+        "duration": 3.0
+      },
+      "early_return_starts": [
+        {
+          "time": 12.926999999999998,
+          "duration": 3.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        }
+      ],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.27620491369813366,
+        "linear_swept_proxy_clearance_min": 0.27620258536748427,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.14430865712386698,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 11.72048946700815,
+          "position": [
+            2.098140252151642,
+            -0.6190685786177293
+          ],
+          "lateral_offset": 0.6190685786177293
+        },
+        "endpoint_sample_time": 39.99,
+        "final_position_error": 0.000270655992509653,
+        "observed_max_planar_speed": 0.22756342333700608,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/head_on_new_gui",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.0019207593502727138,
+        "rows": 401,
+        "last_time": 40.02700000000001,
+        "statuses": {
+          "ok": 353,
+          "feasible_iterate": 48
+        },
+        "timing_p95_ms": 65.87487005162984,
+        "timing_max_ms": 87.1292999945581,
+        "final_error": 0.0017798572801207765,
+        "dynamic_cycles": 209,
+        "max_estimated_speed": 0.08180281919985372
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "oblique_baseline": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/oblique_baseline",
+      "controller_passed": true,
+      "closest_approach_time": 7.577000000000001,
+      "settled_y_time": 17.902,
+      "settled_y_delay": 10.325,
+      "settled_xy_time": 17.947000000000003,
+      "settled_xy_delay": 10.370000000000001,
+      "post_cpa_integrated_abs_y": 4.405731516962,
+      "maximum_abs_y": 0.578551884897538,
+      "omega_total_variation": 7.726938180178546,
+      "first_return": {
+        "time": 13.686000000000002,
+        "duration": 6.0
+      },
+      "early_return_starts": [],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.3394396858255954,
+        "linear_swept_proxy_clearance_min": 0.3394292924457131,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.1412130424765894,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 10.226667332096927,
+          "position": [
+            1.892586637734916,
+            0.5352135651041519
+          ],
+          "lateral_offset": 0.5352135651041519
+        },
+        "endpoint_sample_time": 39.989000000000004,
+        "final_position_error": 0.0013306463631543128,
+        "observed_max_planar_speed": 0.22596539374395586,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/oblique_baseline",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.003097570505437446,
+        "rows": 400,
+        "last_time": 39.986000000000004,
+        "statuses": {
+          "ok": 325,
+          "feasible_iterate": 75
+        },
+        "timing_p95_ms": 65.34838072257116,
+        "timing_max_ms": 95.22694500628859,
+        "final_error": 0.003097570505437446,
+        "dynamic_cycles": 266,
+        "max_estimated_speed": 0.12476430703769474
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "oblique_new": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/oblique_new",
+      "controller_passed": true,
+      "closest_approach_time": 7.578,
+      "settled_y_time": 13.37,
+      "settled_y_delay": 5.791999999999999,
+      "settled_xy_time": 14.473999999999998,
+      "settled_xy_delay": 6.895999999999998,
+      "post_cpa_integrated_abs_y": 2.446071237818496,
+      "maximum_abs_y": 0.5835225958383079,
+      "omega_total_variation": 8.28351298254145,
+      "first_return": {
+        "time": 10.338999999999999,
+        "duration": 3.0
+      },
+      "early_return_starts": [
+        {
+          "time": 10.338999999999999,
+          "duration": 3.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        }
+      ],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.3414159601815188,
+        "linear_swept_proxy_clearance_min": 0.3414102124648916,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.1438254122253113,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 10.225626741920934,
+          "position": [
+            1.8921999999999999,
+            0.5450673398392252
+          ],
+          "lateral_offset": 0.5450673398392252
+        },
+        "endpoint_sample_time": 39.999,
+        "final_position_error": 0.004127759543036443,
+        "observed_max_planar_speed": 0.22740573116745313,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/oblique_new",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.004703740117721546,
+        "rows": 402,
+        "last_time": 40.139,
+        "statuses": {
+          "ok": 364,
+          "feasible_iterate": 38
+        },
+        "timing_p95_ms": 65.9730352985207,
+        "timing_max_ms": 99.13188393693417,
+        "final_error": 0.00428797905977037,
+        "dynamic_cycles": 265,
+        "max_estimated_speed": 0.12217915007483585
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "overtaking_baseline": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_baseline",
+      "controller_passed": true,
+      "closest_approach_time": 11.109,
+      "settled_y_time": 20.138,
+      "settled_y_delay": 9.029000000000002,
+      "settled_xy_time": 20.138,
+      "settled_xy_delay": 9.029000000000002,
+      "post_cpa_integrated_abs_y": 3.521923745927605,
+      "maximum_abs_y": 0.7028301194990757,
+      "omega_total_variation": 6.565114181816422,
+      "first_return": {
+        "time": 15.883999999999997,
+        "duration": 6.0
+      },
+      "early_return_starts": [],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.19233764037526752,
+        "linear_swept_proxy_clearance_min": 0.19233764037526752,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.14228578265272418,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 9.415232654812522,
+          "position": [
+            1.819588731239811,
+            0.5646909962113791
+          ],
+          "lateral_offset": 0.5646909962113791
+        },
+        "endpoint_sample_time": 39.985,
+        "final_position_error": 0.0022218802398988836,
+        "observed_max_planar_speed": 0.21283437100317068,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_baseline",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.00019234162912104945,
+        "rows": 400,
+        "last_time": 39.98399999999999,
+        "statuses": {
+          "feasible_iterate": 25,
+          "ok": 375
+        },
+        "timing_p95_ms": 61.71573573374187,
+        "timing_max_ms": 76.20619202498347,
+        "final_error": 0.00019234162912104945,
+        "dynamic_cycles": 282,
+        "max_estimated_speed": 0.08101288960282327
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "overtaking_new": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_new",
+      "controller_passed": true,
+      "closest_approach_time": 11.433,
+      "settled_y_time": 16.619,
+      "settled_y_delay": 5.186,
+      "settled_xy_time": 16.619,
+      "settled_xy_delay": 5.186,
+      "post_cpa_integrated_abs_y": 1.7406232596344142,
+      "maximum_abs_y": 0.7023450978541714,
+      "omega_total_variation": 7.562162478607945,
+      "first_return": {
+        "time": 12.163,
+        "duration": 6.0
+      },
+      "early_return_starts": [
+        {
+          "time": 12.163,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        },
+        {
+          "time": 12.362999999999998,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        }
+      ],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.21043971720747262,
+        "linear_swept_proxy_clearance_min": 0.21043906535132545,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.14108830982409382,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 9.378979465574211,
+          "position": [
+            1.8165597535638158,
+            0.5907961666376341
+          ],
+          "lateral_offset": 0.5907961666376341
+        },
+        "endpoint_sample_time": 39.988,
+        "final_position_error": 0.002753608598811794,
+        "observed_max_planar_speed": 0.20944674261920423,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_new",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.0009649819825125629,
+        "rows": 401,
+        "last_time": 40.062999999999995,
+        "statuses": {
+          "feasible_iterate": 9,
+          "ok": 392
+        },
+        "timing_p95_ms": 58.5737390210852,
+        "timing_max_ms": 90.8610710175708,
+        "final_error": 0.0006204444135460074,
+        "dynamic_cycles": 307,
+        "max_estimated_speed": 0.08209029418258704
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "overtaking_new_239": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_new_239",
+      "controller_passed": true,
+      "closest_approach_time": 11.064,
+      "settled_y_time": 16.663,
+      "settled_y_delay": 5.599,
+      "settled_xy_time": 16.663,
+      "settled_xy_delay": 5.599,
+      "post_cpa_integrated_abs_y": 1.9818052578648246,
+      "maximum_abs_y": 0.7142478095501359,
+      "omega_total_variation": 8.374237023688545,
+      "first_return": {
+        "time": 12.160000000000002,
+        "duration": 6.0
+      },
+      "early_return_starts": [
+        {
+          "time": 12.160000000000002,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        },
+        {
+          "time": 12.459999999999999,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        }
+      ],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.2358217311364464,
+        "linear_swept_proxy_clearance_min": 0.2358217311364464,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.1424826340090024,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 9.372418596436985,
+          "position": [
+            1.8184031845889665,
+            0.6427525017520557
+          ],
+          "lateral_offset": 0.6427525017520557
+        },
+        "endpoint_sample_time": 40.001000000000005,
+        "final_position_error": 0.0007979459021607542,
+        "observed_max_planar_speed": 0.21301712112349763,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_new_239",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.0008228159653683015,
+        "rows": 400,
+        "last_time": 39.96000000000001,
+        "statuses": {
+          "ok": 398,
+          "feasible_iterate": 2
+        },
+        "timing_p95_ms": 52.38736346946098,
+        "timing_max_ms": 66.59953598864377,
+        "final_error": 0.0008228159653683015,
+        "dynamic_cycles": 264,
+        "max_estimated_speed": 0.07855808899491773
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "oblique_new_gui": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/oblique_new_gui",
+      "controller_passed": true,
+      "closest_approach_time": 7.621,
+      "settled_y_time": 13.775,
+      "settled_y_delay": 6.154,
+      "settled_xy_time": 13.913,
+      "settled_xy_delay": 6.292,
+      "post_cpa_integrated_abs_y": 2.5836601613267813,
+      "maximum_abs_y": 0.5722978831463861,
+      "omega_total_variation": 7.469720808973229,
+      "first_return": {
+        "time": 9.091999999999999,
+        "duration": 6.0
+      },
+      "early_return_starts": [
+        {
+          "time": 9.091999999999999,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        }
+      ],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.3218383382067092,
+        "linear_swept_proxy_clearance_min": 0.32182182335124127,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.13873946535357184,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 10.226881370925792,
+          "position": [
+            1.8910868969162697,
+            0.5635986563401009
+          ],
+          "lateral_offset": 0.5635986563401009
+        },
+        "endpoint_sample_time": 39.985,
+        "final_position_error": 0.0005302044937050062,
+        "observed_max_planar_speed": 0.22526651104984272,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/oblique_new_gui",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.0018749558202926686,
+        "rows": 401,
+        "last_time": 40.092,
+        "statuses": {
+          "ok": 339,
+          "feasible_iterate": 62
+        },
+        "timing_p95_ms": 66.1788770230487,
+        "timing_max_ms": 76.13230601418763,
+        "final_error": 0.001633951395738678,
+        "dynamic_cycles": 264,
+        "max_estimated_speed": 0.12258695085076643
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    },
+    "overtaking_new_gui": {
+      "source": "../../四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_new_gui",
+      "controller_passed": true,
+      "closest_approach_time": 11.446,
+      "settled_y_time": 16.498,
+      "settled_y_delay": 5.052000000000001,
+      "settled_xy_time": 16.498,
+      "settled_xy_delay": 5.052000000000001,
+      "post_cpa_integrated_abs_y": 1.702696689369116,
+      "maximum_abs_y": 0.6996382998461808,
+      "omega_total_variation": 11.205675215358394,
+      "first_return": {
+        "time": 12.281999999999998,
+        "duration": 6.0
+      },
+      "early_return_starts": [
+        {
+          "time": 12.281999999999998,
+          "duration": 6.0,
+          "qualified": true,
+          "scope": "extended_preview_qualified"
+        }
+      ],
+      "all_early_starts_full_qualified": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.20054232969654046,
+        "linear_swept_proxy_clearance_min": 0.20054232969654046,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.1408375965927262,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 9.574106974777274,
+          "position": [
+            1.8278079877596345,
+            0.5460719753930177
+          ],
+          "lateral_offset": 0.5460719753930177
+        },
+        "endpoint_sample_time": 40.008,
+        "final_position_error": 0.005343430892765506,
+        "observed_max_planar_speed": 0.21261884632810168,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/安全可行提前回归_2026-11-18/overtaking_new_gui",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "window_final_error": 0.004384733671175599,
+        "rows": 400,
+        "last_time": 39.982,
+        "statuses": {
+          "ok": 309,
+          "feasible_iterate": 91
+        },
+        "timing_p95_ms": 68.46104021533392,
+        "timing_max_ms": 86.13194699864835,
+        "final_error": 0.004384733671175599,
+        "dynamic_cycles": 248,
+        "max_estimated_speed": 0.08103796800353577
+      },
+      "definition": "CPA: actual centres in [4,25] s. Settled: thereafter through 39 s continuously <=0.05 m, at least 1 s remaining. XY uses original timed reference, not nearest path."
+    }
+  },
+  "limitations": [
+    "Finite CV single-robot straight-reference tests; not new multi-robot/physical or formal recursive safety validation.",
+    "8 s mean/held-axis return screening is a soft decision approximation. Hard MPC remains N10 at dt0.1; hard constraints and command limits unchanged.",
+    "Some return phases restart when updated models reject the old reference. No claim of a single irreversible return transition.",
+    "Head-on peak side deviation did not decrease; angular total variation rose 7.2% in oblique and 15.2% in overtaking. Faster settling is not uniform control smoothness improvement.",
+    "One headless oblique cycle reached 99.13 ms against the original 100 ms deadline; extra GUI tests passed, but no hard realtime guarantee.",
+    "Raw data/screenshots/papers remain local. Same-disk independent copies are not offsite backup."
+  ],
+  "original_controller_sha256": "9f4fb045b7ed76a12738891b750d4dec6cd1968ed13f51627bca7a74e61d3094"
+}
