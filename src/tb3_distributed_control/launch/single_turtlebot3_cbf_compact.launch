@@ -1,4 +1,5 @@
 <launch>
+  <!-- EXPERIMENT ONLY: reduced clearances failed continuity repeats; validated repeatability entry is retained. -->
   <arg name="scenario" default="active_overtaking" />
   <arg name="gui" default="true" />
   <arg name="open_rviz" default="true" />
