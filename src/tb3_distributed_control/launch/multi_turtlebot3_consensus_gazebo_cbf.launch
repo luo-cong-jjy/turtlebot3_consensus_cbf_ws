@@ -38,7 +38,7 @@
   <arg name="formation_radius" default="0.5" />
   <arg name="sensor_ready_delay" default="0.0" />
   <arg name="robot_count" default="5" />
-  <arg name="rviz_config" default="$(eval find('tb3_distributed_control') + '/rviz/' + ('tb3_cbf_single.rviz' if arg('robot_count') == '1' else 'tb3_cbf.rviz'))" />
+  <arg name="rviz_config" default="$(eval find('tb3_distributed_control') + '/rviz/' + ('tb3_cbf_single.rviz' if int(arg('robot_count')) == 1 else 'tb3_cbf.rviz'))" />
   <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
   <arg name="gazebo_seed" default="" />
   <arg name="progress_hypotheses" default="true" />

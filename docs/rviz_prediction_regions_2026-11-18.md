@@ -13,3 +13,5 @@
 216项检查通过，包括旋转椭圆轮廓逐点验证原h=0、输入不被修改、软节点末轴保持、peer排除和过期删除。事前冻结两次实际40 s试验：迎面211开启RViz并仅捕获本次RViz窗口；斜向211无GUI但订阅实际Marker。两次都开启现有0.22/2 s/2-4 s时程，原连续运动和100 ms验收不改。保存显示订阅下的原始Marker与控制输入，逐节点核对坐标/方向/半轴；如果有显示或实时性失败完整保留。
 
 启动沿用研究副本single_turtlebot3_cbf_trigger022.launch，RViz默认开启；Displays中查看“CBF predicted danger regions (green MPC, amber soft preview)”。原工程与旧阶段不会自动更新。
+
+首轮迎面GUI记录head_on_rviz_v1：控制/Marker验收通过，但人工检查截图发现布局未显示3D视口，不能称可视化通过。保留该图与所有数据。恢复已有可用Qt窗口布局状态、缩小面板高度；另修复roslaunch对robot_count的数值自动转换导致与字符串'1'比较恒假的问题（改int(...)==1）。修复后重新做迎面GUI验证，再进行斜向订阅测试。没有以“截图文件存在”代替人工查看画面。
