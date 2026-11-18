@@ -16,6 +16,8 @@ from mpc_dcbf_cached_solver import barrier_values
 
 def replay(directory,observer='tb3_0'):
     p=Path(directory);m=json.loads((p/'run_metadata.json').read_text());mode=m['prediction_mode']
+    if m.get('geometry_observer','mvee')!='mvee':
+        raise ValueError('This legacy replay is for MVEE measurements; use the geometry-observer replay for circle/hold frames')
     model=inline.make_dynamic_tracker(mode=mode,dt=m['control_dt'],
         ca_jerk_density=m['ca_jerk_density'],ca_acceleration_variance=m['ca_acceleration_variance'],
         singer_tau=m['singer_tau'],reaction_time=m['dynamic_reaction_time'],extra_margin=m['dynamic_extra_margin'],

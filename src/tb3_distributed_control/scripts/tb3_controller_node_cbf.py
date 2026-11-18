@@ -343,6 +343,55 @@ def predicted_peer_envelope(peer_id, stamp, state, velocity, now, dt, horizon,
     return obstacle
 
 
+def circle_enclosure_radius(center, ellipse, physical_radius=0., padding=.03):
+    """Enclose the entire old padded ellipse, with a sampling remainder bound."""
+    angle=np.arange(128)*(2*np.pi/128);c,s=np.cos(ellipse.theta),np.sin(ellipse.theta)
+    local=np.column_stack((ellipse.a*np.cos(angle),ellipse.b*np.sin(angle)))
+    boundary=local@np.array([[c,s],[-s,c]])+[ellipse.cx,ellipse.cy]
+    cover=float(np.linalg.norm(boundary-np.asarray(center),axis=1).max())+max(ellipse.a,ellipse.b)*np.pi/128
+    return max(cover,float(physical_radius)+padding)
+
+
+def circle_observation(points, enclosure, sensor_origin, padding=.03):
+    """Near-cylinder hypothesis from a partial arc; no supplied object radius.
+
+    Quality gates are not a universal shape classifier. The output circle
+    contains the whole original padded MVEE, not only its observed returns.
+    """
+    p=np.asarray(points,float).reshape(-1,2)
+    def reject(reason):return dict(accepted=False,reason=reason)
+    if len(p)<6 or not np.isfinite(p).all():return reject('insufficient_points')
+    origin=p.mean(0);q=p-origin;design=np.column_stack((2*q,np.ones(len(p))))
+    estimate,_,rank,_=np.linalg.lstsq(design,np.sum(q*q,axis=1),rcond=None)
+    if rank<3:return reject('rank')
+    center=estimate[:2]+origin;radius=np.sqrt(max(0.,estimate[2]+estimate[0]**2+estimate[1]**2))
+    try:
+        for unused in range(8):
+            delta=center-p;distance=np.linalg.norm(delta,axis=1)
+            if distance.min()<1e-8:return reject('degenerate')
+            error=distance-radius;jacobian=np.column_stack((delta/distance[:,None],-np.ones(len(p))))
+            weight=np.minimum(1.,.01/np.maximum(abs(error),1e-9));normal=jacobian.T@(weight[:,None]*jacobian)
+            if np.linalg.cond(normal)>1000:return reject('conditioning')
+            step=np.linalg.solve(normal,-jacobian.T@(weight*error));center+=step[:2];radius+=step[2]
+            if np.linalg.norm(step)<1e-7:break
+        error=np.linalg.norm(p-center,axis=1)-radius
+        angles=np.sort(np.arctan2(p[:,1]-center[1],p[:,0]-center[0]))
+        span=2*np.pi-np.diff(np.r_[angles,angles[0]+2*np.pi]).max()
+        rms=float(np.sqrt(np.mean(error**2)));sigma=max(.005,rms)
+        covariance=sigma*sigma*np.linalg.inv(jacobian.T@jacobian)
+        center_std=float(np.sqrt(np.linalg.eigvalsh(covariance[:2,:2]).max()))
+    except np.linalg.LinAlgError:return reject('singular')
+    if not .06<=radius<=.6:return reject('radius_range')
+    if span<1.3:return reject('arc_span')
+    if rms>.01 or abs(error).max()>.025:return reject('residual')
+    if not np.isfinite(center_std) or center_std>.06:return reject('precision')
+    ray=origin-np.asarray(sensor_origin)
+    if (center-origin)@ray/max(np.linalg.norm(ray),1e-9)<-.015:return reject('sensor_side')
+    return dict(accepted=True,reason='accepted',center=center,radius=float(radius),
+        enclosure_radius=circle_enclosure_radius(center,enclosure,radius,padding),
+        residual=rms,arc_span=float(span),center_std=center_std)
+
+
 class DynamicEllipseTracker:
     """Local measured ellipses -> predictive association -> upstream 9-state KF.
 
@@ -356,7 +405,8 @@ class DynamicEllipseTracker:
     def __init__(self, dt=.1, horizon=10, association_distance=.65, timeout=.65,
                  history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02,
                  ca_jerk_density=.01,ca_acceleration_variance=.04,singer_tau=1.,
-                 acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False):
+                 acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False,
+                 geometry_observer='mvee'):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -373,6 +423,9 @@ class DynamicEllipseTracker:
         self.acceleration_buffer=bool(acceleration_buffer)
         self.stage_velocity_guidance=bool(stage_velocity_guidance)
         self.transport_geometry=bool(transport_geometry)
+        if geometry_observer not in ('mvee','circle') or geometry_observer=='circle' and mode!='cv':
+            raise ValueError('Circle observation currently supports CV only')
+        self.geometry_observer=geometry_observer
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -435,7 +488,8 @@ class DynamicEllipseTracker:
         assigned={}
         if forced_ids is not None:assigned=dict(enumerate(forced_ids))
         elif ellipses and ids:
-            centers=np.array([[e.cx,e.cy] for e in ellipses])
+            centers=np.array([(getattr(e,'circle_candidate',{}).get('center',[e.cx,e.cy])
+                if self.geometry_observer=='circle' else [e.cx,e.cy]) for e in ellipses])
             predicted=np.array([self.tracks[i]['x'][:2] for i in ids])
             distances=np.linalg.norm(centers[:,None,:]-predicted[None,:,:],axis=2)
             # Dummy columns permit unmatched measurements; gated pairs cannot
@@ -446,6 +500,18 @@ class DynamicEllipseTracker:
             assigned={r:ids[c] for r,c in zip(rows,cols) if c<len(ids) and distances[r,c]<=self.max_distance}
         for index,ellipse in enumerate(ellipses):
             key=assigned.get(index)
+            existing=self.tracks.get(key);position_observed=True;kind='mvee'
+            if self.geometry_observer=='circle':
+                candidate=getattr(ellipse,'circle_candidate',{})
+                if candidate.get('accepted',False):
+                    ellipse.cx,ellipse.cy=candidate['center'];ellipse.a=ellipse.b=candidate['enclosure_radius'];ellipse.theta=0.
+                    kind='circle'
+                elif (existing is not None and existing.get('observation_kind')=='circle'
+                        and stamp-existing.get('last_motion_observed',-1e9)<=.35):
+                    center=existing['x'][:2];radius=circle_enclosure_radius(center,ellipse)
+                    ellipse.cx,ellipse.cy=center;ellipse.a=ellipse.b=radius;ellipse.theta=0.
+                    position_observed=False;kind='circle'
+                ellipse.observation_kind=kind;ellipse.position_observed=position_observed
             z=np.array([ellipse.cx,ellipse.cy,ellipse.a,ellipse.b,ellipse.theta])
             if key is None or key not in self.tracks:
                 if key is None:key=self.next_id;self.next_id+=1
@@ -454,15 +520,24 @@ class DynamicEllipseTracker:
                 self.tracks[key]=dict(x=x,P=self.P0.copy(),stamp=stamp,seen=stamp,
                     history=deque(maxlen=self.history_size),count=0,moving_votes=0,dynamic=False,missed=0)
             track=self.tracks[key];track['history'].append([ellipse.a,ellipse.b])
+            if self.geometry_observer=='circle':
+                if existing is not None and track.get('observation_kind','mvee')!=kind:
+                    velocity=track['x'][5:7].copy();track['x']=np.zeros(9);track['x'][:5]=z;track['x'][5:7]=velocity
+                    track['P']=self.P0.copy();track['history']=deque([[ellipse.a,ellipse.b]],maxlen=self.history_size)
+                    track['observer_resets']=track.get('observer_resets',0)+1
+                track.update(observation_kind=kind,position_observed=position_observed)
+                if position_observed:track['last_motion_observed']=stamp
             variance=float(np.var(np.asarray(track['history']),axis=0).sum())**1.3
             variance+=max(0,3-len(track['history']))*.0005
             r=self.R.copy();r[0,0]*=3000.**np.log10(np.clip(variance,.005,.05)/.005);r[1,1]=r[0,0]
             # Major-axis direction is modulo pi, not modulo 2*pi.
             delta=z[4]-track['x'][4]
             z[4]=track['x'][4]+.5*np.arctan2(np.sin(2*delta),np.cos(2*delta))
-            p=track['P'];gain=np.linalg.solve(self.H@p@self.H.T+r,self.H@p).T
-            track['x']+=gain@(z-self.H@track['x'])
-            residual=np.eye(9)-gain@self.H
+            h=self.H;measurement=z
+            if not position_observed:h=self.H[2:];r=r[2:,2:];measurement=z[2:]
+            p=track['P'];gain=np.linalg.solve(h@p@h.T+r,h@p).T
+            track['x']+=gain@(measurement-h@track['x'])
+            residual=np.eye(9)-gain@h
             track['P']=residual@p@residual.T+gain@r@gain.T  # Joseph form
             track['P']=(track['P']+track['P'].T)/2
             track['x'][2:4]=np.maximum(track['x'][2:4],.025)
@@ -530,7 +605,9 @@ class DynamicEllipseTracker:
             guidance=not track['dynamic'],seen=track['seen'],measurement_age=now-track['seen'],
             geometry_transport_applied=bool(transported),guard_measurement_center=guard_center,
             geometry_reference_stamp=track['seen'],
-            raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'])
+            raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'],
+            observation_kind=track.get('observation_kind','mvee'),position_observed=track.get('position_observed',True),
+            observer_resets=track.get('observer_resets',0))
 
     def obstacles(self,snapshot,now):
         return [obs for obs in (self.forecast(t,now) for t in snapshot) if obs is not None]
@@ -981,6 +1058,9 @@ class TurtleBot3CBFController:
             # their old locations into the static world representation.
             self.static_accumulation=False
         dynamic_mode=get('/cbf/dynamic/prediction_mode','cv')
+        self.geometry_observer=get('/cbf/dynamic/geometry_observer','mvee')
+        if self.geometry_observer=='circle' and not self.dynamic_prediction:
+            raise ValueError('Circle observer requires dynamic scan tracking')
         self.dynamic_tracker=make_dynamic_tracker(self.dt,self.n,
             float(get('/cbf/dynamic/association_distance',.65)),
             float(get('/cbf/dynamic/track_timeout',.65)),
@@ -994,6 +1074,7 @@ class TurtleBot3CBFController:
             acceleration_buffer=bool(get('/cbf/dynamic/acceleration_buffer',True)),
             stage_velocity_guidance=bool(get('/cbf/dynamic/stage_velocity_guidance',True)),
             transport_geometry=bool(get('/cbf/dynamic/transport_geometry',False)),
+            geometry_observer=self.geometry_observer,
             **(get('/cbf/dynamic/reliability',{}) if dynamic_mode=='adaptive' else {}))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
@@ -1139,6 +1220,10 @@ class TurtleBot3CBFController:
                     continue
                 ellipse = enclosing_ellipse(cluster, self.min_axis, self.padding,
                                              self.fit_tolerance, self.fit_iterations)
+                if getattr(self,'geometry_observer','mvee')=='circle':
+                    ellipse.base_enclosure=dict(center=[ellipse.cx,ellipse.cy],a=ellipse.a,b=ellipse.b,
+                        theta=ellipse.theta,point_count=ellipse.point_count)
+                    ellipse.circle_candidate=circle_observation(cluster,ellipse,[translation.x,translation.y],self.padding)
                 fits.append(ellipse)
                 clusters.append(cluster)
             moving=getattr(self,'dynamic_prediction',False)
@@ -1171,7 +1256,8 @@ class TurtleBot3CBFController:
                     guard_measurement_center=o['guard_measurement_center'].tolist(),geometry_reference_stamp=o['geometry_reference_stamp'],
                     execution_margin=o['execution_margin'],
                     centers=o['prediction_centers'].tolist(),axes=o['prediction_axes'].tolist(),
-                    theta=o['theta']) for o in observed]
+                    theta=o['theta'],observation_kind=o.get('observation_kind','mvee'),
+                    position_observed=o.get('position_observed',True),observer_resets=o.get('observer_resets',0)) for o in observed]
                 if self.dynamic_tracker.mode=='adaptive':
                     for row,o in zip(rows,observed):row.update(model_weights=o['model_weights'].tolist(),
                         model_scores=o['model_scores'],selected_model=o['selected_model'],
@@ -1181,6 +1267,11 @@ class TurtleBot3CBFController:
                     measurements=[dict(center=[e.cx,e.cy],a=e.a,b=e.b,theta=e.theta,
                         point_count=e.point_count,**(dict(points=cluster.tolist())
                         if getattr(self,'log_cluster_points',False) else {})) for e,cluster in zip(fits,clusters)])
+                if getattr(self,'geometry_observer','mvee')=='circle':
+                    for measurement,e in zip(prediction_message['measurements'],fits):
+                        quality=getattr(e,'circle_candidate',{})
+                        measurement.update(base_enclosure=e.base_enclosure,observation_kind=e.observation_kind,
+                            position_observed=e.position_observed,circle_quality={k:v for k,v in quality.items() if k!='center'})
                 if getattr(self,'log_cluster_points',False):
                     prediction_message.update(sensor_origin=[translation.x,translation.y],points_frame=self.target_frame,
                         point_input_kind='voxel-downsampled non-peer obstacle cluster')
