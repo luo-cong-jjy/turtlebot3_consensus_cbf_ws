@@ -13,7 +13,7 @@
     <arg name="leader_init_x" value="0" />
     <arg name="leader_init_y" value="0" />
     <arg name="dynamic_prediction" value="true" />
-    <arg name="static_accumulation" value="false" />
+    <arg name="static_accumulation" value="true" />
     <arg name="spatial_pass" value="false" />
     <arg name="peer_safety" value="true" />
     <arg name="execution_backup" value="true" />
