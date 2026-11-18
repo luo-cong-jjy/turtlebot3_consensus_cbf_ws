@@ -1,0 +1,577 @@
+{
+  "tests": {
+    "count": 216,
+    "passed": true
+  },
+  "scope": "RViz display only; unchanged control/prediction mathematics; no new multi-robot validation.",
+  "source_compatibility": {
+    "control_except_display_snapshot": true,
+    "advance_observer": true,
+    "process_scan": true,
+    "record": true,
+    "watchdog": true,
+    "full_mpc_core_unchanged": true
+  },
+  "source_snapshots": {
+    "head_on_rviz_v1": {
+      "commit": "8948bcb",
+      "files": 24,
+      "matched": true
+    },
+    "head_on_rviz_v2": {
+      "commit": "bea4eb3",
+      "files": 24,
+      "matched": true
+    },
+    "oblique_rviz_final": {
+      "commit": "bc8de67",
+      "files": 24,
+      "matched": true
+    },
+    "head_on_rviz_clean": {
+      "commit": "2f8908e",
+      "files": 24,
+      "matched": true
+    }
+  },
+  "attempts": 4,
+  "controller_acceptance_passed": 4,
+  "manual_display_failure_preserved": [
+    "head_on_rviz_v1"
+  ],
+  "final_clean_gui_passed": true,
+  "region_checks": 4630,
+  "adopted_first_steps": 1601,
+  "maximum_region_numeric_error": 1.9984014443252818e-15,
+  "trials": [
+    {
+      "name": "head_on_rviz_v1",
+      "control_passed": true,
+      "visual_passed": false,
+      "marker_check": {
+        "passed": true,
+        "checked_regions": 1180,
+        "hard_regions": 708,
+        "soft_regions": 472,
+        "maximum_numeric_error": 1.9984014443252818e-15,
+        "identical_local_selected_frames": 119,
+        "error_count": 0,
+        "first_error": null,
+        "note": "Display-to-input geometry audit only; does not certify future physical safety."
+      },
+      "model_check": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 401,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_passed": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.22803072720041956,
+        "linear_swept_proxy_clearance_min": 0.22802559833569064,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.12625101997528265,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 11.773627808203425,
+          "position": [
+            2.0964329690302113,
+            -0.6296104172357024
+          ],
+          "lateral_offset": 0.6296104172357024
+        },
+        "endpoint_sample_time": 39.998000000000005,
+        "final_position_error": 0.003229448807081647,
+        "observed_max_planar_speed": 0.22143726110238918,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/RViz预测危险区域_2026-11-18/head_on_rviz_v1",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "0": {
+          "window_final_error": 0.0037436584244534975,
+          "rows": 401,
+          "last_time": 40.089,
+          "statuses": {
+            "feasible_iterate": 85,
+            "ok": 316
+          },
+          "timing_p95_ms": 66.11984898336232,
+          "timing_max_ms": 77.56483007688075,
+          "final_error": 0.0035558262862323,
+          "dynamic_cycles": 200,
+          "max_estimated_speed": 0.07884436445261313
+        }
+      },
+      "published_markers": {
+        "messages": 324,
+        "hard_cylinders": 708,
+        "soft_dashed_ellipses": 472,
+        "observers": [
+          "0",
+          "selected"
+        ],
+        "passed": true
+      }
+    },
+    {
+      "name": "head_on_rviz_v2",
+      "control_passed": true,
+      "visual_passed": true,
+      "marker_check": {
+        "passed": true,
+        "checked_regions": 1180,
+        "hard_regions": 708,
+        "soft_regions": 472,
+        "maximum_numeric_error": 1.7763568394002505e-15,
+        "identical_local_selected_frames": 119,
+        "error_count": 0,
+        "first_error": null,
+        "note": "Display-to-input geometry audit only; does not certify future physical safety."
+      },
+      "model_check": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_passed": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.24387711423226105,
+        "linear_swept_proxy_clearance_min": 0.24385875246721572,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.11839917035788217,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 11.826637351079272,
+          "position": [
+            2.0923,
+            -0.626310545264157
+          ],
+          "lateral_offset": 0.626310545264157
+        },
+        "endpoint_sample_time": 39.984,
+        "final_position_error": 0.002053725614014258,
+        "observed_max_planar_speed": 0.2221709456295708,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/RViz预测危险区域_2026-11-18/head_on_rviz_v2",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "0": {
+          "window_final_error": 0.0004939258305785203,
+          "rows": 400,
+          "last_time": 39.995999999999995,
+          "statuses": {
+            "ok": 390,
+            "feasible_iterate": 10
+          },
+          "timing_p95_ms": 58.12248680158516,
+          "timing_max_ms": 92.69214700907469,
+          "final_error": 0.0004939258305785203,
+          "dynamic_cycles": 206,
+          "max_estimated_speed": 0.07780568491117505
+        }
+      },
+      "published_markers": {
+        "messages": 324,
+        "hard_cylinders": 708,
+        "soft_dashed_ellipses": 472,
+        "observers": [
+          "0",
+          "selected"
+        ],
+        "passed": true
+      }
+    },
+    {
+      "name": "oblique_rviz_final",
+      "control_passed": true,
+      "visual_passed": true,
+      "marker_check": {
+        "passed": true,
+        "checked_regions": 1090,
+        "hard_regions": 654,
+        "soft_regions": 436,
+        "maximum_numeric_error": 1.7763568394002505e-15,
+        "identical_local_selected_frames": 110,
+        "error_count": 0,
+        "first_error": null,
+        "note": "Display-to-input geometry audit only; does not certify future physical safety."
+      },
+      "model_check": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_passed": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.3382460263910216,
+        "linear_swept_proxy_clearance_min": 0.3382173007972718,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.14279930625505521,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 10.212796480095625,
+          "position": [
+            1.893034935648016,
+            0.549028213436654
+          ],
+          "lateral_offset": 0.549028213436654
+        },
+        "endpoint_sample_time": 39.985,
+        "final_position_error": 0.0012157821506560062,
+        "observed_max_planar_speed": 0.22316189112139256,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/RViz预测危险区域_2026-11-18/oblique_rviz_final",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "0": {
+          "window_final_error": 0.0011945437228399023,
+          "rows": 400,
+          "last_time": 39.983,
+          "statuses": {
+            "feasible_iterate": 21,
+            "ok": 379
+          },
+          "timing_p95_ms": 60.2112627297174,
+          "timing_max_ms": 79.80435900390148,
+          "final_error": 0.0011945437228399023,
+          "dynamic_cycles": 266,
+          "max_estimated_speed": 0.12328277385028157
+        }
+      },
+      "published_markers": {
+        "messages": 324,
+        "hard_cylinders": 654,
+        "soft_dashed_ellipses": 436,
+        "observers": [
+          "0",
+          "selected"
+        ],
+        "passed": true
+      }
+    },
+    {
+      "name": "head_on_rviz_clean",
+      "control_passed": true,
+      "visual_passed": true,
+      "marker_check": {
+        "passed": true,
+        "checked_regions": 1180,
+        "hard_regions": 708,
+        "soft_regions": 472,
+        "maximum_numeric_error": 1.887379141862766e-15,
+        "identical_local_selected_frames": 119,
+        "error_count": 0,
+        "first_error": null,
+        "note": "Display-to-input geometry audit only; does not certify future physical safety."
+      },
+      "model_check": {
+        "applicable": true,
+        "passed": true,
+        "checked_adopted_first_steps": 400,
+        "uncertified_other_statuses": 0,
+        "records_without_snapshot": 0,
+        "maximum_input_metric_pose_difference": 0.0,
+        "first_error": null,
+        "error_count": 0,
+        "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+      },
+      "metric_passed": true,
+      "motion": {
+        "passed": true,
+        "checks": {
+          "truth_covers_motion_window": true,
+          "task_endpoint_fresh": true,
+          "sampled_proxy_clearance_positive": true,
+          "linear_swept_proxy_clearance_positive": true,
+          "no_sustained_standstill": true,
+          "total_standstill_within_measurement_tolerance": true,
+          "no_crawling_time_avoidance": true,
+          "passed_actor": true,
+          "spatial_detour_observed": true,
+          "tracking_recovered": true,
+          "no_fault_stop": true
+        },
+        "failed_checks": [],
+        "motion_window": [
+          4.0,
+          39.0
+        ],
+        "sampled_proxy_clearance_min": 0.23934654380705717,
+        "linear_swept_proxy_clearance_min": 0.23934631079383323,
+        "total_standstill_seconds": 0.0,
+        "longest_standstill_seconds": 0.0,
+        "minimum_rolling_speed": 0.1319797410781378,
+        "fault_stop_count": 0,
+        "first_forward_pass": {
+          "time": 11.682870308728557,
+          "position": [
+            2.1010293276916157,
+            -0.595926837420741
+          ],
+          "lateral_offset": 0.595926837420741
+        },
+        "endpoint_sample_time": 39.985,
+        "final_position_error": 0.0002828565774891685,
+        "observed_max_planar_speed": 0.2261535301899596,
+        "protocol": {
+          "version": "active_motion_v1_2026_11_10",
+          "duration": 40.0,
+          "reference_start": [
+            0.4,
+            0.0
+          ],
+          "reference_velocity": [
+            0.15,
+            0.0
+          ],
+          "body_radius": 0.13,
+          "maximum_speed": 0.22,
+          "maximum_yaw_rate": 2.84,
+          "motion_window": [
+            4.0,
+            39.0
+          ],
+          "stop_speed": 0.02,
+          "maximum_stop_episode": 0.25,
+          "maximum_total_stop": 0.3,
+          "rolling_window": 1.0,
+          "minimum_rolling_speed": 0.075,
+          "minimum_lateral_at_pass": 0.13,
+          "maximum_truth_gap": 0.25,
+          "endpoint_freshness": 0.15,
+          "maximum_final_position_error": 0.25,
+          "require_no_fault_stop": true,
+          "witness": {
+            "lateral_offset": 0.45,
+            "start_time": 3.0,
+            "outward_duration": 6.0,
+            "hold_duration": 8.0,
+            "return_duration": 6.0
+          }
+        },
+        "source": "/home/gdut/24_LC/turtlebot3_consensus_cbf_ws/四脚本对比证据/RViz预测危险区域_2026-11-18/head_on_rviz_clean",
+        "independent_truth_file": "gazebo_truth.csv",
+        "controller_records_finalized": true,
+        "base_passed": true
+      },
+      "statistics": {
+        "0": {
+          "window_final_error": 0.0024969348176283835,
+          "rows": 400,
+          "last_time": 39.995,
+          "statuses": {
+            "ok": 389,
+            "feasible_iterate": 11
+          },
+          "timing_p95_ms": 56.71927915536796,
+          "timing_max_ms": 90.33011295832694,
+          "final_error": 0.0024969348176283835,
+          "dynamic_cycles": 212,
+          "max_estimated_speed": 0.08101390313910795
+        }
+      },
+      "published_markers": {
+        "messages": 322,
+        "hard_cylinders": 708,
+        "soft_dashed_ellipses": 472,
+        "observers": [
+          "0",
+          "selected"
+        ],
+        "passed": true
+      }
+    }
+  ],
+  "original_controller_sha256": "9f4fb045b7ed76a12738891b750d4dec6cd1968ed13f51627bca7a74e61d3094"
+}

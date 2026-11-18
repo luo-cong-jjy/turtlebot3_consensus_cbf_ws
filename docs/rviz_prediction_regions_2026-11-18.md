@@ -19,3 +19,27 @@
 第二次迎面head_on_rviz_v2的真实截图已人工确认有3D视口、绿色实心预测区域、黄色虚线和正常Global Status，控制验收通过。进一步只调整默认侧栏隐藏以扩大画面，可从Panels/Displays重新打开；单机缩放180。原定斜向订阅试验在执行前改为也打开RViz并截取本次窗口，以验证最终默认布局，不改控制/验收或场景。
 
 第三次斜向oblique_rviz_final的Marker/控制检查通过、实际危险区域可见，但旧QMainWindow状态仍覆盖侧栏隐藏。最终使用Qt按RViz命名dock重新生成状态，单机移除无用的多机导航工具按钮，RViz刷新15 Hz/预测4 Hz，控制10 Hz不变。为核验最后布局再加一次迎面GUI试验head_on_rviz_clean；前述数据不覆盖。
+
+
+## 最终结果
+
+| 运行 | 控制验收 | 人工显示核验 | 周期P95/最大(ms) |
+|---|---|---|---|
+| head_on_rviz_v1 | 通过 | 失败，面板遮挡保留 | 66.12 / 77.56 |
+| head_on_rviz_v2 | 通过 | 通过 | 58.12 / 92.69 |
+| oblique_rviz_final | 通过 | 通过 | 60.21 / 79.80 |
+| head_on_rviz_clean | 通过 | 通过 | 56.72 / 90.33 |
+
+最后head_on_rviz_clean截图人工确认完整3D视口、绿色预测填充区、黄色虚线和测量轮廓。默认收起侧栏；可点视口左右边缘箭头或Panels菜单展开Displays/Views。多机配置同时加入新主题，视野缩放85/中心0以适应窗口，但未新增多机闭环验证。所有四次40 s GUI运行及首轮人工显示失败保留，没有只按截图文件存在就宣称显示成功。
+
+4630个实际发布区域与对应时间戳/ID的原solver输入逐项核对，最大差1.9984e-15；1601条已采用控制的原首步模型审计和四次指标审计通过。局部主题和所选观察者主题的共同帧一致，颜色与生存期有效。新渲染不订阅Gazebo真值/其他机器人雷达，原控制回调剔除唯一显示快照赋值后与b68f36e代码树相同，观测器、感知更新、记录公式及整个MPC内核保持。四次源码清单逐文件对应冻结提交。
+
+这只是显示功能和有限GUI运行证据，不是性能统计优势、硬实时或物理安全证明。实际危险包络含不确定性/执行和车体裕量，不能把它当真实物体尺寸；黄色软预测也没有增加硬约束窗口。原0.22定义、原限速和原应急行为不变。新增GUI可能增加计算负载，本批最坏周期记录在表中，不保证任意机器无超时。
+
+最终截图在根工程四脚本对比证据/RViz预测危险区域_2026-11-18/head_on_rviz_clean/rviz_prediction.png。全部源码、原始Marker/CSV/截图、失败、SHA清单、Git bundle独立归档到阶段成果归档/2026-11-18_RViz预测危险区域。只推送源码和汇总，不上传截图/原始数据/论文；同盘副本不等于异地备份。汇总见docs/stages/rviz_prediction_regions_validation_2026-11-18.json。
+
+```bash
+cd /home/gdut/24_LC/turtlebot3_consensus_cbf_ws/研究副本/ca_prediction_ws_2026-10-26
+source devel/setup.bash
+TURTLEBOT3_MODEL=burger roslaunch tb3_distributed_control single_turtlebot3_cbf_trigger022.launch
+```
