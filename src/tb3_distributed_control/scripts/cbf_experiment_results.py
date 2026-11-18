@@ -595,6 +595,8 @@ class ExperimentRecorder:
             prediction_mode=rospy.get_param('/cbf/dynamic/prediction_mode','cv'),
             local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed'),
             spatial_pass=rospy.get_param('/cbf/mpc/spatial_pass',False),
+            spatial_activation_threshold=rospy.get_param('/cbf/mpc/spatial_activation_threshold',-1.),
+            spatial_activation_preview_seconds=rospy.get_param('/cbf/mpc/spatial_activation_preview_seconds',1.),
             spatial_lateral_extras=rospy.get_param('/cbf/mpc/spatial_lateral_extras',[.12,.22,.32]),
             spatial_compiled_rollout=rospy.get_param('/cbf/mpc/spatial_compiled_rollout',False),
             spatial_timeout_carry=rospy.get_param('/cbf/mpc/spatial_timeout_carry',False),

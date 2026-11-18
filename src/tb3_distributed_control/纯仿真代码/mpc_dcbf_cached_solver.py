@@ -1025,7 +1025,65 @@ def spatial_lateral_extras(config):
     return levels
 
 
-def spatial_pass_guidance(state, goals, obstacles, config, memory):
+def spatial_activation_measurement(state,goals,obstacles,config,memory):
+    """Metre-valued CBF h on the current state and bounded nominal rollout.
+
+    This gates ONLY the auxiliary reference, never the original hard safety
+    constraints. For an ellipse h is the existing scaled distance, not exact
+    Euclidean surface clearance. Peer envelopes are explicitly excluded.
+    """
+    threshold=float(config.get('spatial_activation_threshold',-1.))
+    seconds=float(config.get('spatial_activation_preview_seconds',1.))
+    if not np.isfinite(threshold) or threshold<0:raise ValueError('Expected nonnegative activation threshold')
+    if not np.isfinite(seconds) or not 0<=seconds<=config['horizon']*config['dt']+1e-9:
+        raise ValueError('Activation preview must stay within the original MPC window')
+    active=[o for o in obstacles if o.get('name')!='inactive' and not o.get('peer',False)]
+    if not active:return dict(current_min_h=None,predicted_min_h=None,predicted_steps=0,triggered=False)
+    steps=min(config['horizon'],max(0,int(round(seconds/config['dt']))));dt=config['dt']
+    bounds=memory.get('progress_bounds',[-.22,.22]);previous=np.asarray(memory.get('progress_previous',np.zeros(2)),float)
+    point=np.asarray(state,float).copy();states=[point.copy()];last=previous.copy()
+    for j in range(steps):
+        feed=(goals[j+1,:2]-goals[j,:2])/dt
+        desired=feed+1.2*(goals[j+1,:2]-point[:2])
+        angle=np.arctan2(desired[1],desired[0]);error=np.arctan2(np.sin(angle-point[2]),np.cos(angle-point[2]))
+        command=np.array([np.clip(np.linalg.norm(desired)*np.cos(error),*bounds),
+                          np.clip(3.*error,-config['omega_max'],config['omega_max'])])
+        command=last+(dt/(.2+dt))*(command-last)
+        if config['delta_limit']:command=np.clip(command,last-[config['delta_v'],config['delta_w']],last+[config['delta_v'],config['delta_w']])
+        point=rollout(point,command[None],dt)[1];states.append(point.copy());last=command
+    values=barrier_values(np.asarray(states),active,config['margin'])
+    current=float(values[:,0].min());predicted=float(values.min())
+    return dict(current_min_h=current,predicted_min_h=predicted,predicted_steps=steps,
+                triggered=predicted<=threshold+1e-9,threshold=threshold,numerical_tolerance=1e-9)
+
+
+def spatial_pass_guidance(state,goals,obstacles,config,memory):
+    threshold=float(config.get('spatial_activation_threshold',-1.))
+    if threshold<0:return _spatial_pass_guidance_active(state,goals,obstacles,config,memory)
+    gate=spatial_activation_measurement(state,goals,obstacles,config,memory)
+    latched=bool(memory.get('spatial_activation_active',False))
+    if gate['triggered']:latched=True
+    if gate['current_min_h'] is None:latched=False;memory.pop('spatial_selected',None)
+    if latched and not memory.get('spatial_selected') and not gate['triggered']:
+        if gate['predicted_min_h'] is not None and gate['predicted_min_h']>threshold+.05:
+            latched=False
+    memory['spatial_activation_active']=latched
+    gate.update(active=latched,latched=latched and not gate['triggered'])
+    if not latched:
+        memory.pop('progress_plan',None);memory['guide_index']=None
+        memory['guide_level']=0.;memory.pop('guide_vector',None)
+        memory['spatial_summary']=dict(mode='activation_inactive',activation=gate)
+        return np.zeros((config['horizon'],2)),0.
+    result=_spatial_pass_guidance_active(state,goals,obstacles,config,memory)
+    summary=memory.setdefault('spatial_summary',{})
+    if summary.get('mode') in ('returned_to_timed_path','no_observed_target'):
+        memory['spatial_activation_active']=False
+        gate['released']=True
+    summary['activation']=gate
+    return result
+
+
+def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     """Early bounded side-shift/hold/return candidates for CV dynamic scenes.
 
     The timed goals never change. An extended, held-axis preview selects a
@@ -1603,6 +1661,11 @@ def checked_spatial_guidance_carry(problem,state,obstacles,bounds,previous,contr
 class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
+        activation=float(config.get('spatial_activation_threshold',-1.))
+        seconds=float(config.get('spatial_activation_preview_seconds',1.))
+        if not np.isfinite(activation) or (activation>=0 and
+                (not np.isfinite(seconds) or not 0<=seconds<=config['horizon']*config['dt']+1e-9)):
+            raise ValueError('Invalid activation threshold or prediction window')
         if config.get('spatial_pass',False):spatial_lateral_extras(config)
         if config.get('spatial_compiled_rollout',False):warm_spatial_rollouts(config)
         if config.get('spatial_pass',False) and (not config.get('execution_backup',False)
