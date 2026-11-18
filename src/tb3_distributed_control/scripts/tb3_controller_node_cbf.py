@@ -789,6 +789,10 @@ class TurtleBot3CBFController:
                 or rospy.get_param('/cbf/dynamic/prediction_mode','cv')!='cv'):
             raise ValueError('Spatial pass requires single/explicit two-robot timed line and CV prediction')
         self.control_budget=float(rospy.get_param('/cbf/control_budget_ms',100.))/1000.
+        self.sensor_ready_delay=float(rospy.get_param('/cbf/sensor_ready_delay',0.))
+        if not np.isfinite(self.sensor_ready_delay) or self.sensor_ready_delay<0:
+            raise ValueError('Expected finite nonnegative sensor_ready_delay')
+        self.sensor_ready_since=None
         self.cfg['nlp_wall_time']=float(rospy.get_param('/cbf/nlp_budget_ms',65.))/1000.
         self.cfg['manager_wall_time']=max(.010,self.control_budget-.015)
         self.cfg['fallback_reserve']=.035 if self.cfg.get('spatial_runtime_guard',False) else .010
@@ -1450,6 +1454,10 @@ class TurtleBot3CBFController:
             if len(poses)<len(self.names):
                 self.stop_motion();return
             if not self.warmed:
+                since=getattr(self,'sensor_ready_since',None)
+                if since is None or now<since:self.sensor_ready_since=now
+                if now-self.sensor_ready_since<getattr(self,'sensor_ready_delay',0.):
+                    self.stop_motion();return
                 dummy=padded_obstacles([],self.slots)
                 problem=self.manager.problems[self.problem_key]
                 try:

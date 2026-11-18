@@ -9,6 +9,7 @@
     <arg name="world_name" value="$(find tb3_distributed_control)/worlds/consensus_dynamic_obstacles.world" />
     <arg name="robot_count" value="5" />
     <arg name="formation_radius" value="0.4" />
+    <arg name="sensor_ready_delay" value="0.8" />
     <arg name="trajectory_type" value="line" />
     <arg name="leader_init_x" value="0" />
     <arg name="leader_init_y" value="0" />

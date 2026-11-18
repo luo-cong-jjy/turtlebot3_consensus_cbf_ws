@@ -571,6 +571,7 @@ class ExperimentRecorder:
             timezone='Asia/Shanghai',method='MPC-D-CBF',
             world_file=rospy.get_param('/cbf/world_file',''),
             formation_radius=rospy.get_param('/cbf/formation_radius',.5),
+            sensor_ready_delay=rospy.get_param('/cbf/sensor_ready_delay',0.),
             control_dt=rospy.get_param('/cbf/mpc/dt',.1),
             mpc_horizon=rospy.get_param('/cbf/mpc/horizon',10),
             realtime_solver=rospy.get_param('/cbf/realtime_solver',True),

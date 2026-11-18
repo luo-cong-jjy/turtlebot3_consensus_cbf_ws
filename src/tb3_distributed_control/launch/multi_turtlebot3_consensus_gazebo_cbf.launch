@@ -33,6 +33,7 @@
   <arg name="geometry_observer" default="0" />
   <arg name="geometry_debug" default="false" />
   <arg name="formation_radius" default="0.5" />
+  <arg name="sensor_ready_delay" default="0.0" />
   <arg name="robot_count" default="5" />
   <arg name="rviz_config" default="$(eval find('tb3_distributed_control') + '/rviz/' + ('tb3_cbf_single.rviz' if arg('robot_count') == '1' else 'tb3_cbf.rviz'))" />
   <arg name="dynamic_prediction" default="$(eval arg('dynamic_scenario') != 'none')" />
@@ -152,6 +153,7 @@
   <node pkg="tb3_distributed_control" type="cbf_experiment_results.py" name="cbf_experiment_results" output="screen" />
   <node pkg="tb3_distributed_control" type="cbf_active_monitor.py" name="cbf_active_monitor" output="screen" if="$(arg active_experiment)" />
   <param name="/cbf/formation_radius" value="$(arg formation_radius)" />
+  <param name="/cbf/sensor_ready_delay" value="$(arg sensor_ready_delay)" />
   <param name="/cbf/peer_safety" value="$(arg peer_safety)" />
   <param name="/cbf/peer_radius" value="$(arg peer_radius)" />
   <param name="/cbf/stall_recovery" value="$(arg stall_recovery)" />
