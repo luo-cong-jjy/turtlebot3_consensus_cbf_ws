@@ -748,8 +748,26 @@ def prediction_region_geometry(obstacles, config, preview_seconds):
             a,b=batch.axes[i,stage];factor=1.+margin/b
             result.append(dict(id=int(obs['id']),name=obs['name'],stage=stage,seconds=stage*dt,
                 hard=stage<=n,center=batch.centers[i,stage].copy(),a=float(a*factor),b=float(b*factor),
+                prediction_a=float(a),prediction_b=float(b),
                 theta=float(np.arctan2(batch.sine[i,stage],batch.cosine[i,stage]))))
     return result
+
+
+def prediction_motion_annotation(nodes):
+    """One-second mean motion and fixed-length direction ICON, not a forecast.
+
+    Centre markers and time-labelled ellipse positions retain real distances.
+    Never infer the obstacle's motion from its ellipse major-axis orientation.
+    """
+    start=next(r for r in nodes if r['stage']==0)
+    end=max((r for r in nodes if r['hard']),key=lambda r:r['seconds'])
+    velocity=(end['center']-start['center'])/end['seconds']
+    speed=float(np.linalg.norm(velocity));direction_end=None;normal=np.array([0.,1.])
+    if speed>.015:
+        direction=velocity/speed;normal=np.array([-direction[1],direction[0]])
+        direction_end=start['center']+.32*direction
+    return dict(center=start['center'],velocity=velocity,speed=speed,
+                direction_end=direction_end,normal=normal)
 
 
 class TurtleBot3CBFController:
@@ -1331,7 +1349,7 @@ class TurtleBot3CBFController:
                 marker.pose.orientation.z=np.sin(item['theta']/2.)
                 marker.pose.orientation.w=np.cos(item['theta']/2.)
                 marker.scale.x,marker.scale.y,marker.scale.z=2*item['a'],2*item['b'],.035
-                marker.color.r,marker.color.g,marker.color.b,marker.color.a=(.05,.85,.30,.13)
+                marker.color.r,marker.color.g,marker.color.b,marker.color.a=(.05,.85,.30,.035)
             else:
                 marker=self.geometry_marker(stamp,key,namespace,Marker.LINE_LIST)
                 marker.scale.x=.014
@@ -1341,7 +1359,45 @@ class TurtleBot3CBFController:
                                for j in range(0,len(contour)-1,2) for p in contour[j:j+2]]
             output.markers.append(marker);visible.add((namespace,key))
             paths.setdefault(key,[]).append(item)
+            # Predicted occupied envelope BEFORE vehicle margin, separate from
+            # the larger safety set; keep actual centres/axes and time colours.
+            if stage in (0,self.n,max(r['stage'] for r in regions if r['id']==key)):
+                namespace='prediction_shape_'+str(stage)
+                marker=self.geometry_marker(stamp,key,namespace,Marker.LINE_STRIP)
+                marker.scale.x=.016
+                color=((.25,.85,1.) if stage==0 else (.2,.55,1.) if hard else (1.,.4,.12))
+                marker.color.r,marker.color.g,marker.color.b=color;marker.color.a=.9
+                contour=Ellipse(*item['center'],item['prediction_a'],item['prediction_b'],item['theta'],0).contour()
+                marker.points=[Point(x=float(p[0]),y=float(p[1]),z=.11) for p in contour]
+                output.markers.append(marker);visible.add((namespace,key))
         for key,nodes in paths.items():
+            motion=prediction_motion_annotation(nodes)
+            marker=self.geometry_marker(stamp,key,'prediction_centers',Marker.SPHERE_LIST)
+            marker.scale.x=marker.scale.y=marker.scale.z=.032
+            marker.color.r,marker.color.g,marker.color.b,marker.color.a=(1.,1.,1.,1.)
+            marker.points=[Point(x=float(r['center'][0]),y=float(r['center'][1]),z=.16) for r in nodes]
+            output.markers.append(marker);visible.add(('prediction_centers',key))
+            if motion['direction_end'] is not None:
+                marker=self.geometry_marker(stamp,key,'prediction_motion_direction',Marker.ARROW)
+                marker.scale.x,marker.scale.y,marker.scale.z=.018,.05,.07
+                marker.color.r,marker.color.g,marker.color.b,marker.color.a=(.2,.9,1.,1.)
+                marker.points=[Point(x=float(p[0]),y=float(p[1]),z=.18)
+                               for p in (motion['center'],motion['direction_end'])]
+                output.markers.append(marker);visible.add(('prediction_motion_direction',key))
+            marker=self.geometry_marker(stamp,key,'prediction_velocity',Marker.TEXT_VIEW_FACING)
+            marker.pose.position.x,marker.pose.position.y=motion['center']-.22*motion['normal']
+            marker.pose.position.z=.22;marker.scale.z=.10
+            marker.color.r,marker.color.g,marker.color.b,marker.color.a=(.35,.9,1.,1.)
+            marker.text='#%d v=%.3f m/s (dir)'%(key,motion['speed'])
+            output.markers.append(marker);visible.add(('prediction_velocity',key))
+            if motion['direction_end'] is not None:
+                last=nodes[-1]
+                marker=self.geometry_marker(stamp,key,'prediction_time',Marker.TEXT_VIEW_FACING)
+                marker.pose.position.x,marker.pose.position.y=last['center']+.18*motion['normal']
+                marker.pose.position.z=.22;marker.scale.z=.10
+                marker.color.r,marker.color.g,marker.color.b,marker.color.a=(1.,.65,.2,1.)
+                marker.text='+%.1fs'%last['seconds']
+                output.markers.append(marker);visible.add(('prediction_time',key))
             for hard,namespace,color in ((True,'prediction_hard_path',(.1,.9,.4)),
                                          (False,'prediction_soft_path',(1.,.68,.05))):
                 subset=([r for r in nodes if r['hard']] if hard else

@@ -26,6 +26,7 @@ class PredictionRegionsChecks(unittest.TestCase):
         for r in regions:
             if not r['hard']:continue
             j=r['stage'];np.testing.assert_array_equal(r['center'],obs[0]['prediction_centers'][j])
+            np.testing.assert_array_equal([r['prediction_a'],r['prediction_b']],obs[0]['prediction_axes'][j])
             contour=inline.Ellipse(*r['center'],r['a'],r['b'],r['theta'],0).contour()
             original=dict(center=r['center'],a=obs[0]['prediction_axes'][j,0],
                 b=obs[0]['prediction_axes'][j,1],theta=obs[0]['prediction_angles'][j])
@@ -57,3 +58,18 @@ class PredictionRegionsChecks(unittest.TestCase):
         markers=n.prediction_region_pub.publish.call_args[0][0].markers
         self.assertEqual([(m.ns,m.id,m.action) for m in markers],[('prediction_hard_10',7,2)])
         self.assertFalse(n.prediction_visible_keys)
+
+    def test_direction_uses_predicted_translation_not_ellipse_angle(self):
+        cfg,obs=self.inputs();obs[0]['prediction_centers'][:,0]=1-.004*np.arange(11)
+        regions=inline.prediction_region_geometry(obs,cfg,2.)
+        motion=inline.prediction_motion_annotation(regions)
+        expected=np.array([-.04,.1]);np.testing.assert_allclose(motion['velocity'],expected)
+        direction=motion['direction_end']-motion['center']
+        self.assertAlmostEqual(np.linalg.norm(direction),.32)
+        np.testing.assert_allclose(direction/.32,expected/np.linalg.norm(expected))
+
+    def test_nearly_static_estimate_has_no_fake_direction_arrow(self):
+        cfg,obs=self.inputs();obs[0]['prediction_centers'][:]=[1.,.2]
+        motion=inline.prediction_motion_annotation(inline.prediction_region_geometry(obs,cfg,2.))
+        self.assertEqual(motion['speed'],0.)
+        self.assertIsNone(motion['direction_end']);self.assertTrue(np.isfinite(motion['normal']).all())

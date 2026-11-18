@@ -147,7 +147,7 @@ def main():
                 position=[m.pose.position.x,m.pose.position.y,m.pose.position.z],
                 orientation=[m.pose.orientation.x,m.pose.orientation.y,m.pose.orientation.z,m.pose.orientation.w],
                 scale=[m.scale.x,m.scale.y,m.scale.z],color=[m.color.r,m.color.g,m.color.b,m.color.a],
-                lifetime=m.lifetime.to_sec(),points=[[p.x,p.y,p.z] for p in m.points]) for m in msg.markers]))
+                lifetime=m.lifetime.to_sec(),text=m.text,points=[[p.x,p.y,p.z] for p in m.points]) for m in msg.markers]))
         subscribers=[rospy.Subscriber('/leader/history',LeaderHistoryData,lead,queue_size=1),
             rospy.Subscriber('/gazebo/model_states',ModelStates,models,queue_size=1),
             rospy.Subscriber('/system/shutdown',Bool,lambda m:completed.append(time.monotonic()) if m.data else None)]
