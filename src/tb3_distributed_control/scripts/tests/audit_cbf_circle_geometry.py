@@ -6,7 +6,7 @@ import numpy as np
 
 
 def audit(directory):
-    p=Path(directory);circle=0;mvee=0;holds=0;errors=[];max_excess=-1e9
+    p=Path(directory);circle=0;mvee=0;holds=0;errors=[];max_excess=-1e9;retained=0;prior_excess=-1e9
     for frame in map(json.loads,(p/'obstacle_predictions.jsonl').open()):
         for item in frame['measurements']:
             points=np.asarray(item['points']);center=np.asarray(item['center']);c,s=np.cos(item['theta']),np.sin(item['theta'])
@@ -20,8 +20,15 @@ def audit(directory):
             excess=float(np.linalg.norm(boundary-center,axis=1).max()-item['a']);max_excess=max(max_excess,excess)
             if abs(item['a']-item['b'])>1e-10 or excess>1e-9:
                 errors.append(dict(stamp=frame['stamp'],error='Old complete padded ellipse not enclosed',excess=excess))
+            if 'retained_prior' in item:
+                retained+=1;prior=item['retained_prior']
+                extra=float(np.linalg.norm(np.asarray(prior['center'])-center)+prior['radius']-item['a'])
+                prior_excess=max(prior_excess,extra)
+                if extra>1e-9 or item['position_observed']:
+                    errors.append(dict(stamp=frame['stamp'],error='Prior circle lost or copied position treated as measurement',excess=extra))
     return dict(passed=not errors and circle+mvee>0,circle_measurements=circle,mvee_measurements=mvee,
         geometry_only_circle_holds=holds,maximum_old_enclosure_excess=max_excess if circle else None,
+        retained_prior_checks=retained,maximum_retained_prior_excess=prior_excess if retained else None,
         error_count=len(errors),first_error=errors[0] if errors else None,
         note='Checks measured geometry inclusion, not unknown physical-object or future safety certification.')
 

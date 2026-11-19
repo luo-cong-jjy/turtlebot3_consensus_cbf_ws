@@ -9,7 +9,7 @@ inline.reference_covariance_matrices=reference_covariance_matrices
 inline.reference_axis_inflation=reference_axis_inflation
 
 
-def replay(directory):
+def replay(directory,compare_retention=False):
     p=Path(directory);meta=json.loads((p/'run_metadata.json').read_text())
     if meta['prediction_mode']!='cv':raise ValueError('This stage validates CV geometry only')
     truth=list(csv.DictReader((p/'gazebo_truth.csv').open()))
@@ -23,7 +23,13 @@ def replay(directory):
         reaction_time=meta['dynamic_reaction_time'],extra_margin=meta['dynamic_extra_margin'],
         transport_geometry=meta['transport_geometry'],acceleration_buffer=meta['acceleration_buffer'],
         stage_velocity_guidance=meta['stage_velocity_guidance'])
-    models={kind:inline.DynamicEllipseTracker(**args,geometry_observer=kind) for kind in ('mvee','circle')}
+    kinds=('mvee','circle','circle_prior') if compare_retention else ('mvee','circle')
+    models={kind:inline.DynamicEllipseTracker(**args,geometry_observer='mvee' if kind=='mvee' else 'circle',
+        circle_prior_retention=(kind=='circle_prior' if compare_retention else
+            kind=='circle' and meta.get('circle_prior_retention',False))) for kind in kinds}
+    configured=meta.get('geometry_observer','mvee')
+    configured_key=('circle_prior' if compare_retention and configured=='circle'
+        and meta.get('circle_prior_retention',False) else configured)
     frames=[r for r in map(json.loads,(p/'obstacle_predictions.jsonl').open()) if r['observer']=='tb3_0']
     records=[];replay_error=0.;replay_checks=0;gates={};holds=0;resets=0;snapshots={}
     for frame in frames:
@@ -33,16 +39,15 @@ def replay(directory):
             for measurement in frame['measurements']:
                 raw=measurement.get('base_enclosure',measurement)
                 e=inline.Ellipse(*raw['center'],raw['a'],raw['b'],raw['theta'],raw['point_count'])
-                if kind=='circle':
+                if kind!='mvee':
                     if 'points' not in measurement:raise ValueError('No saved cluster points; do not fabricate observations')
                     e.circle_candidate=inline.circle_observation(measurement['points'],e,frame['sensor_origin'])
                     reason=e.circle_candidate['reason'];gates[reason]=gates.get(reason,0)+1
                 fits.append(e)
             model.update(fits,stamp);current=model.obstacles(model.snapshot(stamp),stamp)
             results[kind]={o['id']:o for o in current};ids[kind]=[e.track_id for e in fits]
-        configured=meta.get('geometry_observer','mvee')
-        snapshots[round(stamp,8)]=models[configured].snapshot(stamp)
-        saved={r['id']:r for r in frame['tracks']};found=results[configured]
+        snapshots[round(stamp,8)]=models[configured_key].snapshot(stamp)
+        saved={r['id']:r for r in frame['tracks']};found=results[configured_key]
         if set(saved)!=set(found):raise AssertionError('Recorded track set cannot be reproduced')
         for key,old in saved.items():
             new=found[key]
@@ -55,6 +60,9 @@ def replay(directory):
             entry=dict(velocity_error=float(np.linalg.norm(velocity-(actual(t+.5)-actual(t-.5)))),
                 centre_error=float(np.linalg.norm(center-actual(t))),observation_kind=o['observation_kind'],
                 position_observed=o['position_observed'],observer_resets=o['observer_resets'],
+                prior_shape_retained=o.get('prior_shape_retained',False),
+                circle_quality_degraded=o.get('circle_quality_degraded',False),
+                motion_observation_age=o.get('motion_observation_age',0.),
                 velocity=velocity.tolist(),center=center.tolist(),displacement_error={},absolute_prediction_error={},
                 occupied_circle_coverage={},collision_proxy_coverage={})
             if kind=='circle':holds+=int(not o['position_observed']);resets=max(resets,o['observer_resets'])
@@ -93,7 +101,7 @@ def replay(directory):
         row=rows[event['cycle_id']];now=float(row['ros_time']);scan=now-float(row['geometry_age'])
         state=snapshots.get(round(scan,8))
         if state is None:missing.append(dict(cycle=event['cycle_id'],scan=scan));continue
-        expected={o['name']:o for o in models[meta.get('geometry_observer','mvee')].obstacles(state,now)}
+        expected={o['name']:o for o in models[configured_key].obstacles(state,now)}
         for obs in saved['obstacles']:
             if obs['name']=='inactive' or obs.get('peer',False):continue
             if obs['name'] not in expected:missing.append(dict(cycle=event['cycle_id'],track=obs['name']));continue
@@ -102,6 +110,8 @@ def replay(directory):
                            float(abs(np.asarray(obs['prediction_axes'])-found['prediction_axes']).max()))
             control_error=max(control_error,difference);control_checks+=1
     return dict(source=str(p),configured_observer=meta.get('geometry_observer','mvee'),
+        configured_circle_prior_retention=meta.get('circle_prior_retention',False),
+        comparison_includes_circle_prior=compare_retention,
         configured_replay_checks=replay_checks,configured_maximum_difference=replay_error,
         configured_replay_passed=replay_checks>0 and replay_error<1e-8,window=[4.,20.],
         control_replay_checks=control_checks,control_maximum_difference=control_error,
@@ -112,9 +122,10 @@ def replay(directory):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('directory');parser.add_argument('--output',required=True);a=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('directory');parser.add_argument('--output',required=True)
+    parser.add_argument('--compare-retention',action='store_true');a=parser.parse_args()
     out=Path(a.output)
     if out.exists():raise FileExistsError(out)
-    result=replay(a.directory);out.write_text(json.dumps(result,indent=2))
+    result=replay(a.directory,compare_retention=a.compare_retention);out.write_text(json.dumps(result,indent=2))
     print(json.dumps({k:v for k,v in result.items() if k!='records'},indent=2))
     if not result['configured_replay_passed']:raise SystemExit(1)

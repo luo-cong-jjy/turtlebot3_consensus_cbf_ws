@@ -406,7 +406,7 @@ class DynamicEllipseTracker:
                  history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02,
                  ca_jerk_density=.01,ca_acceleration_variance=.04,singer_tau=1.,
                  acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False,
-                 geometry_observer='mvee'):
+                 geometry_observer='mvee',circle_prior_retention=False):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -426,6 +426,9 @@ class DynamicEllipseTracker:
         if geometry_observer not in ('mvee','circle') or geometry_observer=='circle' and mode!='cv':
             raise ValueError('Circle observation currently supports CV only')
         self.geometry_observer=geometry_observer
+        self.circle_prior_retention=bool(circle_prior_retention)
+        if self.circle_prior_retention and geometry_observer!='circle':
+            raise ValueError('Circle prior retention requires circle observations')
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -507,8 +510,16 @@ class DynamicEllipseTracker:
                     ellipse.cx,ellipse.cy=candidate['center'];ellipse.a=ellipse.b=candidate['enclosure_radius'];ellipse.theta=0.
                     kind='circle'
                 elif (existing is not None and existing.get('observation_kind')=='circle'
-                        and stamp-existing.get('last_motion_observed',-1e9)<=.35):
+                        and (self.circle_prior_retention or stamp-existing.get('last_motion_observed',-1e9)<=.35)):
                     center=existing['x'][:2];radius=circle_enclosure_radius(center,ellipse)
+                    if self.circle_prior_retention:
+                        prior_radius=existing.get('circle_prior_radius',max(existing['raw_a'],existing['raw_b']))
+                        offset=np.asarray(existing.get('circle_prior_offset',existing['raw_center']-existing['measurement_reference_center']))
+                        # Preserve BOTH fresh sensed geometry and the last
+                        # complete circle transported by the nominal motion.
+                        radius=max(radius,float(prior_radius+np.linalg.norm(offset)))
+                        ellipse.retained_prior=dict(center=(center+offset).tolist(),radius=float(prior_radius),
+                            age=float(stamp-existing['last_motion_observed']))
                     ellipse.cx,ellipse.cy=center;ellipse.a=ellipse.b=radius;ellipse.theta=0.
                     position_observed=False;kind='circle'
                 ellipse.observation_kind=kind;ellipse.position_observed=position_observed
@@ -526,6 +537,7 @@ class DynamicEllipseTracker:
                     track['P']=self.P0.copy();track['history']=deque([[ellipse.a,ellipse.b]],maxlen=self.history_size)
                     track['observer_resets']=track.get('observer_resets',0)+1
                 track.update(observation_kind=kind,position_observed=position_observed)
+                if self.circle_prior_retention:track['prior_shape_retained']=not position_observed
                 if position_observed:track['last_motion_observed']=stamp
             variance=float(np.var(np.asarray(track['history']),axis=0).sum())**1.3
             variance+=max(0,3-len(track['history']))*.0005
@@ -544,6 +556,9 @@ class DynamicEllipseTracker:
             track.update(seen=stamp,missed=0,variance=variance,count=track['count']+1,
                          raw_a=ellipse.a,raw_b=ellipse.b,raw_center=z[:2].copy(),raw_theta=z[4],point_count=ellipse.point_count,
                          measurement_reference_center=track['x'][:2].copy())
+            if self.circle_prior_retention and kind=='circle' and position_observed:
+                track['circle_prior_radius']=float(ellipse.a)
+                track['circle_prior_offset']=z[:2].copy()-track['x'][:2]
             speed=float(np.linalg.norm(track['x'][5:7]))
             track['moving_votes']=max(-3,min(3,track['moving_votes']+(1 if speed>self.speed_threshold else -1)))
             if track['moving_votes']>=2:track['dynamic']=True
@@ -607,7 +622,11 @@ class DynamicEllipseTracker:
             geometry_reference_stamp=track['seen'],
             raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'],
             observation_kind=track.get('observation_kind','mvee'),position_observed=track.get('position_observed',True),
-            observer_resets=track.get('observer_resets',0))
+            observer_resets=track.get('observer_resets',0),
+            circle_prior_retention=self.circle_prior_retention,prior_shape_retained=track.get('prior_shape_retained',False),
+            motion_observation_age=float(now-track.get('last_motion_observed',track['seen'])),
+            circle_quality_degraded=bool(self.circle_prior_retention and track.get('observation_kind')=='circle'
+                and now-track.get('last_motion_observed',track['seen'])>.35))
 
     def obstacles(self,snapshot,now):
         return [obs for obs in (self.forecast(t,now) for t in snapshot) if obs is not None]
@@ -1075,6 +1094,7 @@ class TurtleBot3CBFController:
             stage_velocity_guidance=bool(get('/cbf/dynamic/stage_velocity_guidance',True)),
             transport_geometry=bool(get('/cbf/dynamic/transport_geometry',False)),
             geometry_observer=self.geometry_observer,
+            circle_prior_retention=bool(get('/cbf/dynamic/circle_prior_retention',False)),
             **(get('/cbf/dynamic/reliability',{}) if dynamic_mode=='adaptive' else {}))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
@@ -1257,7 +1277,10 @@ class TurtleBot3CBFController:
                     execution_margin=o['execution_margin'],
                     centers=o['prediction_centers'].tolist(),axes=o['prediction_axes'].tolist(),
                     theta=o['theta'],observation_kind=o.get('observation_kind','mvee'),
-                    position_observed=o.get('position_observed',True),observer_resets=o.get('observer_resets',0)) for o in observed]
+                    position_observed=o.get('position_observed',True),observer_resets=o.get('observer_resets',0),
+                    prior_shape_retained=o.get('prior_shape_retained',False),
+                    motion_observation_age=o.get('motion_observation_age',0.),
+                    circle_quality_degraded=o.get('circle_quality_degraded',False)) for o in observed]
                 if self.dynamic_tracker.mode=='adaptive':
                     for row,o in zip(rows,observed):row.update(model_weights=o['model_weights'].tolist(),
                         model_scores=o['model_scores'],selected_model=o['selected_model'],
@@ -1272,6 +1295,7 @@ class TurtleBot3CBFController:
                         quality=getattr(e,'circle_candidate',{})
                         measurement.update(base_enclosure=e.base_enclosure,observation_kind=e.observation_kind,
                             position_observed=e.position_observed,circle_quality={k:v for k,v in quality.items() if k!='center'})
+                        if hasattr(e,'retained_prior'):measurement['retained_prior']=e.retained_prior
                 if getattr(self,'log_cluster_points',False):
                     prediction_message.update(sensor_origin=[translation.x,translation.y],points_frame=self.target_frame,
                         point_input_kind='voxel-downsampled non-peer obstacle cluster')
