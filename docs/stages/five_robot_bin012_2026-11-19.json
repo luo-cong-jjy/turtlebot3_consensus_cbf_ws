@@ -1,0 +1,2369 @@
+{
+  "integration_commit": "22d10280d059824f3beba7dca67773dc27384269",
+  "parent": "a3ab8641c7d111b4ecb3e2467f7b3bb1d120bd96",
+  "tests": 242,
+  "actor_radius": 0.12,
+  "formation_radius": 0.4,
+  "attempts": 3,
+  "passed": 0,
+  "cases": {
+    "V1_head_on_211": {
+      "passed": false,
+      "base_passed": true,
+      "failure": null,
+      "minimum_rolling_speed": 0.06963440545070765,
+      "peer_linear_swept_proxy_gap": 0.05548043534787461,
+      "dynamic_linear_swept_proxy_gap": 0.1970959480350205,
+      "final_pair_error": 0.003854816914756076,
+      "maximum_recorded_ms": 123.50875604897738,
+      "own_scan_only": true,
+      "no_truth_input": true,
+      "private_local_recording": true,
+      "all_source_files_match_V1": true,
+      "robots": {
+        "tb3_0": {
+          "failed_checks": [
+            "no_crawling_time_avoidance",
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.06963440545070765,
+          "fault_stop_count": 18,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.008785814512520312
+        },
+        "tb3_1": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.13172442952899033,
+          "fault_stop_count": 3,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.0077122115909847655
+        },
+        "tb3_2": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.13215409242580645,
+          "fault_stop_count": 12,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.004954458464110499
+        },
+        "tb3_3": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.13049973795796443,
+          "fault_stop_count": 1,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.007640992603109586
+        },
+        "tb3_4": {
+          "failed_checks": [],
+          "minimum_rolling_speed": 0.1372211011843958,
+          "fault_stop_count": 0,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.006342122849303893
+        }
+      },
+      "timing": {
+        "0": {
+          "window_final_error": 0.005714623152396038,
+          "rows": 402,
+          "last_time": 40.108999999999995,
+          "statuses": {
+            "ok": 272,
+            "validated_one_step": 8,
+            "solver_failed_stop": 3,
+            "late_fallback_stop": 16,
+            "feasible_iterate": 103
+          },
+          "timing_p95_ms": 97.10490016150288,
+          "timing_max_ms": 123.50875604897738,
+          "final_error": 0.0037615632376468773,
+          "dynamic_cycles": 276,
+          "max_estimated_speed": 0.07895812541329916
+        },
+        "1": {
+          "window_final_error": 0.0032489672121016784,
+          "rows": 402,
+          "last_time": 40.126000000000005,
+          "statuses": {
+            "late_fallback_stop": 4,
+            "feasible_iterate": 97,
+            "ok": 301
+          },
+          "timing_p95_ms": 88.42318200622685,
+          "timing_max_ms": 116.53094599023461,
+          "final_error": 0.0038388775309636533,
+          "dynamic_cycles": 263,
+          "max_estimated_speed": 0.14374835227923338
+        },
+        "2": {
+          "window_final_error": 0.0010964461556001524,
+          "rows": 401,
+          "last_time": 40.117000000000004,
+          "statuses": {
+            "late_fallback_stop": 14,
+            "feasible_iterate": 99,
+            "validated_one_step": 2,
+            "ok": 286
+          },
+          "timing_p95_ms": 96.44890192430466,
+          "timing_max_ms": 123.165980912745,
+          "final_error": 0.0008960923333337965,
+          "dynamic_cycles": 298,
+          "max_estimated_speed": 0.07135175149867393
+        },
+        "3": {
+          "window_final_error": 0.003999507147376239,
+          "rows": 402,
+          "last_time": 40.13600000000001,
+          "statuses": {
+            "late_fallback_stop": 2,
+            "feasible_iterate": 94,
+            "validated_one_step": 4,
+            "ok": 302
+          },
+          "timing_p95_ms": 86.20266939979047,
+          "timing_max_ms": 112.00702202040702,
+          "final_error": 0.0032609010403807166,
+          "dynamic_cycles": 286,
+          "max_estimated_speed": 0.10020238104446387
+        },
+        "4": {
+          "window_final_error": 0.0024557260882411523,
+          "rows": 402,
+          "last_time": 40.15599999999999,
+          "statuses": {
+            "feasible_iterate": 52,
+            "ok": 350
+          },
+          "timing_p95_ms": 78.65031732362695,
+          "timing_max_ms": 101.1321929981932,
+          "final_error": 0.0022964531562712654,
+          "dynamic_cycles": 219,
+          "max_estimated_speed": 0.08888370833367773
+        }
+      },
+      "audits": {
+        "solver": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 1970,
+          "uncertified_other_statuses": 39,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 402,
+              "prior_plan_samples_audited": 318,
+              "reference_quality_counts": {
+                "0": 1,
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.01062949071032639,
+              "max_plan_execution_error": 0.04492332311402854,
+              "max_nominal_error_during_plan_samples": 1.019564887447287
+            },
+            "1": {
+              "rows": 402,
+              "prior_plan_samples_audited": 369,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 389,
+                "3": 11
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.004287400167076239,
+              "max_plan_execution_error": 0.0437484029134633,
+              "max_nominal_error_during_plan_samples": 0.35775609716061285
+            },
+            "2": {
+              "rows": 401,
+              "prior_plan_samples_audited": 382,
+              "reference_quality_counts": {
+                "1": 400,
+                "2": 1
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009311143640544611,
+              "max_plan_execution_error": 0.04380272992959408,
+              "max_nominal_error_during_plan_samples": 0.5366448183491811
+            },
+            "3": {
+              "rows": 402,
+              "prior_plan_samples_audited": 366,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.008371949527101128,
+              "max_plan_execution_error": 0.043185108584329626,
+              "max_nominal_error_during_plan_samples": 0.4450578763667344
+            },
+            "4": {
+              "rows": 402,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.003914186760358038,
+              "max_plan_execution_error": 0.0421848913044772,
+              "max_nominal_error_during_plan_samples": 0.3462802353709572
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "display": {
+          "passed": true,
+          "checked_regions": 7940,
+          "hard_regions": 2172,
+          "soft_regions": 1448,
+          "maximum_numeric_error": 3.3306690738754696e-15,
+          "prediction_envelopes": 2172,
+          "direction_icons": 700,
+          "velocity_labels": 724,
+          "center_markers": 724,
+          "identical_local_selected_frames": 122,
+          "error_count": 0,
+          "first_error": null,
+          "note": "Display-to-input geometry audit only; does not certify future physical safety."
+        },
+        "circle": {
+          "passed": true,
+          "circle_measurements": 1287,
+          "mvee_measurements": 240,
+          "geometry_only_circle_holds": 295,
+          "maximum_old_enclosure_excess": -0.0016450878559407522,
+          "retained_prior_checks": 295,
+          "maximum_retained_prior_excess": 0.0,
+          "error_count": 0,
+          "first_error": null,
+          "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+        }
+      },
+      "observer_replays": {
+        "tb3_0": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_head_on_211",
+          "observer": "tb3_0",
+          "frame_source": "tb3_0_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 156,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 156,
+            "no_target": 0,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 317,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 302,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "accepted": 236,
+            "arc_span": 3,
+            "insufficient_points": 45,
+            "conditioning": 5,
+            "residual": 23
+          },
+          "circle_hold_frames": 14,
+          "circle_maximum_resets": 0,
+          "summary": {
+            "mvee": {
+              "frames": 156,
+              "velocity_rmse": 0.020605616583911076,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08271024688309271,
+              "displacement_rmse": {
+                "1.0": 0.02064674658262436,
+                "2.0": 0.04124088079873243
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09054782420713199,
+                "2.0": 0.10201804913911008
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.0,
+                "1.0": 0.5897435897435898,
+                "2.0": 0.46153846153846156
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.0,
+                "1.0": 0.27564102564102566,
+                "2.0": 0.2564102564102564
+              }
+            },
+            "circle": {
+              "frames": 156,
+              "velocity_rmse": 0.0033763367703650185,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.0052621846738842674,
+              "displacement_rmse": {
+                "1.0": 0.0033972847928128115,
+                "2.0": 0.006654949460795929
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.007990643507524917,
+                "2.0": 0.011031413246333483
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_1": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_head_on_211",
+          "observer": "tb3_1",
+          "frame_source": "tb3_1_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 154,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 154,
+            "no_target": 3,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 299,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 292,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "insufficient_points": 74,
+            "accepted": 187,
+            "residual": 14,
+            "arc_span": 3
+          },
+          "circle_hold_frames": 14,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 154,
+              "velocity_rmse": 0.017814413283841285,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08207679826639255,
+              "displacement_rmse": {
+                "1.0": 0.017827815815824814,
+                "2.0": 0.03561932772542102
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.08821942411175589,
+                "2.0": 0.09727976468209006
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.01948051948051948,
+                "1.0": 0.6038961038961039,
+                "2.0": 0.5194805194805194
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.0,
+                "1.0": 0.33116883116883117,
+                "2.0": 0.2662337662337662
+              }
+            },
+            "circle": {
+              "frames": 154,
+              "velocity_rmse": 0.004132257901481189,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.0071282988542567365,
+              "displacement_rmse": {
+                "1.0": 0.004089869646894181,
+                "2.0": 0.00804729071297493
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.01038749037790568,
+                "2.0": 0.014011043124587206
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_2": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_head_on_211",
+          "observer": "tb3_2",
+          "frame_source": "tb3_2_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 157,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 157,
+            "no_target": 3,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 349,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 326,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "insufficient_points": 109,
+            "accepted": 218,
+            "residual": 9,
+            "arc_span": 3,
+            "conditioning": 1
+          },
+          "circle_hold_frames": 11,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 157,
+              "velocity_rmse": 0.017555135790698322,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08278448432472982,
+              "displacement_rmse": {
+                "1.0": 0.017558886239548422,
+                "2.0": 0.035041067501813905
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.08826405594464853,
+                "2.0": 0.09662193797953371
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.01910828025477707,
+                "1.0": 0.6878980891719745,
+                "2.0": 0.5605095541401274
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.006369426751592357,
+                "1.0": 0.33121019108280253,
+                "2.0": 0.3184713375796178
+              }
+            },
+            "circle": {
+              "frames": 157,
+              "velocity_rmse": 0.004118252050114719,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.00618782066784236,
+              "displacement_rmse": {
+                "1.0": 0.004031367808857732,
+                "2.0": 0.00789287954684871
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.009656489990624724,
+                "2.0": 0.013335027778725547
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_3": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_head_on_211",
+          "observer": "tb3_3",
+          "frame_source": "tb3_3_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 148,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 148,
+            "no_target": 8,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 340,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 324,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "insufficient_points": 109,
+            "accepted": 198,
+            "residual": 13,
+            "conditioning": 3,
+            "arc_span": 5
+          },
+          "circle_hold_frames": 17,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 148,
+              "velocity_rmse": 0.02621130454465095,
+              "applicable": true,
+              "target_track_switches": 1,
+              "current_centre_rmse": 0.08570469806557825,
+              "displacement_rmse": {
+                "1.0": 0.02621953946441177,
+                "2.0": 0.05241594017855362
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09178221216052554,
+                "2.0": 0.10429893907643252
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.013513513513513514,
+                "1.0": 0.5675675675675675,
+                "2.0": 0.5337837837837838
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.0,
+                "1.0": 0.40540540540540543,
+                "2.0": 0.36486486486486486
+              }
+            },
+            "circle": {
+              "frames": 148,
+              "velocity_rmse": 0.01678524458100869,
+              "applicable": true,
+              "target_track_switches": 1,
+              "current_centre_rmse": 0.027180203583173485,
+              "displacement_rmse": {
+                "1.0": 0.016799582020270286,
+                "2.0": 0.03352115777445111
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.029934180040074622,
+                "2.0": 0.040189620119938645
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.9527027027027027,
+                "1.0": 0.9932432432432432,
+                "2.0": 0.9932432432432432
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.9527027027027027,
+                "1.0": 0.9932432432432432,
+                "2.0": 0.9932432432432432
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_4": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_head_on_211",
+          "observer": "tb3_4",
+          "frame_source": "tb3_4_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 142,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 142,
+            "no_target": 17,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 297,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 266,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "insufficient_points": 107,
+            "accepted": 153,
+            "residual": 7,
+            "arc_span": 1,
+            "conditioning": 1
+          },
+          "circle_hold_frames": 16,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 142,
+              "velocity_rmse": 0.020209981705330424,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.083129178291385,
+              "displacement_rmse": {
+                "1.0": 0.02019301776836814,
+                "2.0": 0.04036872033694997
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09103133533341592,
+                "2.0": 0.1023572947369386
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.02112676056338028,
+                "1.0": 0.5704225352112676,
+                "2.0": 0.4647887323943662
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.007042253521126761,
+                "1.0": 0.29577464788732394,
+                "2.0": 0.28169014084507044
+              }
+            },
+            "circle": {
+              "frames": 142,
+              "velocity_rmse": 0.005681607358858783,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.010753089175641812,
+              "displacement_rmse": {
+                "1.0": 0.005771806602908787,
+                "2.0": 0.011359845577042053
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.016019335203761406,
+                "2.0": 0.02140604703855709
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        }
+      }
+    },
+    "V1_oblique_crossing_211": {
+      "passed": false,
+      "base_passed": true,
+      "failure": null,
+      "minimum_rolling_speed": 0.06273262652728628,
+      "peer_linear_swept_proxy_gap": 0.06552855026464582,
+      "dynamic_linear_swept_proxy_gap": 0.17199792950411746,
+      "final_pair_error": 0.006766543814184059,
+      "maximum_recorded_ms": 134.1219360474497,
+      "own_scan_only": true,
+      "no_truth_input": true,
+      "private_local_recording": true,
+      "all_source_files_match_V1": true,
+      "robots": {
+        "tb3_0": {
+          "failed_checks": [
+            "no_crawling_time_avoidance",
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.06273262652728628,
+          "fault_stop_count": 18,
+          "longest_standstill": 0.11000000000000121,
+          "final_position_error": 0.0058107917414657135
+        },
+        "tb3_1": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.13141968076860921,
+          "fault_stop_count": 2,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.001851852801551658
+        },
+        "tb3_2": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.12234120583857622,
+          "fault_stop_count": 1,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.008514801373029852
+        },
+        "tb3_3": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.0982380527045319,
+          "fault_stop_count": 1,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.002562062649233328
+        },
+        "tb3_4": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.14018752936426937,
+          "fault_stop_count": 2,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.004931359925620893
+        }
+      },
+      "timing": {
+        "0": {
+          "window_final_error": 0.004404730396579034,
+          "rows": 400,
+          "last_time": 40.01,
+          "statuses": {
+            "feasible_iterate": 110,
+            "validated_one_step": 7,
+            "ok": 263,
+            "late_fallback_stop": 20
+          },
+          "timing_p95_ms": 102.77467048144896,
+          "timing_max_ms": 134.1219360474497,
+          "final_error": 0.004404730396579034,
+          "dynamic_cycles": 255,
+          "max_estimated_speed": 0.11452276959440036
+        },
+        "1": {
+          "window_final_error": 0.00028672604900856745,
+          "rows": 401,
+          "last_time": 40.04500000000001,
+          "statuses": {
+            "feasible_iterate": 88,
+            "ok": 311,
+            "late_fallback_stop": 2
+          },
+          "timing_p95_ms": 80.62982198316604,
+          "timing_max_ms": 111.84312799014151,
+          "final_error": 0.0006241017127041215,
+          "dynamic_cycles": 257,
+          "max_estimated_speed": 0.12353018992524548
+        },
+        "2": {
+          "window_final_error": 0.004801029664202932,
+          "rows": 401,
+          "last_time": 40.046,
+          "statuses": {
+            "feasible_iterate": 94,
+            "ok": 306,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 83.77012296114117,
+          "timing_max_ms": 118.11707902234048,
+          "final_error": 0.007238287363997262,
+          "dynamic_cycles": 261,
+          "max_estimated_speed": 0.1652975610286312
+        },
+        "3": {
+          "window_final_error": 0.0008734861517249751,
+          "rows": 401,
+          "last_time": 40.05100000000001,
+          "statuses": {
+            "feasible_iterate": 84,
+            "validated_one_step": 1,
+            "ok": 315,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 80.72095201350749,
+          "timing_max_ms": 107.78906801715493,
+          "final_error": 0.0011606691176891041,
+          "dynamic_cycles": 248,
+          "max_estimated_speed": 0.11309059520467127
+        },
+        "4": {
+          "window_final_error": 0.002931362333176075,
+          "rows": 401,
+          "last_time": 40.035000000000004,
+          "statuses": {
+            "feasible_iterate": 110,
+            "ok": 289,
+            "late_fallback_stop": 2
+          },
+          "timing_p95_ms": 86.13728999625891,
+          "timing_max_ms": 121.82554404716939,
+          "final_error": 0.00344145740579017,
+          "dynamic_cycles": 280,
+          "max_estimated_speed": 0.1189533685781825
+        }
+      },
+      "audits": {
+        "solver": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 1978,
+          "uncertified_other_statuses": 26,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 400,
+              "prior_plan_samples_audited": 301,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.006604356100394271,
+              "max_plan_execution_error": 0.036194290737684015,
+              "max_nominal_error_during_plan_samples": 0.4932382026403665
+            },
+            "1": {
+              "rows": 401,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.0038166405219957826,
+              "max_plan_execution_error": 0.03763948428099665,
+              "max_nominal_error_during_plan_samples": 0.20734193597295938
+            },
+            "2": {
+              "rows": 401,
+              "prior_plan_samples_audited": 328,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.004946849310578678,
+              "max_plan_execution_error": 0.050230976160664666,
+              "max_nominal_error_during_plan_samples": 0.24566092532835332
+            },
+            "3": {
+              "rows": 401,
+              "prior_plan_samples_audited": 394,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.005980164853627908,
+              "max_plan_execution_error": 0.0392374328813457,
+              "max_nominal_error_during_plan_samples": 0.302658854987962
+            },
+            "4": {
+              "rows": 401,
+              "prior_plan_samples_audited": 380,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.005545060946046508,
+              "max_plan_execution_error": 0.04435215269368881,
+              "max_nominal_error_during_plan_samples": 0.5364063103796799
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "display": {
+          "passed": true,
+          "checked_regions": 7225,
+          "hard_regions": 1974,
+          "soft_regions": 1316,
+          "maximum_numeric_error": 3.885780586188048e-15,
+          "prediction_envelopes": 1974,
+          "direction_icons": 645,
+          "velocity_labels": 658,
+          "center_markers": 658,
+          "identical_local_selected_frames": 109,
+          "error_count": 0,
+          "first_error": null,
+          "note": "Display-to-input geometry audit only; does not certify future physical safety."
+        },
+        "circle": {
+          "passed": true,
+          "circle_measurements": 1286,
+          "mvee_measurements": 81,
+          "geometry_only_circle_holds": 400,
+          "maximum_old_enclosure_excess": -0.0017713756718556462,
+          "retained_prior_checks": 400,
+          "maximum_retained_prior_excess": 1.1102230246251565e-16,
+          "error_count": 0,
+          "first_error": null,
+          "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+        }
+      },
+      "observer_replays": {
+        "tb3_0": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_oblique_crossing_211",
+          "observer": "tb3_0",
+          "frame_source": "tb3_0_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 155,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 155,
+            "no_target": 0,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 287,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 269,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "accepted": 201,
+            "radius_range": 1,
+            "arc_span": 2,
+            "conditioning": 3,
+            "residual": 15,
+            "insufficient_points": 52
+          },
+          "circle_hold_frames": 21,
+          "circle_maximum_resets": 0,
+          "summary": {
+            "mvee": {
+              "frames": 155,
+              "velocity_rmse": 0.021021497590851066,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08459381550851054,
+              "displacement_rmse": {
+                "1.0": 0.020997752367316734,
+                "2.0": 0.041857132808380174
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09310138109233204,
+                "2.0": 0.10517247516372065
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.06451612903225806,
+                "1.0": 0.8,
+                "2.0": 0.7032258064516129
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.0064516129032258064,
+                "1.0": 0.6580645161290323,
+                "2.0": 0.535483870967742
+              }
+            },
+            "circle": {
+              "frames": 155,
+              "velocity_rmse": 0.0041715209153685255,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.00726817319123445,
+              "displacement_rmse": {
+                "1.0": 0.004188857551903145,
+                "2.0": 0.007932930368319211
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.010151279240179285,
+                "2.0": 0.013539783116586889
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_1": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_oblique_crossing_211",
+          "observer": "tb3_1",
+          "frame_source": "tb3_1_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 153,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 153,
+            "no_target": 7,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 311,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 272,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "accepted": 187,
+            "radius_range": 4,
+            "residual": 13,
+            "arc_span": 3,
+            "conditioning": 9,
+            "insufficient_points": 64
+          },
+          "circle_hold_frames": 29,
+          "circle_maximum_resets": 0,
+          "summary": {
+            "mvee": {
+              "frames": 153,
+              "velocity_rmse": 0.02081365252671907,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08485501821555401,
+              "displacement_rmse": {
+                "1.0": 0.020786704062788444,
+                "2.0": 0.0414371932983382
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09280597289624368,
+                "2.0": 0.10428348731349872
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.0915032679738562,
+                "1.0": 0.8431372549019608,
+                "2.0": 0.7581699346405228
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.026143790849673203,
+                "1.0": 0.7450980392156863,
+                "2.0": 0.6601307189542484
+              }
+            },
+            "circle": {
+              "frames": 153,
+              "velocity_rmse": 0.005719709943627022,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.009542690762447256,
+              "displacement_rmse": {
+                "1.0": 0.005616720528381899,
+                "2.0": 0.010951465277860093
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.014194064358372324,
+                "2.0": 0.019260996777528502
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_2": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_oblique_crossing_211",
+          "observer": "tb3_2",
+          "frame_source": "tb3_2_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 148,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 148,
+            "no_target": 11,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 272,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 272,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "insufficient_points": 81,
+            "residual": 12,
+            "accepted": 146,
+            "arc_span": 6,
+            "conditioning": 13
+          },
+          "circle_hold_frames": 37,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 148,
+              "velocity_rmse": 0.0434010803511892,
+              "applicable": true,
+              "target_track_switches": 1,
+              "current_centre_rmse": 0.09377994595874752,
+              "displacement_rmse": {
+                "1.0": 0.043462289463400014,
+                "2.0": 0.08682726965946515
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.11339944539724506,
+                "2.0": 0.14378549716922054
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.12162162162162163,
+                "1.0": 0.5540540540540541,
+                "2.0": 0.4864864864864865
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.02702702702702703,
+                "1.0": 0.47297297297297297,
+                "2.0": 0.41216216216216217
+              }
+            },
+            "circle": {
+              "frames": 148,
+              "velocity_rmse": 0.03332354305131076,
+              "applicable": true,
+              "target_track_switches": 1,
+              "current_centre_rmse": 0.03282454647286948,
+              "displacement_rmse": {
+                "1.0": 0.03344279649171103,
+                "2.0": 0.06690565123810226
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.05493372404683896,
+                "2.0": 0.08484547868179997
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.9662162162162162,
+                "1.0": 0.9662162162162162,
+                "2.0": 0.9662162162162162
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.9662162162162162,
+                "1.0": 0.9662162162162162,
+                "2.0": 0.9662162162162162
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_3": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_oblique_crossing_211",
+          "observer": "tb3_3",
+          "frame_source": "tb3_3_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 139,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 139,
+            "no_target": 21,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 298,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 275,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "insufficient_points": 91,
+            "radius_range": 1,
+            "conditioning": 2,
+            "arc_span": 3,
+            "accepted": 155,
+            "residual": 22
+          },
+          "circle_hold_frames": 22,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 139,
+              "velocity_rmse": 0.03355060966463689,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08635217304192251,
+              "displacement_rmse": {
+                "1.0": 0.03357696997937854,
+                "2.0": 0.06706598985650732
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09492386512237783,
+                "2.0": 0.11318916496585012
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.04316546762589928,
+                "1.0": 0.8129496402877698,
+                "2.0": 0.6258992805755396
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.007194244604316547,
+                "1.0": 0.5971223021582733,
+                "2.0": 0.43884892086330934
+              }
+            },
+            "circle": {
+              "frames": 139,
+              "velocity_rmse": 0.024549908345993136,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.023043143607042016,
+              "displacement_rmse": {
+                "1.0": 0.02455884530878038,
+                "2.0": 0.049054655289692564
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.026851982600137853,
+                "2.0": 0.04601736950979776
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.9568345323741008,
+                "1.0": 1.0,
+                "2.0": 0.9928057553956835
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.9568345323741008,
+                "1.0": 1.0,
+                "2.0": 0.9928057553956835
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_4": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_oblique_crossing_211",
+          "observer": "tb3_4",
+          "frame_source": "tb3_4_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 155,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 155,
+            "no_target": 1,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 287,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 290,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "insufficient_points": 63,
+            "residual": 17,
+            "accepted": 197,
+            "arc_span": 4
+          },
+          "circle_hold_frames": 13,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 155,
+              "velocity_rmse": 0.02179668522884389,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08333215920672156,
+              "displacement_rmse": {
+                "1.0": 0.021818831184702136,
+                "2.0": 0.04360580960411086
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09240359213973717,
+                "2.0": 0.10528631067927383
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.07096774193548387,
+                "1.0": 0.8387096774193549,
+                "2.0": 0.6838709677419355
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.025806451612903226,
+                "1.0": 0.6387096774193548,
+                "2.0": 0.5225806451612903
+              }
+            },
+            "circle": {
+              "frames": 155,
+              "velocity_rmse": 0.004058437909219541,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.005925553589910191,
+              "displacement_rmse": {
+                "1.0": 0.004141102415307354,
+                "2.0": 0.00774823549167298
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.009087246950478184,
+                "2.0": 0.012527454097200106
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        }
+      }
+    },
+    "V1_overtaking_211": {
+      "passed": false,
+      "base_passed": true,
+      "failure": null,
+      "minimum_rolling_speed": 0.1352886509312441,
+      "peer_linear_swept_proxy_gap": 0.10383313242818931,
+      "dynamic_linear_swept_proxy_gap": 0.18267645858108633,
+      "final_pair_error": 0.0029545691491910425,
+      "maximum_recorded_ms": 111.822416074574,
+      "own_scan_only": true,
+      "no_truth_input": true,
+      "private_local_recording": true,
+      "all_source_files_match_V1": true,
+      "robots": {
+        "tb3_0": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.1352886509312441,
+          "fault_stop_count": 2,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.004619755522813515
+        },
+        "tb3_1": {
+          "failed_checks": [],
+          "minimum_rolling_speed": 0.14315410173500043,
+          "fault_stop_count": 0,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.003280692441509557
+        },
+        "tb3_2": {
+          "failed_checks": [
+            "no_fault_stop"
+          ],
+          "minimum_rolling_speed": 0.13945069413245914,
+          "fault_stop_count": 1,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.0016651877363157864
+        },
+        "tb3_3": {
+          "failed_checks": [],
+          "minimum_rolling_speed": 0.14063154233667552,
+          "fault_stop_count": 0,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.004135056830829581
+        },
+        "tb3_4": {
+          "failed_checks": [],
+          "minimum_rolling_speed": 0.14039523131938836,
+          "fault_stop_count": 0,
+          "longest_standstill": 0.0,
+          "final_position_error": 0.003717791228848129
+        }
+      },
+      "timing": {
+        "0": {
+          "window_final_error": 0.004888993388678938,
+          "rows": 402,
+          "last_time": 40.175999999999995,
+          "statuses": {
+            "feasible_iterate": 22,
+            "ok": 378,
+            "late_fallback_stop": 2
+          },
+          "timing_p95_ms": 65.15461051021701,
+          "timing_max_ms": 111.822416074574,
+          "final_error": 0.004703564045537041,
+          "dynamic_cycles": 228,
+          "max_estimated_speed": 0.0606072032250116
+        },
+        "1": {
+          "window_final_error": 0.003493685458868949,
+          "rows": 401,
+          "last_time": 40.096,
+          "statuses": {
+            "feasible_iterate": 23,
+            "ok": 378
+          },
+          "timing_p95_ms": 64.09963907208294,
+          "timing_max_ms": 101.02108807768673,
+          "final_error": 0.0032564442946826843,
+          "dynamic_cycles": 186,
+          "max_estimated_speed": 0.07744115117516057
+        },
+        "2": {
+          "window_final_error": 0.001956163597642314,
+          "rows": 401,
+          "last_time": 40.12199999999999,
+          "statuses": {
+            "feasible_iterate": 14,
+            "ok": 386,
+            "late_fallback_stop": 1
+          },
+          "timing_p95_ms": 59.605275047942996,
+          "timing_max_ms": 108.98887494113296,
+          "final_error": 0.001829883394083781,
+          "dynamic_cycles": 157,
+          "max_estimated_speed": 0.05968807058728676
+        },
+        "3": {
+          "window_final_error": 0.0052209991517236445,
+          "rows": 402,
+          "last_time": 40.136,
+          "statuses": {
+            "feasible_iterate": 8,
+            "ok": 394
+          },
+          "timing_p95_ms": 52.34469144488685,
+          "timing_max_ms": 86.76174306310713,
+          "final_error": 0.0037612228850699464,
+          "dynamic_cycles": 207,
+          "max_estimated_speed": 0.0638517993128973
+        },
+        "4": {
+          "window_final_error": 0.00403405090254488,
+          "rows": 401,
+          "last_time": 40.09199999999999,
+          "statuses": {
+            "feasible_iterate": 27,
+            "ok": 374
+          },
+          "timing_p95_ms": 66.99794495943934,
+          "timing_max_ms": 83.93730397801846,
+          "final_error": 0.0033112643907701905,
+          "dynamic_cycles": 232,
+          "max_estimated_speed": 0.1622984209263027
+        }
+      },
+      "audits": {
+        "solver": {
+          "applicable": true,
+          "passed": true,
+          "checked_adopted_first_steps": 2003,
+          "uncertified_other_statuses": 3,
+          "records_without_snapshot": 0,
+          "maximum_input_metric_pose_difference": 0.0,
+          "first_error": null,
+          "error_count": 0,
+          "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+        },
+        "metrics": {
+          "passed": true,
+          "robots": {
+            "0": {
+              "rows": 402,
+              "prior_plan_samples_audited": 390,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.009127304907629577,
+              "max_plan_execution_error": 0.04162261565862116,
+              "max_nominal_error_during_plan_samples": 0.563870388639591
+            },
+            "1": {
+              "rows": 401,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 399
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.006825677512383532,
+              "max_plan_execution_error": 0.04414040735225575,
+              "max_nominal_error_during_plan_samples": 0.5295956148349342
+            },
+            "2": {
+              "rows": 401,
+              "prior_plan_samples_audited": 398,
+              "reference_quality_counts": {
+                "1": 400,
+                "2": 1
+              },
+              "max_nominal_analytic_residual": 1.7763568394002505e-15,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.007140814147027155,
+              "max_plan_execution_error": 0.04366120908501562,
+              "max_nominal_error_during_plan_samples": 0.5226001711366273
+            },
+            "3": {
+              "rows": 402,
+              "prior_plan_samples_audited": 395,
+              "reference_quality_counts": {
+                "2": 2,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.008181226327587327,
+              "max_plan_execution_error": 0.04357733902474678,
+              "max_nominal_error_during_plan_samples": 0.5916150908441062
+            },
+            "4": {
+              "rows": 401,
+              "prior_plan_samples_audited": 400,
+              "reference_quality_counts": {
+                "2": 1,
+                "1": 400
+              },
+              "max_nominal_analytic_residual": 8.881784197001252e-16,
+              "max_heading_analytic_residual": 0.0,
+              "mean_plan_execution_error": 0.007004426081016885,
+              "max_plan_execution_error": 0.04347395892261924,
+              "max_nominal_error_during_plan_samples": 0.5287404655823197
+            }
+          },
+          "checks": [
+            "pose/reference same timestamp",
+            "target-minus-actual heading sign",
+            "prior accepted plan trace reconstruction",
+            "no fabricated plan zero",
+            "no nominal/plan alias",
+            "analytic prescribed leader cross-check"
+          ]
+        },
+        "display": {
+          "passed": true,
+          "checked_regions": 10142,
+          "hard_regions": 2769,
+          "soft_regions": 1846,
+          "maximum_numeric_error": 3.4416913763379853e-15,
+          "prediction_envelopes": 2769,
+          "direction_icons": 912,
+          "velocity_labels": 923,
+          "center_markers": 923,
+          "identical_local_selected_frames": 161,
+          "error_count": 0,
+          "first_error": null,
+          "note": "Display-to-input geometry audit only; does not certify future physical safety."
+        },
+        "circle": {
+          "passed": true,
+          "circle_measurements": 1792,
+          "mvee_measurements": 156,
+          "geometry_only_circle_holds": 318,
+          "maximum_old_enclosure_excess": -0.0013481743581653938,
+          "retained_prior_checks": 318,
+          "maximum_retained_prior_excess": 2.7755575615628914e-17,
+          "error_count": 0,
+          "first_error": null,
+          "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+        }
+      },
+      "observer_replays": {
+        "tb3_0": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_overtaking_211",
+          "observer": "tb3_0",
+          "frame_source": "tb3_0_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 161,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 161,
+            "no_target": 0,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 414,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 401,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "accepted": 344,
+            "residual": 32,
+            "conditioning": 1,
+            "arc_span": 1,
+            "insufficient_points": 35
+          },
+          "circle_hold_frames": 16,
+          "circle_maximum_resets": 0,
+          "summary": {
+            "mvee": {
+              "frames": 161,
+              "velocity_rmse": 0.019915089586354982,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08218151309813886,
+              "displacement_rmse": {
+                "1.0": 0.019933725308477424,
+                "2.0": 0.03984393682096796
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09017728708383259,
+                "2.0": 0.10150544419019059
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.006211180124223602,
+                "1.0": 0.7515527950310559,
+                "2.0": 0.5093167701863354
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.006211180124223602,
+                "1.0": 0.37267080745341613,
+                "2.0": 0.2484472049689441
+              }
+            },
+            "circle": {
+              "frames": 161,
+              "velocity_rmse": 0.0034303167494086316,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.005767464129167547,
+              "displacement_rmse": {
+                "1.0": 0.0034232410568873313,
+                "2.0": 0.006776644424348568
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.008543066677742472,
+                "2.0": 0.011671210039867813
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_1": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_overtaking_211",
+          "observer": "tb3_1",
+          "frame_source": "tb3_1_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 157,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 157,
+            "no_target": 0,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 366,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 347,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "accepted": 212,
+            "radius_range": 1,
+            "residual": 28,
+            "arc_span": 1,
+            "conditioning": 1,
+            "insufficient_points": 111
+          },
+          "circle_hold_frames": 19,
+          "circle_maximum_resets": 0,
+          "summary": {
+            "mvee": {
+              "frames": 157,
+              "velocity_rmse": 0.012395011736698701,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08108164528275133,
+              "displacement_rmse": {
+                "1.0": 0.012397078516423061,
+                "2.0": 0.02476809208080687
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.08390649866160778,
+                "2.0": 0.08839376873307499
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.012738853503184714,
+                "1.0": 0.8535031847133758,
+                "2.0": 0.7770700636942676
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.006369426751592357,
+                "1.0": 0.46496815286624205,
+                "2.0": 0.40764331210191085
+              }
+            },
+            "circle": {
+              "frames": 157,
+              "velocity_rmse": 0.003060540259380444,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.004841124897248903,
+              "displacement_rmse": {
+                "1.0": 0.0030855494555756913,
+                "2.0": 0.005990087263705127
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.007309368523416016,
+                "2.0": 0.010026809660857684
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_2": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_overtaking_211",
+          "observer": "tb3_2",
+          "frame_source": "tb3_2_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 155,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 155,
+            "no_target": 5,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 416,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 401,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "accepted": 363,
+            "residual": 31,
+            "conditioning": 2,
+            "insufficient_points": 13,
+            "arc_span": 2
+          },
+          "circle_hold_frames": 25,
+          "circle_maximum_resets": 0,
+          "summary": {
+            "mvee": {
+              "frames": 155,
+              "velocity_rmse": 0.018351595540721,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.0839706542416485,
+              "displacement_rmse": {
+                "1.0": 0.018355585884057408,
+                "2.0": 0.03668661814900636
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.09024817872832233,
+                "2.0": 0.0995663911970577
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.01935483870967742,
+                "1.0": 0.7612903225806451,
+                "2.0": 0.6645161290322581
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.0064516129032258064,
+                "1.0": 0.47096774193548385,
+                "2.0": 0.45806451612903226
+              }
+            },
+            "circle": {
+              "frames": 155,
+              "velocity_rmse": 0.003457233664051395,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.006148199136618909,
+              "displacement_rmse": {
+                "1.0": 0.003488506680013909,
+                "2.0": 0.006864080644761565
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.009145369546332946,
+                "2.0": 0.01235926575478741
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_3": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_overtaking_211",
+          "observer": "tb3_3",
+          "frame_source": "tb3_3_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 157,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 157,
+            "no_target": 3,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 425,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 401,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "residual": 41,
+            "accepted": 339,
+            "conditioning": 7,
+            "insufficient_points": 17,
+            "radius_range": 1,
+            "arc_span": 2
+          },
+          "circle_hold_frames": 20,
+          "circle_maximum_resets": 1,
+          "summary": {
+            "mvee": {
+              "frames": 157,
+              "velocity_rmse": 0.01870579088222,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08201622248505198,
+              "displacement_rmse": {
+                "1.0": 0.018717100692325735,
+                "2.0": 0.037378837513258746
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.08597170682020686,
+                "2.0": 0.09353227979925077
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.012738853503184714,
+                "1.0": 0.7834394904458599,
+                "2.0": 0.7070063694267515
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.006369426751592357,
+                "1.0": 0.5222929936305732,
+                "2.0": 0.4394904458598726
+              }
+            },
+            "circle": {
+              "frames": 157,
+              "velocity_rmse": 0.006038768983306547,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.007514673080139459,
+              "displacement_rmse": {
+                "1.0": 0.006083597046084138,
+                "2.0": 0.012089302157291051
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.012838687430023095,
+                "2.0": 0.018601735563411256
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        },
+        "tb3_4": {
+          "source": "../../\u56db\u811a\u672c\u5bf9\u6bd4\u8bc1\u636e/\u4e94\u673a\u5783\u573e\u6876012_2026-11-19/V1_overtaking_211",
+          "observer": "tb3_4",
+          "frame_source": "tb3_4_local_clusters.jsonl",
+          "metric_target_label": "Offline radial cluster-to-actor match only; never used online",
+          "metric_labelled_frames": 154,
+          "configured_observer": "circle",
+          "metric_target_labels": {
+            "matched": 154,
+            "no_target": 4,
+            "ambiguous": 0,
+            "non_target_clusters": 0
+          },
+          "configured_circle_prior_retention": true,
+          "comparison_includes_circle_prior": false,
+          "offline_quality_rejection_interval": null,
+          "configured_replay_checks": 378,
+          "configured_maximum_difference": 0.0,
+          "configured_replay_passed": true,
+          "window": [
+            4.0,
+            20.0
+          ],
+          "control_replay_checks": 358,
+          "control_maximum_difference": 0.0,
+          "control_replay_passed": true,
+          "control_replay_missing": [],
+          "circle_gate_counts": {
+            "accepted": 216,
+            "radius_range": 1,
+            "residual": 25,
+            "arc_span": 4,
+            "conditioning": 8,
+            "insufficient_points": 109
+          },
+          "circle_hold_frames": 25,
+          "circle_maximum_resets": 0,
+          "summary": {
+            "mvee": {
+              "frames": 154,
+              "velocity_rmse": 0.016889721212642986,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.08319052969758836,
+              "displacement_rmse": {
+                "1.0": 0.016891860503976803,
+                "2.0": 0.03377204825029411
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.08852653669554197,
+                "2.0": 0.09655635669624739
+              },
+              "occupied_circle_coverage": {
+                "0.0": 0.025974025974025976,
+                "1.0": 0.8441558441558441,
+                "2.0": 0.7532467532467533
+              },
+              "collision_proxy_coverage": {
+                "0.0": 0.006493506493506494,
+                "1.0": 0.5064935064935064,
+                "2.0": 0.4675324675324675
+              }
+            },
+            "circle": {
+              "frames": 154,
+              "velocity_rmse": 0.005233401838977721,
+              "applicable": true,
+              "target_track_switches": 0,
+              "current_centre_rmse": 0.009552131978306927,
+              "displacement_rmse": {
+                "1.0": 0.00519766864117311,
+                "2.0": 0.010323633172224884
+              },
+              "absolute_centre_prediction_rmse": {
+                "1.0": 0.013929703992493282,
+                "2.0": 0.01870295180369836
+              },
+              "occupied_circle_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              },
+              "collision_proxy_coverage": {
+                "0.0": 1.0,
+                "1.0": 1.0,
+                "2.0": 1.0
+              }
+            }
+          },
+          "interpretation": "Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer."
+        }
+      }
+    }
+  },
+  "production_algorithm_and_old_profiles_unchanged": true,
+  "adopted_first_step_checks": 5951,
+  "prediction_display_checks": 25307,
+  "control_forecast_replay_checks": 4796,
+  "scan_forecast_replay_checks": 5056,
+  "all_replayed_forecasts_exact": true,
+  "physical_circle_coverage_counterexamples": {
+    "diagnostic": "Offline counterexamples: scan-time target circle vs recorded model envelope.\n\nNeeds independently labelled observer replay files. A positive boundary excess\nis a sampled counterexample; passing samples alone does not prove containment.\nNo truth or radius is supplied to a controller by this utility.\n",
+    "candidate_uncovered_frames": 18,
+    "confirmed_outside_samples": 18,
+    "confirmed_expanded_outside_samples": 18,
+    "failures": [
+      {
+        "case": "V1_head_on_211",
+        "observer": "tb3_3",
+        "time": 9.482000000000001,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.358778331664121,
+        "expanded_collision_boundary_max_norm": 1.2466553203774782,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11854773421893557
+      },
+      {
+        "case": "V1_head_on_211",
+        "observer": "tb3_3",
+        "time": 9.583000000000002,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.4662369534087287,
+        "expanded_collision_boundary_max_norm": 1.3031467504488539,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11717573254624676
+      },
+      {
+        "case": "V1_head_on_211",
+        "observer": "tb3_3",
+        "time": 9.652000000000001,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.5450479190273476,
+        "expanded_collision_boundary_max_norm": 1.3403776470822588,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.1152069016160628
+      },
+      {
+        "case": "V1_head_on_211",
+        "observer": "tb3_3",
+        "time": 9.757000000000001,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.5568878557655974,
+        "expanded_collision_boundary_max_norm": 1.3457751081597553,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11310292537287273
+      },
+      {
+        "case": "V1_head_on_211",
+        "observer": "tb3_3",
+        "time": 9.856000000000002,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3123641680354512,
+        "expanded_collision_boundary_max_norm": 1.221068895994534,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11812079342400839
+      },
+      {
+        "case": "V1_head_on_211",
+        "observer": "tb3_3",
+        "time": 9.958000000000002,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.443989293880727,
+        "expanded_collision_boundary_max_norm": 1.2926470527596994,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.12002470658047669
+      },
+      {
+        "case": "V1_head_on_211",
+        "observer": "tb3_3",
+        "time": 10.06,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3979043996904708,
+        "expanded_collision_boundary_max_norm": 1.2663138070007338,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11354998549823324
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_2",
+        "time": 15.285,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3693508889133783,
+        "expanded_collision_boundary_max_norm": 1.2530460597933026,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.12028991703227176
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_2",
+        "time": 15.387,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.4925222952833872,
+        "expanded_collision_boundary_max_norm": 1.3174109994880712,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.1194346522767676
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_2",
+        "time": 15.489,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.5046548223665133,
+        "expanded_collision_boundary_max_norm": 1.3236404617910766,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11977627503535232
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_2",
+        "time": 15.591000000000001,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.4400386244215815,
+        "expanded_collision_boundary_max_norm": 1.2908098669529573,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.12143344998737773
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_2",
+        "time": 15.693000000000001,
+        "track_id": 2,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.443409123794104,
+        "expanded_collision_boundary_max_norm": 1.2916183970586066,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11878162765290268
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_3",
+        "time": 6.191000000000001,
+        "track_id": 4,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3136584397001665,
+        "expanded_collision_boundary_max_norm": 1.21971439652855,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.11078106417640576
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_3",
+        "time": 6.291,
+        "track_id": 4,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3412737180218364,
+        "expanded_collision_boundary_max_norm": 1.2339117647152182,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.10614483343570556
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_3",
+        "time": 6.393000000000001,
+        "track_id": 4,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.31577324652287,
+        "expanded_collision_boundary_max_norm": 1.2185447068887314,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.09962363088926013
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_3",
+        "time": 6.496,
+        "track_id": 4,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3273392594317106,
+        "expanded_collision_boundary_max_norm": 1.2255176378350312,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.10353158396679825
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_3",
+        "time": 6.58,
+        "track_id": 4,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3642060189496072,
+        "expanded_collision_boundary_max_norm": 1.2443587449023699,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.10272121332423831
+      },
+      {
+        "case": "V1_oblique_crossing_211",
+        "observer": "tb3_3",
+        "time": 6.684000000000001,
+        "track_id": 4,
+        "observation_kind": "mvee",
+        "sampled_boundary_max_norm": 1.3664594442641613,
+        "expanded_collision_boundary_max_norm": 1.247502491191403,
+        "outside_sample_found": true,
+        "expanded_outside_sample_found": true,
+        "center_error": 0.10629801070838962
+      }
+    ]
+  },
+  "physical_circle_coverage_certified": false,
+  "next_priority": "Known .12m shape prior for untrusted target initialization/reassociation; then runtime deadlines and peer coordination, retaining hard boundaries and all failures."
+}
