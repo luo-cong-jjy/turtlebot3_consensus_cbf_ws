@@ -352,6 +352,40 @@ def circle_enclosure_radius(center, ellipse, physical_radius=0., padding=.03):
     return max(cover,float(physical_radius)+padding)
 
 
+def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error=.01):
+    """Conditional set guard for a calibrated cylindrical target, not a fit.
+
+    If all returns belong to this body and each is within point_error of its
+    true surface/interior, its centre lies in every disk (p_i,Rmax+error).
+    The intersection of their coordinate bounds encloses that centre set.
+    Expanding its circumscribed disk by Rmax encloses the complete object.
+    No point estimate/covariance observation is fabricated from this set.
+    """
+    points=np.asarray(points,float).reshape(-1,2)
+    if not len(points) or not np.isfinite(points).all():raise ValueError('Finite nonempty target returns required')
+    if not all(np.isfinite(v) for v in (radius,radius_tolerance,point_error)) or radius<=0 or min(radius_tolerance,point_error)<0:
+        raise ValueError('Invalid calibrated radius or error bounds')
+    upper=radius+radius_tolerance;reach=upper+point_error
+    lower_box=np.max(points-reach,axis=0);upper_box=np.min(points+reach,axis=0)
+    if np.all(lower_box<=upper_box):
+        center=.5*(lower_box+upper_box);center_bound=.5*float(np.linalg.norm(upper_box-lower_box))
+        method='intersection_coordinate_bounds'
+        # Every individual disk also bounds the intersection. Choose the
+        # smallest of these valid enclosing disks; no data is discarded.
+        if center_bound>reach:
+            center=points[np.argmin(np.linalg.norm(points-points.mean(0),axis=1))].copy();center_bound=reach
+            method='single_disk_bound'
+    else:
+        # Inconsistent single-body/point-error assumption: retain a union
+        # bound, conditional on at least one genuine return; flag explicitly.
+        center=points.mean(0);center_bound=float(np.linalg.norm(points-center,axis=1).max())+reach
+        method='inconsistent_union_bound'
+    return dict(center=center.tolist(),radius=float(center_bound+upper),center_radius=float(center_bound),
+        radius_prior=float(radius),radius_upper=float(upper),point_error_bound=float(point_error),
+        method=method,consistent=bool(np.all(lower_box<=upper_box)),
+        center_box_lower=lower_box.tolist(),center_box_upper=upper_box.tolist(),point_count=len(points))
+
+
 def local_cluster_record(message, clusters, sensor_origin, frame):
     """Private diagnostic copy; never add raw points to the public message."""
     result=dict(message,sensor_origin=list(sensor_origin),points_frame=frame,
@@ -414,7 +448,8 @@ class DynamicEllipseTracker:
                  history_size=10, speed_threshold=.05, mode='cv',reaction_time=.35,extra_margin=.02,
                  ca_jerk_density=.01,ca_acceleration_variance=.04,singer_tau=1.,
                  acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False,
-                 geometry_observer='mvee',circle_prior_retention=False):
+                 geometry_observer='mvee',circle_prior_retention=False,known_radius=0.,
+                 known_radius_tolerance=.005,known_point_error=.01):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -437,6 +472,11 @@ class DynamicEllipseTracker:
         self.circle_prior_retention=bool(circle_prior_retention)
         if self.circle_prior_retention and geometry_observer!='circle':
             raise ValueError('Circle prior retention requires circle observations')
+        if not all(np.isfinite(v) and v>=0 for v in (known_radius,known_radius_tolerance,known_point_error)):
+            raise ValueError('Invalid known-radius prior bounds')
+        if known_radius>0 and (mode!='cv' or geometry_observer!='circle' or not transport_geometry):
+            raise ValueError('Known-radius initialization guard requires CV/circle and transported geometry')
+        self.known_radius,self.known_radius_tolerance,self.known_point_error=known_radius,known_radius_tolerance,known_point_error
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -564,6 +604,10 @@ class DynamicEllipseTracker:
             track.update(seen=stamp,missed=0,variance=variance,count=track['count']+1,
                          raw_a=ellipse.a,raw_b=ellipse.b,raw_center=z[:2].copy(),raw_theta=z[4],point_count=ellipse.point_count,
                          measurement_reference_center=track['x'][:2].copy())
+            if self.known_radius>0 and kind=='mvee':
+                if not hasattr(ellipse,'known_radius_guard'):raise ValueError('Missing calibrated-radius centre-set guard')
+                track['known_radius_guard']=ellipse.known_radius_guard
+            else:track.pop('known_radius_guard',None)
             if self.circle_prior_retention and kind=='circle' and position_observed:
                 track['circle_prior_radius']=float(ellipse.a)
                 track['circle_prior_offset']=z[:2].copy()-track['x'][:2]
@@ -597,6 +641,12 @@ class DynamicEllipseTracker:
         shape=np.diag(1./base)@rotation@np.diag([track['raw_a'],track['raw_b']])
         scale=max(1.,np.linalg.norm(local/base)+np.linalg.norm(shape,2))
         shape_guard=base*scale
+        original_shape_guard=shape_guard.copy()
+        initialization_guard=track.get('known_radius_guard')
+        if initialization_guard is not None:
+            offset=np.asarray(initialization_guard['center'])-track['measurement_reference_center']
+            required=initialization_guard['radius']+float(np.linalg.norm(offset))
+            shape_guard=np.maximum(shape_guard,required)
         # Separate from upstream stochastic inflation: a deterministic execution
         # buffer for model/command tracking lag. Uniform radial scaling adds
         # exactly this margin to the existing b*(rho-1) barrier, not an
@@ -613,8 +663,13 @@ class DynamicEllipseTracker:
                 margin=self.extra_margin+self.reaction_time*np.linalg.norm(x[5:7])+\
                     .5*self.reaction_time**2*np.linalg.norm(x[7:9])
             margins.append(float(margin))
-            inflated=shape_guard+reference_axis_inflation(p)
-            axes.append(inflated*(1.+margin/inflated[1]))
+            uncertainty=reference_axis_inflation(p)
+            inflated=shape_guard+uncertainty
+            stage_axes=inflated*(1.+margin/inflated[1])
+            if initialization_guard is not None:
+                original_inflated=original_shape_guard+uncertainty
+                stage_axes=np.maximum(stage_axes,original_inflated*(1.+margin/original_inflated[1]))
+            axes.append(stage_axes)
         return dict(id=track['id'],name='tracked_'+str(track['id']),center=np.asarray(centers[0]),
             a=float(axes[0][0]),b=float(axes[0][1]),theta=float(x[4]),
             prediction_centers=np.asarray(centers),prediction_axes=np.asarray(axes),
@@ -631,6 +686,7 @@ class DynamicEllipseTracker:
             raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'],
             observation_kind=track.get('observation_kind','mvee'),position_observed=track.get('position_observed',True),
             observer_resets=track.get('observer_resets',0),
+            **(dict(known_radius_guard=dict(initialization_guard,shape_guard_axes=shape_guard.tolist())) if initialization_guard is not None else {}),
             circle_prior_retention=self.circle_prior_retention,prior_shape_retained=track.get('prior_shape_retained',False),
             motion_observation_age=float(now-track.get('last_motion_observed',track['seen'])),
             circle_quality_degraded=bool(self.circle_prior_retention and track.get('observation_kind')=='circle'
@@ -1108,6 +1164,9 @@ class TurtleBot3CBFController:
             transport_geometry=bool(get('/cbf/dynamic/transport_geometry',False)),
             geometry_observer=self.geometry_observer,
             circle_prior_retention=bool(get('/cbf/dynamic/circle_prior_retention',False)),
+            known_radius=float(get('/cbf/dynamic/known_radius',0.)),
+            known_radius_tolerance=float(get('/cbf/dynamic/known_radius_tolerance',.005)),
+            known_point_error=float(get('/cbf/dynamic/known_point_error',.01)),
             **(get('/cbf/dynamic/reliability',{}) if dynamic_mode=='adaptive' else {}))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
@@ -1257,6 +1316,10 @@ class TurtleBot3CBFController:
                     ellipse.base_enclosure=dict(center=[ellipse.cx,ellipse.cy],a=ellipse.a,b=ellipse.b,
                         theta=ellipse.theta,point_count=ellipse.point_count)
                     ellipse.circle_candidate=circle_observation(cluster,ellipse,[translation.x,translation.y],self.padding)
+                tracker=getattr(self,'dynamic_tracker',None)
+                if tracker is not None and getattr(tracker,'known_radius',0.)>0:
+                    ellipse.known_radius_guard=known_radius_center_guard(cluster,tracker.known_radius,
+                        tracker.known_radius_tolerance,tracker.known_point_error)
                 fits.append(ellipse)
                 clusters.append(cluster)
             moving=getattr(self,'dynamic_prediction',False)
@@ -1294,6 +1357,8 @@ class TurtleBot3CBFController:
                     prior_shape_retained=o.get('prior_shape_retained',False),
                     motion_observation_age=o.get('motion_observation_age',0.),
                     circle_quality_degraded=o.get('circle_quality_degraded',False)) for o in observed]
+                for row,o in zip(rows,observed):
+                    if 'known_radius_guard' in o:row['known_radius_guard']=o['known_radius_guard']
                 if self.dynamic_tracker.mode=='adaptive':
                     for row,o in zip(rows,observed):row.update(model_weights=o['model_weights'].tolist(),
                         model_scores=o['model_scores'],selected_model=o['selected_model'],
@@ -1308,6 +1373,7 @@ class TurtleBot3CBFController:
                         quality=getattr(e,'circle_candidate',{})
                         measurement.update(base_enclosure=e.base_enclosure,observation_kind=e.observation_kind,
                             position_observed=e.position_observed,circle_quality={k:v for k,v in quality.items() if k!='center'})
+                        if hasattr(e,'known_radius_guard'):measurement['known_radius_guard']=e.known_radius_guard
                         if hasattr(e,'retained_prior'):measurement['retained_prior']=e.retained_prior
                 if getattr(self,'log_cluster_points',False):
                     prediction_message.update(sensor_origin=[translation.x,translation.y],points_frame=self.target_frame,

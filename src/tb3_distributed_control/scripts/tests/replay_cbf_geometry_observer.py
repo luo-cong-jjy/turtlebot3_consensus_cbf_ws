@@ -9,7 +9,7 @@ inline.reference_covariance_matrices=reference_covariance_matrices
 inline.reference_axis_inflation=reference_axis_inflation
 
 
-def replay(directory,compare_retention=False,reject_circle_interval=None,observer='tb3_0'):
+def replay(directory,compare_retention=False,reject_circle_interval=None,observer='tb3_0',counterfactual_known_radius=None):
     p=Path(directory);meta=json.loads((p/'run_metadata.json').read_text())
     if meta['prediction_mode']!='cv':raise ValueError('This stage validates CV geometry only')
     truth=list(csv.DictReader((p/'gazebo_truth.csv').open()))
@@ -26,11 +26,18 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
     kinds=('mvee','circle','circle_prior') if compare_retention else ('mvee','circle')
     models={kind:inline.DynamicEllipseTracker(**args,geometry_observer='mvee' if kind=='mvee' else 'circle',
         circle_prior_retention=(kind=='circle_prior' if compare_retention else
-            kind=='circle' and meta.get('circle_prior_retention',False))) for kind in kinds}
+            kind=='circle' and meta.get('circle_prior_retention',False)),
+        known_radius=(counterfactual_known_radius if counterfactual_known_radius is not None else meta.get('known_radius',0.)) if kind!='mvee' else 0.,
+        known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01)) for kind in kinds}
     configured=meta.get('geometry_observer','mvee')
     configured_key=('circle_prior' if compare_retention and configured=='circle'
         and meta.get('circle_prior_retention',False) else configured)
     evaluated_kinds=tuple(models)
+    if counterfactual_known_radius is not None:
+        models['_recorded']=inline.DynamicEllipseTracker(**args,geometry_observer=configured,
+            circle_prior_retention=meta.get('circle_prior_retention',False),known_radius=meta.get('known_radius',0.),
+            known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01))
+        configured_key='_recorded'
     if reject_circle_interval is not None:
         if len(reject_circle_interval)!=2 or reject_circle_interval[0]>=reject_circle_interval[1]:
             raise ValueError('Expected ordered offline quality-rejection interval')
@@ -59,6 +66,9 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
                             and reject_circle_interval[0]<=t<=reject_circle_interval[1]):
                         e.circle_candidate=dict(accepted=False,reason='offline_injected_quality_loss')
                     reason=e.circle_candidate['reason'];gates[reason]=gates.get(reason,0)+1
+                if model.known_radius>0:
+                    e.known_radius_guard=inline.known_radius_center_guard(measurement['points'],model.known_radius,
+                        model.known_radius_tolerance,model.known_point_error)
                 fits.append(e)
             model.update(fits,stamp);current=model.obstacles(model.snapshot(stamp),stamp)
             results[kind]={o['id']:o for o in current};ids[kind]=[e.track_id for e in fits]
@@ -151,7 +161,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         metric_labelled_frames=len(records),configured_observer=meta.get('geometry_observer','mvee'),
         metric_target_labels=labels,
         configured_circle_prior_retention=meta.get('circle_prior_retention',False),
-        comparison_includes_circle_prior=compare_retention,
+        comparison_includes_circle_prior=compare_retention,counterfactual_known_radius=counterfactual_known_radius,
         offline_quality_rejection_interval=reject_circle_interval,
         configured_replay_checks=replay_checks,configured_maximum_difference=replay_error,
         configured_replay_passed=replay_checks>0 and replay_error<1e-8,window=[4.,20.],

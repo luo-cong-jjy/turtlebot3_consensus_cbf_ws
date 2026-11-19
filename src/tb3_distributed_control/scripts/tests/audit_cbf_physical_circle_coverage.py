@@ -26,6 +26,8 @@ def audit(root):
         origin=float(np.median([float(r['ros_time'])-float(r['time']) for r in truth]))
         for source in sorted(case.glob('observer_replay_tb3_*.json')):
             replay=json.loads(source.read_text())
+            if replay.get('counterfactual_known_radius') is not None or replay.get('offline_quality_rejection_interval') is not None:
+                raise ValueError('Modified counterfactual geometry must not be audited against original logged axes')
             if not replay['configured_replay_passed']:raise ValueError('Recorded forecast replay must agree first')
             bad=[r for r in replay['records'] if not r['circle']['occupied_circle_coverage']['0.0']]
             if not bad:continue
