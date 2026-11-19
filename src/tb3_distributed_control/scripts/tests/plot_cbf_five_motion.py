@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 
 
-def plot(root):
+def plot(root,suffix=""):
     root=Path(root);cases=['V1_overtaking_211','V1_head_on_211','V1_oblique_crossing_211']
+    cases=[case+suffix for case in cases]
     labels=['Overtaking','Head-on','Oblique crossing'];colors=plt.get_cmap('tab10').colors[:5]
     fig,axes=plt.subplots(3,3,figsize=(15,11),constrained_layout=True)
     for row,(case,label) in enumerate(zip(cases,labels)):
@@ -55,4 +56,4 @@ def plot(root):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('root');plot(parser.parse_args().root)
+    parser=argparse.ArgumentParser();parser.add_argument('root');parser.add_argument('--suffix',default='');args=parser.parse_args();plot(args.root,args.suffix)

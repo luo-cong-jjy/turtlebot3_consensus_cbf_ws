@@ -13,9 +13,15 @@ import numpy as np
 
 
 def audit(root):
-    root=Path(root);failures=[];angle=np.arange(4096)*2*np.pi/4096
+    root=Path(root);failures=[];excluded=[];evaluated=[];observers=0;frames_checked=0;angle=np.arange(4096)*2*np.pi/4096
     unit=np.column_stack([np.cos(angle),np.sin(angle)])
     for case in sorted(root.glob('V1_*')):
+        evaluation=case/'evaluation.json'
+        status=json.loads(evaluation.read_text()) if evaluation.exists() else {}
+        if status.get('failure') is not None:
+            excluded.append(dict(case=case.name,reason=status['failure']))
+            continue
+        evaluated.append(case.name)
         specs=json.loads((case/'dynamic_scenario.json').read_text())['specifications']
         if len(specs)!=1:raise ValueError('Exactly one circular evaluation actor required')
         radius=specs[0]['radius'];meta=json.loads((case/'run_metadata.json').read_text())
@@ -25,7 +31,7 @@ def audit(root):
         truth=list(csv.DictReader((case/'gazebo_truth.csv').open()))
         origin=float(np.median([float(r['ros_time'])-float(r['time']) for r in truth]))
         for source in sorted(case.glob('observer_replay_tb3_*.json')):
-            replay=json.loads(source.read_text())
+            replay=json.loads(source.read_text());observers+=1;frames_checked+=len(replay['records'])
             if replay.get('counterfactual_known_radius_refine') is not None or replay.get('counterfactual_known_radius') is not None or replay.get('offline_quality_rejection_interval') is not None:
                 raise ValueError('Modified counterfactual geometry must not be audited against original logged axes')
             if not replay['configured_replay_passed']:raise ValueError('Recorded forecast replay must agree first')
@@ -49,7 +55,7 @@ def audit(root):
                     sampled_boundary_max_norm=maximum,expanded_collision_boundary_max_norm=proxy,
                     outside_sample_found=maximum>1,expanded_outside_sample_found=proxy>1,
                     center_error=row['circle']['centre_error']))
-    return dict(diagnostic=__doc__,candidate_uncovered_frames=len(failures),
+    return dict(diagnostic=__doc__,applicable=frames_checked>0,evaluated_attempts=evaluated,labelled_observer_replays=observers,labelled_frames_checked=frames_checked,excluded_incomplete_attempts=excluded,candidate_uncovered_frames=len(failures),
         confirmed_outside_samples=sum(f['outside_sample_found'] for f in failures),
         confirmed_expanded_outside_samples=sum(f['expanded_outside_sample_found'] for f in failures),failures=failures)
 
