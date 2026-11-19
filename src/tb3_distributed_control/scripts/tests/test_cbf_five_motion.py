@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import yaml
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from evaluate_cbf_five_motion import evaluate_five
+from evaluate_cbf_five_motion import evaluate_five,validate_scene
 
 
 class FiveMotionTests(unittest.TestCase):
@@ -37,6 +37,32 @@ class FiveMotionTests(unittest.TestCase):
         r=evaluate_five(t,xy,actor,.18,p,'active_overtaking')
         self.assertFalse(r['checks']['relative_formation_recovered'])
         self.assertTrue(r['robots']['tb3_4']['motion']['checks']['tracking_recovered'])
+
+
+class PhysicalSceneProtocolTests(unittest.TestCase):
+    def load(self,bin_profile):
+        path=Path(__file__).resolve().parents[2]/'config'
+        protocol=yaml.safe_load((path/('cbf_five_bin012_protocol.yaml' if bin_profile else 'cbf_five_robot_protocol.yaml')).read_text())
+        scenes=yaml.safe_load((path/('cbf_bin012_scenarios.yaml' if bin_profile else 'cbf_active_avoidance_scenarios.yaml')).read_text())
+        return protocol,scenes
+
+    def test_both_sizes_keep_geometrically_qualified_roles(self):
+        for bin_profile in (False,True):
+            protocol,scenes=self.load(bin_profile)
+            for name,specs in scenes.items():
+                result=validate_scene(protocol,specs[0],name)
+                if name=='active_oblique_crossing':
+                    self.assertEqual(result['spatial_required'][3],not bin_profile)
+                    self.assertAlmostEqual(result['closest_center_distances'][3],.26169826594238665)
+
+    def test_wrong_physical_size_rejected_before_acceptance(self):
+        for bin_profile in (False,True):
+            protocol,scenes=self.load(bin_profile);spec=dict(scenes['active_head_on'][0],radius=.18 if bin_profile else .12)
+            with self.assertRaises(ValueError):validate_scene(protocol,spec,'active_head_on')
+
+    def test_legacy_role_cannot_force_unthreatened_small_bin_robot(self):
+        protocol,scenes=self.load(True);protocol['spatial_required']['active_oblique_crossing'][3]=True
+        with self.assertRaises(ValueError):validate_scene(protocol,scenes['active_oblique_crossing'][0],'active_oblique_crossing')
 
 
 if __name__=='__main__':unittest.main()

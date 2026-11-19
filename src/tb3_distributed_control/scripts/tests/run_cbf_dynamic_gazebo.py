@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--log-local-clusters',action='store_true',help='Per-controller files only; no raw-point ROS messages')
     parser.add_argument('--two-motion-profile',action='store_true')
     parser.add_argument('--five-motion-profile',action='store_true')
+    parser.add_argument('--five-bin-profile',action='store_true')
     parser.add_argument('--motion-geometry-observer',choices=['mvee','circle'],default='mvee')
     parser.add_argument('--circle-prior-retention',choices=['true','false'],default='false')
     parser.add_argument('--open-rviz',action='store_true')
@@ -82,6 +83,7 @@ def main():
     parser.add_argument('--wall-timeout',type=float,default=240.)
     args=parser.parse_args();out=Path(args.output).resolve()
     active=args.scenario.startswith('active_')
+    if args.five_bin_profile and not args.five_motion_profile:parser.error('Bin profile requires explicit --five-motion-profile')
     if args.two_motion_profile and args.robots!=2:parser.error('Dual profile requires robots=2')
     if args.five_motion_profile and (args.robots!=5 or not active):parser.error('Five profile requires robots=5 and qualified active scene')
     if args.log_local_clusters and not (args.robots==2 or args.robots==5 and args.five_motion_profile):parser.error('Local recording requires dual or explicit five profile')
@@ -105,7 +107,7 @@ def main():
     package=Path(__file__).resolve().parents[2]
     sources=out/'sources';sources.mkdir(exist_ok=True)
     manifest={}
-    for relative in ['scripts/evaluate_cbf_five_motion.py','config/cbf_five_robot_protocol.yaml','launch/five_turtlebot3_cbf_motion_geometry.launch','rviz/tb3_cbf_five_motion_geometry.rviz','scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py','scripts/leader_node.py',
+    for relative in ['launch/five_turtlebot3_cbf_bin012.launch','config/cbf_bin012_scenarios.yaml','config/cbf_five_bin012_protocol.yaml','scripts/evaluate_cbf_five_motion.py','config/cbf_five_robot_protocol.yaml','launch/five_turtlebot3_cbf_motion_geometry.launch','rviz/tb3_cbf_five_motion_geometry.rviz','scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py','scripts/leader_node.py',
             'scripts/cbf_dynamic_scenario.py','scripts/cbf_spawn_checked.py','scripts/cbf_experiment_results.py','config/cbf_dynamic_scenarios.yaml',
             'scripts/cbf_active_monitor.py','scripts/evaluate_cbf_team_motion.py','config/cbf_two_robot_protocol.yaml','launch/two_turtlebot3_cbf_dynamic.launch','launch/two_turtlebot3_cbf_motion_geometry.launch','rviz/tb3_cbf_two_motion_geometry.rviz','launch/single_turtlebot3_cbf_compact.launch','scripts/evaluate_cbf_active_motion.py','config/cbf_active_avoidance_scenarios.yaml','config/cbf_active_avoidance_protocol.yaml',
             '纯仿真代码/mpc_dcbf_cached_solver.py','launch/multi_turtlebot3_consensus_gazebo_cbf.launch',
@@ -172,6 +174,7 @@ def main():
               if args.robots==2 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch')
         if args.two_motion_profile:name='two_turtlebot3_cbf_motion_geometry.launch'
         if args.five_motion_profile:name='five_turtlebot3_cbf_motion_geometry.launch'
+        if args.five_bin_profile:name='five_turtlebot3_cbf_bin012.launch'
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:='+str(args.open_rviz or args.capture_rviz).lower(),
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),'active_experiment:='+str(active).lower(),'local_reference_mode:='+args.local_reference_mode,'spatial_pass:='+args.spatial_pass,'spatial_lateral_extras:='+args.spatial_lateral_extras,'spatial_shift_durations:='+args.spatial_shift_durations,'spatial_predictive_return:='+args.spatial_predictive_return,'spatial_activation_threshold:='+str(args.spatial_activation_threshold),'spatial_activation_preview_seconds:='+str(args.spatial_activation_preview_seconds),'spatial_compiled_rollout:='+args.spatial_compiled_rollout,'spatial_timeout_carry:='+args.spatial_timeout_carry,'spatial_runtime_guard:='+args.spatial_runtime_guard,'spatial_prefix_retention:='+args.spatial_prefix_retention,
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
@@ -216,7 +219,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(local_cluster_recording=args.log_local_clusters,two_motion_profile=args.two_motion_profile,five_motion_profile=args.five_motion_profile,circle_prior_retention=args.circle_prior_retention=='true',geometry_observer=args.motion_geometry_observer,spatial_predictive_return=args.spatial_predictive_return=='true',spatial_shift_durations=shift_durations,spatial_activation_threshold=args.spatial_activation_threshold,spatial_activation_preview_seconds=args.spatial_activation_preview_seconds,spatial_lateral_extras=extras,spatial_runtime_guard=args.spatial_runtime_guard=='true',spatial_prefix_retention=args.spatial_prefix_retention=='true' or args.robots==2 and args.spatial_pass=='true',spatial_compiled_rollout=args.spatial_compiled_rollout=='true',spatial_timeout_carry=args.spatial_timeout_carry=='true',spatial_pass=args.spatial_pass=='true',local_reference_mode=args.local_reference_mode,rear_pass=args.rear_pass=='true',rear_preview_seconds=args.rear_preview_seconds,mpc_horizon=args.mpc_horizon,pending_seed_with_backup=args.pending_seed_with_backup=='true',log_mpc_inputs=args.log_mpc_inputs=='true',constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(local_cluster_recording=args.log_local_clusters,two_motion_profile=args.two_motion_profile,five_motion_profile=args.five_motion_profile,five_bin_profile=args.five_bin_profile,circle_prior_retention=args.circle_prior_retention=='true',geometry_observer=args.motion_geometry_observer,spatial_predictive_return=args.spatial_predictive_return=='true',spatial_shift_durations=shift_durations,spatial_activation_threshold=args.spatial_activation_threshold,spatial_activation_preview_seconds=args.spatial_activation_preview_seconds,spatial_lateral_extras=extras,spatial_runtime_guard=args.spatial_runtime_guard=='true',spatial_prefix_retention=args.spatial_prefix_retention=='true' or args.robots==2 and args.spatial_pass=='true',spatial_compiled_rollout=args.spatial_compiled_rollout=='true',spatial_timeout_carry=args.spatial_timeout_carry=='true',spatial_pass=args.spatial_pass=='true',local_reference_mode=args.local_reference_mode,rear_pass=args.rear_pass=='true',rear_preview_seconds=args.rear_preview_seconds,mpc_horizon=args.mpc_horizon,pending_seed_with_backup=args.pending_seed_with_backup=='true',log_mpc_inputs=args.log_mpc_inputs=='true',constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if args.check_prediction_markers:
         with (out/'prediction_regions.jsonl').open('w') as f:
@@ -313,6 +316,8 @@ def main():
     result['transport_geometry_configured']=(bool(json.loads(metadata_path.read_text()).get('transport_geometry',False))==result['transport_geometry']) if metadata_path.exists() else False
     result['adaptive_recovery_configured']=(bool(json.loads(metadata_path.read_text()).get('adaptive_recovery',False))==result['adaptive_recovery']) if metadata_path.exists() else False
     result['no_truth_input_passed']=bool(audit) and not any(topic in audit for topic in ('/gazebo/model_states','/cbf/scenario/truth','/gazebo/set_model_state'))
+    bin_specs=json.loads((out/'dynamic_scenario.json').read_text()).get('specifications',[]) if (out/'dynamic_scenario.json').exists() else []
+    result['bin_profile_configured']=not args.five_bin_profile or (meta.get('active_protocol',{}).get('version')=='five_robot_bin012_v1_2026_11_19' and bool(bin_specs) and all(s['radius']==.12 for s in bin_specs))
     result['own_scan_only']=all(sorted(topic for topic,members in audit.items()
         if '/tb3_controller_cbf_'+str(i) in members and topic.endswith('/scan'))==['/tb3_'+str(i)+'/scan'] for i in range(args.robots))
     result['passed']=(failure is None and bool(completed) and (out/'RESULTS_SAVED').exists()
@@ -320,7 +325,7 @@ def main():
         and (not args.capture_rviz or result['rviz_capture']['passed'])
         and len(result['robot_statistics'])==args.robots and result.get('dynamic_clearance_min',-1)>0.
         and result.get('peer_clearance_min',-1)>0. and result.get('static_clearance_min',-1)>0.
-        and result['local_cluster_recording_passed'] and result['circle_prior_configured'] and result['geometry_observer_configured'] and result['return_configured'] and result['shift_durations_configured'] and result['activation_configured'] and result['lateral_extras_configured'] and result['spatial_backend_configured'] and result['own_scan_only'] and result['spatial_pass_configured'] and result['local_reference_configured'] and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['seed_policy_configured'] and result['horizon_configured'] and result['rear_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
+        and result['bin_profile_configured'] and result['local_cluster_recording_passed'] and result['circle_prior_configured'] and result['geometry_observer_configured'] and result['return_configured'] and result['shift_durations_configured'] and result['activation_configured'] and result['lateral_extras_configured'] and result['spatial_backend_configured'] and result['own_scan_only'] and result['spatial_pass_configured'] and result['local_reference_configured'] and result['no_truth_input_passed'] and result['seed_configured'] and result['progress_configured'] and result['execution_backup_configured'] and result['infeasible_escape_configured'] and result['predictive_bypass_configured'] and result['active_guidance_only_configured'] and result['risk_configured'] and result['core_mode_configured'] and result['seed_policy_configured'] and result['horizon_configured'] and result['rear_configured'] and result['transport_geometry_configured'] and result['adaptive_recovery_configured']
         and all(s['last_time']>args.duration-.5 and s['dynamic_cycles']>0 and np.isfinite(s['window_final_error']) and s['window_final_error']<.25
                 for s in result['robot_statistics'].values()))
     if active:
@@ -330,7 +335,7 @@ def main():
                         else evaluate_active_run(out,base_passed=result['base_passed']))
         except Exception as exc:continuous=dict(passed=False,failed_checks=['active_evaluation_error'],error=str(exc))
         (out/'active_evaluation.json').write_text(json.dumps(continuous,indent=2,allow_nan=False))
-        result.update(acceptance_protocol='five_robot_motion_v1' if args.five_motion_profile else 'two_robot_motion_v1' if args.robots==2 else 'active_motion_v1',active_motion=continuous,passed=continuous['passed'])
+        result.update(acceptance_protocol='five_robot_bin012_v1' if args.five_bin_profile else 'five_robot_motion_v1' if args.five_motion_profile else 'two_robot_motion_v1' if args.robots==2 else 'active_motion_v1',active_motion=continuous,passed=continuous['passed'])
     (out/'evaluation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2),flush=True)
     if not result['passed']:raise SystemExit(1)
 

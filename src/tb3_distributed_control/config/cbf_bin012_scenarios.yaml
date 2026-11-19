@@ -1,0 +1,28 @@
+# Physical bin radius .12m only; original actor paths and velocities unchanged.
+active_head_on:
+- name: cbf_dynamic_0
+  start:
+  - 2.8
+  - 0.0
+  velocity:
+  - -0.06
+  - 0.0
+  radius: 0.12
+active_overtaking:
+- name: cbf_dynamic_0
+  start:
+  - 1.35
+  - 0.0
+  velocity:
+  - 0.05
+  - 0.0
+  radius: 0.12
+active_oblique_crossing:
+- name: cbf_dynamic_0
+  start:
+  - 2.3
+  - 0.85
+  velocity:
+  - -0.04
+  - -0.1
+  radius: 0.12

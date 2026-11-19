@@ -52,17 +52,34 @@ def evaluate_five(times, positions, actor, actor_radius, protocol, scenario, fau
         note='Ten pairs, sampled/linearly swept circular proxies; temporary deformation allowed, no mesh-safety proof')
 
 
+def validate_scene(protocol,spec,scenario):
+    """Freeze physical size and threatened roles; independent evaluation only."""
+    expected=.12 if protocol['version']=='five_robot_bin012_v1_2026_11_19' else .18
+    if spec['radius']!=expected:
+        raise ValueError('Actor radius disagrees with frozen protocol')
+    offsets=np.asarray(protocol['robot_offsets']);delta=np.asarray(protocol['reference_start'])+offsets-np.asarray(spec['start'])
+    velocity=np.asarray(protocol['reference_velocity'])-np.asarray(spec['velocity'])
+    norm=float(velocity@velocity)
+    closest=np.clip(-delta@velocity/max(norm,1e-15),0.,protocol['duration']) if norm else np.zeros(5)
+    distance=np.linalg.norm(delta+closest[:,None]*velocity,axis=1)
+    roles=(distance<protocol['body_radius']+expected).tolist()
+    if roles!=protocol['spatial_required'][scenario]:
+        raise ValueError('Spatial roles disagree with pretrial nominal CPA geometry')
+    return dict(closest_times=closest.tolist(),closest_center_distances=distance.tolist(),spatial_required=roles)
+
+
 def evaluate_five_run(directory,base_passed=None):
     path=Path(directory);meta=json.loads((path/'run_metadata.json').read_text());protocol=meta['active_protocol']
     if (meta['robot_names']!=['tb3_'+str(i) for i in range(5)] or not meta.get('five_robot_experiment')
-            or meta['trajectory_type']!='line' or protocol['version']!='five_robot_motion_v1_2026_11_19'):
+            or meta['trajectory_type']!='line' or protocol['version'] not in ('five_robot_motion_v1_2026_11_19','five_robot_bin012_v1_2026_11_19')):
         raise ValueError('Explicit frozen five-robot line protocol required')
     expected=np.array([[.4*np.cos(2*np.pi*i/5),.4*np.sin(2*np.pi*i/5)] for i in range(5)])
     if meta.get('formation_radius')!=.4 or not np.allclose(protocol['robot_offsets'],expected,atol=1e-9):
         raise ValueError('Frozen radius=.4 pentagon required')
     specs=json.loads((path/'dynamic_scenario.json').read_text())['specifications']
     if len(specs)!=1:raise ValueError('Five-robot protocol requires one actor')
-    spec=specs[0];source=path/'gazebo_truth.csv'
+    spec=specs[0];validate_scene(protocol,spec,meta['dynamic_scenario'])
+    source=path/'gazebo_truth.csv'
     if not source.exists():source=path/'active_truth.csv'
     if not source.exists():return dict(passed=False,failed_checks=['missing_independent_truth'])
     rows=list(csv.DictReader(source.open()));t=[float(r['time']) for r in rows]
