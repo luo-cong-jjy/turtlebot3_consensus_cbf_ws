@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from evaluate_cbf_active_motion import evaluate_run as evaluate_active_run
 from evaluate_cbf_team_motion import evaluate_team_run
+from evaluate_cbf_five_motion import evaluate_five_run
 from run_cbf_gazebo import free_port,stop
 
 
@@ -26,6 +27,7 @@ def main():
     parser.add_argument('--log-cluster-points',action='store_true',help='Local single-robot diagnostics only')
     parser.add_argument('--log-local-clusters',action='store_true',help='Per-controller files only; no raw-point ROS messages')
     parser.add_argument('--two-motion-profile',action='store_true')
+    parser.add_argument('--five-motion-profile',action='store_true')
     parser.add_argument('--motion-geometry-observer',choices=['mvee','circle'],default='mvee')
     parser.add_argument('--circle-prior-retention',choices=['true','false'],default='false')
     parser.add_argument('--open-rviz',action='store_true')
@@ -80,14 +82,16 @@ def main():
     parser.add_argument('--wall-timeout',type=float,default=240.)
     args=parser.parse_args();out=Path(args.output).resolve()
     active=args.scenario.startswith('active_')
-    if (args.log_local_clusters or args.two_motion_profile) and args.robots!=2:parser.error('Dual local recording/profile requires robots=2')
+    if args.two_motion_profile and args.robots!=2:parser.error('Dual profile requires robots=2')
+    if args.five_motion_profile and (args.robots!=5 or not active):parser.error('Five profile requires robots=5 and qualified active scene')
+    if args.log_local_clusters and not (args.robots==2 or args.robots==5 and args.five_motion_profile):parser.error('Local recording requires dual or explicit five profile')
     if args.log_cluster_points and args.robots!=1:parser.error('Point recording is single-robot diagnostic only')
     try:
         extras=json.loads(args.spatial_lateral_extras)
         if np.shape(extras)!=(3,) or not np.isfinite(extras).all() or min(extras)<0 or np.any(np.diff(extras)<0):raise ValueError()
     except (ValueError,TypeError):parser.error('Expected three finite nonnegative ordered lateral extras')
     if args.local_reference_mode=='nearest_line' and args.robots!=1:parser.error('Nearest reference is single-robot only')
-    if active and args.robots not in (1,2):parser.error('Active-motion protocol requires single or two-robot experiment')
+    if active and args.robots not in (1,2) and not args.five_motion_profile:parser.error('Active-motion protocol requires single/two or explicit five profile')
     if args.robots==2 and not active:parser.error('Two-robot entry currently requires a qualified active scene')
     if active and args.duration!=40.:parser.error('Frozen active-motion protocol requires duration=40')
     if any(out.glob('tb3_*.csv')) or (out/'evaluation.json').exists():
@@ -101,7 +105,7 @@ def main():
     package=Path(__file__).resolve().parents[2]
     sources=out/'sources';sources.mkdir(exist_ok=True)
     manifest={}
-    for relative in ['scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py','scripts/leader_node.py',
+    for relative in ['scripts/evaluate_cbf_five_motion.py','config/cbf_five_robot_protocol.yaml','launch/five_turtlebot3_cbf_motion_geometry.launch','rviz/tb3_cbf_five_motion_geometry.rviz','scripts/tb3_controller_node_cbf.py','scripts/cbf_mpc_core.py','scripts/leader_node_cbf.py','scripts/leader_node.py',
             'scripts/cbf_dynamic_scenario.py','scripts/cbf_spawn_checked.py','scripts/cbf_experiment_results.py','config/cbf_dynamic_scenarios.yaml',
             'scripts/cbf_active_monitor.py','scripts/evaluate_cbf_team_motion.py','config/cbf_two_robot_protocol.yaml','launch/two_turtlebot3_cbf_dynamic.launch','launch/two_turtlebot3_cbf_motion_geometry.launch','rviz/tb3_cbf_two_motion_geometry.rviz','launch/single_turtlebot3_cbf_compact.launch','scripts/evaluate_cbf_active_motion.py','config/cbf_active_avoidance_scenarios.yaml','config/cbf_active_avoidance_protocol.yaml',
             '纯仿真代码/mpc_dcbf_cached_solver.py','launch/multi_turtlebot3_consensus_gazebo_cbf.launch',
@@ -167,11 +171,12 @@ def main():
         name=('single_turtlebot3_cbf_dynamic.launch' if args.robots==1 else 'two_turtlebot3_cbf_dynamic.launch'
               if args.robots==2 else 'multi_turtlebot3_consensus_gazebo_cbf_dynamic.launch')
         if args.two_motion_profile:name='two_turtlebot3_cbf_motion_geometry.launch'
+        if args.five_motion_profile:name='five_turtlebot3_cbf_motion_geometry.launch'
         process=launch(['roslaunch','tb3_distributed_control',name,'gui:=false','open_rviz:='+str(args.open_rviz or args.capture_rviz).lower(),
             'scenario:='+args.scenario,'total_time:='+str(args.duration),'output_dir:='+str(out),'active_experiment:='+str(active).lower(),'local_reference_mode:='+args.local_reference_mode,'spatial_pass:='+args.spatial_pass,'spatial_lateral_extras:='+args.spatial_lateral_extras,'spatial_shift_durations:='+args.spatial_shift_durations,'spatial_predictive_return:='+args.spatial_predictive_return,'spatial_activation_threshold:='+str(args.spatial_activation_threshold),'spatial_activation_preview_seconds:='+str(args.spatial_activation_preview_seconds),'spatial_compiled_rollout:='+args.spatial_compiled_rollout,'spatial_timeout_carry:='+args.spatial_timeout_carry,'spatial_runtime_guard:='+args.spatial_runtime_guard,'spatial_prefix_retention:='+args.spatial_prefix_retention,
             'gazebo_seed:='+('' if args.gazebo_seed is None else str(args.gazebo_seed)),
             'prediction_mode:='+args.prediction_mode,'motion_geometry_observer:='+args.motion_geometry_observer,'circle_prior_retention:='+args.circle_prior_retention,'progress_guidance:='+args.progress_guidance,'progress_abstain:='+args.progress_abstain,'execution_backup:='+args.execution_backup,'infeasible_escape:='+args.infeasible_escape,'predictive_bypass:='+args.predictive_bypass,'active_guidance_only:='+args.active_guidance_only,'prediction_risk:='+args.prediction_risk,'suppress_guidance:='+args.suppress_guidance,'risk_weight:='+str(args.risk_weight),'risk_clearance:='+str(args.risk_clearance),'risk_discount:='+str(args.risk_discount),'risk_tail_seconds:='+str(args.risk_tail_seconds),'constraint_mode:='+args.constraint_mode,'risk_penalty:='+args.risk_penalty,'wang_alpha:='+str(args.wang_alpha),'wang_mu:='+str(args.wang_mu),'wang_iota:='+str(args.wang_iota),'wang_radius:='+str(args.wang_radius),'mpc_horizon:='+str(args.mpc_horizon),'pending_seed_with_backup:='+args.pending_seed_with_backup,'log_mpc_inputs:='+args.log_mpc_inputs,'rear_pass:='+args.rear_pass,'rear_preview_seconds:='+str(args.rear_preview_seconds),'transport_geometry:='+args.transport_geometry,'adaptive_recovery:='+args.adaptive_recovery,'progress_hypotheses:='+args.progress_hypotheses,'moving_frame_projection:='+args.moving_frame_projection,'singer_tau:='+str(args.singer_tau),
-            'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance]+(['local_cluster_recording:='+str(args.log_local_clusters).lower()] if args.robots==2 else []),'launch')
+            'acceleration_buffer:='+args.acceleration_buffer,'stage_velocity_guidance:='+args.stage_velocity_guidance]+(['local_cluster_recording:='+str(args.log_local_clusters).lower()] if args.robots==2 or args.five_motion_profile else []),'launch')
         report=0.
         while time.monotonic()-wall<args.wall_timeout:
             if args.capture_rviz and not captured and begins and rospy.get_time()-begins[0]>8.:
@@ -211,7 +216,7 @@ def main():
     finally:
         for p in reversed(processes):stop(p)
         for stream in streams:stream.close()
-    result=dict(local_cluster_recording=args.log_local_clusters,two_motion_profile=args.two_motion_profile,circle_prior_retention=args.circle_prior_retention=='true',geometry_observer=args.motion_geometry_observer,spatial_predictive_return=args.spatial_predictive_return=='true',spatial_shift_durations=shift_durations,spatial_activation_threshold=args.spatial_activation_threshold,spatial_activation_preview_seconds=args.spatial_activation_preview_seconds,spatial_lateral_extras=extras,spatial_runtime_guard=args.spatial_runtime_guard=='true',spatial_prefix_retention=args.spatial_prefix_retention=='true' or args.robots==2 and args.spatial_pass=='true',spatial_compiled_rollout=args.spatial_compiled_rollout=='true',spatial_timeout_carry=args.spatial_timeout_carry=='true',spatial_pass=args.spatial_pass=='true',local_reference_mode=args.local_reference_mode,rear_pass=args.rear_pass=='true',rear_preview_seconds=args.rear_preview_seconds,mpc_horizon=args.mpc_horizon,pending_seed_with_backup=args.pending_seed_with_backup=='true',log_mpc_inputs=args.log_mpc_inputs=='true',constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
+    result=dict(local_cluster_recording=args.log_local_clusters,two_motion_profile=args.two_motion_profile,five_motion_profile=args.five_motion_profile,circle_prior_retention=args.circle_prior_retention=='true',geometry_observer=args.motion_geometry_observer,spatial_predictive_return=args.spatial_predictive_return=='true',spatial_shift_durations=shift_durations,spatial_activation_threshold=args.spatial_activation_threshold,spatial_activation_preview_seconds=args.spatial_activation_preview_seconds,spatial_lateral_extras=extras,spatial_runtime_guard=args.spatial_runtime_guard=='true',spatial_prefix_retention=args.spatial_prefix_retention=='true' or args.robots==2 and args.spatial_pass=='true',spatial_compiled_rollout=args.spatial_compiled_rollout=='true',spatial_timeout_carry=args.spatial_timeout_carry=='true',spatial_pass=args.spatial_pass=='true',local_reference_mode=args.local_reference_mode,rear_pass=args.rear_pass=='true',rear_preview_seconds=args.rear_preview_seconds,mpc_horizon=args.mpc_horizon,pending_seed_with_backup=args.pending_seed_with_backup=='true',log_mpc_inputs=args.log_mpc_inputs=='true',constraint_mode=args.constraint_mode,risk_penalty=args.risk_penalty,wang_alpha=args.wang_alpha,wang_mu=args.wang_mu,wang_iota=args.wang_iota,wang_radius=args.wang_radius,prediction_risk=args.prediction_risk=='true',suppress_guidance=args.suppress_guidance=='true',risk_weight=args.risk_weight,risk_clearance=args.risk_clearance,risk_discount=args.risk_discount,risk_tail_seconds=args.risk_tail_seconds,active_guidance_only=args.active_guidance_only=='true',adaptive_recovery=args.adaptive_recovery=='true',transport_geometry=args.transport_geometry=='true',predictive_bypass=args.predictive_bypass=='true',infeasible_escape=args.infeasible_escape=='true',execution_backup=args.execution_backup=='true',scenario=args.scenario,robots=args.robots,gazebo_seed=args.gazebo_seed,progress_guidance=args.progress_guidance=='true',progress_abstain=args.progress_abstain=='true',progress_hypotheses=args.progress_hypotheses=='true',prediction_mode=args.prediction_mode,failure=failure,
         completed=bool(completed),controller_subscriptions=audit,robot_statistics={})
     if args.check_prediction_markers:
         with (out/'prediction_regions.jsonl').open('w') as f:
@@ -321,10 +326,11 @@ def main():
     if active:
         result['base_passed']=result['passed']
         try:continuous=(evaluate_team_run(out,base_passed=result['base_passed']) if args.robots==2
+                        else evaluate_five_run(out,base_passed=result['base_passed']) if args.five_motion_profile
                         else evaluate_active_run(out,base_passed=result['base_passed']))
         except Exception as exc:continuous=dict(passed=False,failed_checks=['active_evaluation_error'],error=str(exc))
         (out/'active_evaluation.json').write_text(json.dumps(continuous,indent=2,allow_nan=False))
-        result.update(acceptance_protocol='two_robot_motion_v1' if args.robots==2 else 'active_motion_v1',active_motion=continuous,passed=continuous['passed'])
+        result.update(acceptance_protocol='five_robot_motion_v1' if args.five_motion_profile else 'two_robot_motion_v1' if args.robots==2 else 'active_motion_v1',active_motion=continuous,passed=continuous['passed'])
     (out/'evaluation.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2),flush=True)
     if not result['passed']:raise SystemExit(1)
 

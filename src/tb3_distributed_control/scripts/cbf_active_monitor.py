@@ -13,14 +13,16 @@ from std_msgs.msg import Bool
 from tb3_distributed_control.msg import LeaderHistoryData
 from evaluate_cbf_active_motion import evaluate_run
 from evaluate_cbf_team_motion import evaluate_team_run
+from evaluate_cbf_five_motion import evaluate_five_run
 
 
 class Monitor:
     def __init__(self):
         self.lock=threading.RLock();self.origin=None;self.closed=False;self.last=-1.;self.worker=None
         self.names=rospy.get_param('/cbf/robot_names')
-        if len(self.names)!=1 and not (len(self.names)==2 and rospy.get_param('/cbf/two_robot_experiment',False)):
-            raise ValueError('Active monitor requires single or explicit two-robot experiment')
+        if len(self.names)!=1 and not (len(self.names)==2 and rospy.get_param('/cbf/two_robot_experiment',False)
+                or len(self.names)==5 and rospy.get_param('/cbf/five_robot_experiment',False)):
+            raise ValueError('Active monitor requires single or explicit two/five-robot experiment')
         scenario=rospy.get_param('/cbf/dynamic_scenario');specs=rospy.get_param('/cbf/scenarios/'+scenario)
         if len(specs)!=1:raise ValueError('Active monitor requires one actor')
         self.actor=specs[0]['name']
@@ -53,7 +55,7 @@ class Monitor:
     def report(self):
         deadline=time.monotonic()+30.
         while time.monotonic()<deadline and not rospy.is_shutdown() and not (self.path/'RESULTS_SAVED').exists():time.sleep(.05)
-        try:result=(evaluate_run(self.path) if len(self.names)==1 else evaluate_team_run(self.path))
+        try:result=(evaluate_run(self.path) if len(self.names)==1 else evaluate_team_run(self.path) if len(self.names)==2 else evaluate_five_run(self.path))
         except Exception as exc:result=dict(passed=False,failed_checks=['evaluation_error'],error=str(exc))
         with (self.path/'active_motion_report.json').open('x') as f:json.dump(result,f,indent=2,allow_nan=False)
         rospy.loginfo('Active avoidance evaluation: passed=%s, failed=%s',result['passed'],result.get('failed_checks'))

@@ -908,7 +908,8 @@ class TurtleBot3CBFController:
         if self.cfg.get('spatial_pass',False):
             self.cfg['guide_velocity_weight']=3000.
             self.cfg['guide_heading_weight']=8.
-            self.cfg['spatial_rear_preference']=bool(rospy.get_param('/cbf/two_robot_experiment',False))
+            self.cfg['spatial_rear_preference']=bool(rospy.get_param('/cbf/two_robot_experiment',False)
+                or len(self.names)==5 and rospy.get_param('/cbf/five_robot_experiment',False))
             self.cfg['spatial_prefix_retention']=bool(rospy.get_param('/cbf/two_robot_experiment',False)
                 or self.cfg.get('spatial_prefix_retention',False))
         self.local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed')
@@ -933,10 +934,11 @@ class TurtleBot3CBFController:
         self.cfg['feasible_seed_search']=bool(rospy.get_param('/cbf/feasible_seed_search',False))
         self.cfg['realtime']=bool(rospy.get_param('/cbf/realtime_solver',True))
         if self.cfg.get('spatial_pass',False) and (not (len(self.names)==1 or
-                len(self.names)==2 and rospy.get_param('/cbf/two_robot_experiment',False)) or self.local_reference_mode!='timed'
+                len(self.names)==2 and rospy.get_param('/cbf/two_robot_experiment',False)
+                or len(self.names)==5 and rospy.get_param('/cbf/five_robot_experiment',False)) or self.local_reference_mode!='timed'
                 or rospy.get_param('/cbf/trajectory_type','')!='line'
                 or rospy.get_param('/cbf/dynamic/prediction_mode','cv')!='cv'):
-            raise ValueError('Spatial pass requires single/explicit two-robot timed line and CV prediction')
+            raise ValueError('Spatial pass requires single/explicit two/five-robot timed line and CV prediction')
         self.control_budget=float(rospy.get_param('/cbf/control_budget_ms',100.))/1000.
         self.sensor_ready_delay=float(rospy.get_param('/cbf/sensor_ready_delay',0.))
         if not np.isfinite(self.sensor_ready_delay) or self.sensor_ready_delay<0:

@@ -8,6 +8,7 @@
   <arg name="dynamic_scenario" default="none" />
   <arg name="active_experiment" default="false" />
   <arg name="two_robot_experiment" default="false" />
+  <arg name="five_robot_experiment" default="false" />
   <arg name="active_protocol_file" default="$(find tb3_distributed_control)/config/cbf_active_avoidance_protocol.yaml" />
   <arg name="robot0_init_x" default="0.4" />
   <arg name="robot0_init_y" default="0.0" />
@@ -156,6 +157,7 @@
   <rosparam command="load" file="$(find tb3_distributed_control)/config/cbf_active_avoidance_scenarios.yaml" ns="/cbf/scenarios" />
   <param name="/cbf/active_experiment" value="$(arg active_experiment)" type="bool" />
   <param name="/cbf/two_robot_experiment" value="$(arg two_robot_experiment)" type="bool" />
+  <param name="/cbf/five_robot_experiment" value="$(arg five_robot_experiment)" type="bool" />
   <rosparam param="/cbf/active_protocol">{}</rosparam>
   <rosparam command="load" file="$(arg active_protocol_file)" ns="/cbf/active_protocol" if="$(arg active_experiment)" />
   <node pkg="tb3_distributed_control" type="cbf_dynamic_scenario.py" name="cbf_dynamic_scenario" output="screen" if="$(eval arg('dynamic_scenario') != 'none')" />
