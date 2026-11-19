@@ -25,7 +25,7 @@ def replay(directory):
         stage_velocity_guidance=meta['stage_velocity_guidance'])
     models={kind:inline.DynamicEllipseTracker(**args,geometry_observer=kind) for kind in ('mvee','circle')}
     frames=[r for r in map(json.loads,(p/'obstacle_predictions.jsonl').open()) if r['observer']=='tb3_0']
-    records=[];replay_error=0.;replay_checks=0;gates={};holds=0;resets=0
+    records=[];replay_error=0.;replay_checks=0;gates={};holds=0;resets=0;snapshots={}
     for frame in frames:
         stamp=frame['stamp'];t=stamp-begin;results={};ids={}
         for kind,model in models.items():
@@ -41,6 +41,7 @@ def replay(directory):
             model.update(fits,stamp);current=model.obstacles(model.snapshot(stamp),stamp)
             results[kind]={o['id']:o for o in current};ids[kind]=[e.track_id for e in fits]
         configured=meta.get('geometry_observer','mvee')
+        snapshots[round(stamp,8)]=models[configured].snapshot(stamp)
         saved={r['id']:r for r in frame['tracks']};found=results[configured]
         if set(saved)!=set(found):raise AssertionError('Recorded track set cannot be reproduced')
         for key,old in saved.items():
@@ -84,9 +85,28 @@ def replay(directory):
             absolute_centre_prediction_rmse={str(h):float(np.sqrt(np.mean([r['absolute_prediction_error'][str(h)]**2 for r in rows]))) for h in (1.,2.)},
             occupied_circle_coverage={str(h):float(np.mean([r['occupied_circle_coverage'][str(h)] for r in rows])) for h in (0.,1.,2.)},
             collision_proxy_coverage={str(h):float(np.mean([r['collision_proxy_coverage'][str(h)] for r in rows])) for h in (0.,1.,2.)})
+    control_checks=0;control_error=0.;missing=[]
+    rows={int(r['cycle_id']):r for r in csv.DictReader((p/'tb3_0.csv').open())}
+    for event in map(json.loads,(p/'tb3_0_solver_trace.jsonl').open()):
+        saved=event.get('manager',{}).get('input_snapshot')
+        if saved is None:continue
+        row=rows[event['cycle_id']];now=float(row['ros_time']);scan=now-float(row['geometry_age'])
+        state=snapshots.get(round(scan,8))
+        if state is None:missing.append(dict(cycle=event['cycle_id'],scan=scan));continue
+        expected={o['name']:o for o in models[meta.get('geometry_observer','mvee')].obstacles(state,now)}
+        for obs in saved['obstacles']:
+            if obs['name']=='inactive' or obs.get('peer',False):continue
+            if obs['name'] not in expected:missing.append(dict(cycle=event['cycle_id'],track=obs['name']));continue
+            found=expected[obs['name']]
+            difference=max(float(abs(np.asarray(obs['prediction_centers'])-found['prediction_centers']).max()),
+                           float(abs(np.asarray(obs['prediction_axes'])-found['prediction_axes']).max()))
+            control_error=max(control_error,difference);control_checks+=1
     return dict(source=str(p),configured_observer=meta.get('geometry_observer','mvee'),
         configured_replay_checks=replay_checks,configured_maximum_difference=replay_error,
         configured_replay_passed=replay_checks>0 and replay_error<1e-8,window=[4.,20.],
+        control_replay_checks=control_checks,control_maximum_difference=control_error,
+        control_replay_passed=control_checks>0 and not missing and control_error<1e-8,
+        control_replay_missing=missing,
         circle_gate_counts=gates,circle_hold_frames=holds,circle_maximum_resets=resets,summary=summary,records=records,
         interpretation='Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer.')
 
