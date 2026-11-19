@@ -18,7 +18,8 @@ def audit(directory):
             for measured in frame['measurements']:
                 if radius<=0:continue
                 expected=inline.known_radius_center_guard(measured['points'],radius,
-                    meta['known_radius_tolerance'],meta['known_point_error'])
+                    meta['known_radius_tolerance'],meta['known_point_error'],
+                    refine=meta.get('known_radius_refine',False) and not measured.get('circle_quality',{}).get('accepted',False))
                 measurements+=1
                 if measured.get('known_radius_guard')!=expected:
                     errors.append(dict(stamp=frame['stamp'],error='Centre-set construction differs from raw own returns'))
@@ -26,7 +27,8 @@ def audit(directory):
                 guard=track.get('known_radius_guard')
                 if guard is None:continue
                 guards+=1;inconsistent+=int(not guard['consistent'])
-                required=guard['radius']+np.linalg.norm(np.asarray(guard['center'])-track['centers'][0])
+                disk=guard.get('selected_guard_disk',guard)
+                required=disk['radius']+np.linalg.norm(np.asarray(disk['center'])-track['centers'][0])
                 if track['observation_kind']!='mvee' or min(track['axes'][0])+1e-10<required:
                     errors.append(dict(stamp=frame['stamp'],error='Recorded forecast does not enclose centre-set object disk'))
     return dict(passed=not errors and measurements>0,measurements_checked=measurements,

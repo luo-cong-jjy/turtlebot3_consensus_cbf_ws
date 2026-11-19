@@ -600,6 +600,7 @@ class ExperimentRecorder:
             known_radius=rospy.get_param('/cbf/dynamic/known_radius',0.),
             known_radius_tolerance=rospy.get_param('/cbf/dynamic/known_radius_tolerance',.005),
             known_point_error=rospy.get_param('/cbf/dynamic/known_point_error',.01),
+            known_radius_refine=rospy.get_param('/cbf/dynamic/known_radius_refine',False),
             local_cluster_recording=rospy.get_param('/cbf/dynamic/local_cluster_recording',False),
             local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed'),
             spatial_pass=rospy.get_param('/cbf/mpc/spatial_pass',False),

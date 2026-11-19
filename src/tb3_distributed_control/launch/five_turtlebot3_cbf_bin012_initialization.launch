@@ -54,6 +54,7 @@
   <arg name="known_radius" default="0.12" />
   <arg name="known_radius_tolerance" default="0.005" />
   <arg name="known_point_error" default="0.01" />
+  <arg name="known_radius_refine" default="false" />
   <arg name="moving_frame_projection" default="false" />
   <arg name="singer_tau" default="1.0" />
   <arg name="acceleration_buffer" default="true" />
@@ -139,6 +140,7 @@
     <arg name="known_radius" value="$(arg known_radius)" />
     <arg name="known_radius_tolerance" value="$(arg known_radius_tolerance)" />
     <arg name="known_point_error" value="$(arg known_point_error)" />
+    <arg name="known_radius_refine" value="$(arg known_radius_refine)" />
     <arg name="dynamic_reaction_time" value="$(arg dynamic_reaction_time)" />
     <arg name="dynamic_extra_margin" value="$(arg dynamic_extra_margin)" />
     <arg name="total_time" value="$(arg total_time)" />

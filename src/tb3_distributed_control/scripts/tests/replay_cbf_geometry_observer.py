@@ -9,7 +9,7 @@ inline.reference_covariance_matrices=reference_covariance_matrices
 inline.reference_axis_inflation=reference_axis_inflation
 
 
-def replay(directory,compare_retention=False,reject_circle_interval=None,observer='tb3_0',counterfactual_known_radius=None):
+def replay(directory,compare_retention=False,reject_circle_interval=None,observer='tb3_0',counterfactual_known_radius=None,counterfactual_known_radius_refine=None,collect_geometry_comparison=False):
     p=Path(directory);meta=json.loads((p/'run_metadata.json').read_text())
     if meta['prediction_mode']!='cv':raise ValueError('This stage validates CV geometry only')
     truth=list(csv.DictReader((p/'gazebo_truth.csv').open()))
@@ -28,15 +28,16 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         circle_prior_retention=(kind=='circle_prior' if compare_retention else
             kind=='circle' and meta.get('circle_prior_retention',False)),
         known_radius=(counterfactual_known_radius if counterfactual_known_radius is not None else meta.get('known_radius',0.)) if kind!='mvee' else 0.,
-        known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01)) for kind in kinds}
+        known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01),
+        known_radius_refine=(counterfactual_known_radius_refine if counterfactual_known_radius_refine is not None else meta.get('known_radius_refine',False)) if kind!='mvee' else False) for kind in kinds}
     configured=meta.get('geometry_observer','mvee')
     configured_key=('circle_prior' if compare_retention and configured=='circle'
         and meta.get('circle_prior_retention',False) else configured)
     evaluated_kinds=tuple(models)
-    if counterfactual_known_radius is not None:
+    if counterfactual_known_radius is not None or counterfactual_known_radius_refine is not None:
         models['_recorded']=inline.DynamicEllipseTracker(**args,geometry_observer=configured,
             circle_prior_retention=meta.get('circle_prior_retention',False),known_radius=meta.get('known_radius',0.),
-            known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01))
+            known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01),known_radius_refine=meta.get('known_radius_refine',False))
         configured_key='_recorded'
     if reject_circle_interval is not None:
         if len(reject_circle_interval)!=2 or reject_circle_interval[0]>=reject_circle_interval[1]:
@@ -45,11 +46,14 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         # counterfactual observers. No original prediction is certified after
         # silently changing its input validity.
         models['_recorded']=inline.DynamicEllipseTracker(**args,geometry_observer=configured,
-            circle_prior_retention=meta.get('circle_prior_retention',False))
+            circle_prior_retention=meta.get('circle_prior_retention',False),known_radius=meta.get('known_radius',0.),
+            known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01),
+            known_radius_refine=meta.get('known_radius_refine',False))
         configured_key='_recorded'
     private=p/(observer+'_local_clusters.jsonl')
     frame_source=private if private.exists() else p/'obstacle_predictions.jsonl'
     frames=[r for r in map(json.loads,frame_source.open()) if r['observer']==observer]
+    geometry_comparison=[]
     records=[];replay_error=0.;replay_checks=0;gates={};holds=0;resets=0;snapshots={}
     labels=dict(matched=0,no_target=0,ambiguous=0,non_target_clusters=0)
     for frame in frames:
@@ -68,10 +72,25 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
                     reason=e.circle_candidate['reason'];gates[reason]=gates.get(reason,0)+1
                 if model.known_radius>0:
                     e.known_radius_guard=inline.known_radius_center_guard(measurement['points'],model.known_radius,
-                        model.known_radius_tolerance,model.known_point_error)
+                        model.known_radius_tolerance,model.known_point_error,
+                        refine=model.known_radius_refine and not getattr(e,'circle_candidate',{}).get('accepted',False))
                 fits.append(e)
             model.update(fits,stamp);current=model.obstacles(model.snapshot(stamp),stamp)
             results[kind]={o['id']:o for o in current};ids[kind]=[e.track_id for e in fits]
+        if collect_geometry_comparison:
+            if configured_key!='_recorded':raise ValueError('Counterfactual comparison requires a separate original verifier')
+            snapshots_by_id={s['id']:s for s in models['circle'].snapshot(stamp)}
+            for key,old in results['_recorded'].items():
+                if 'known_radius_guard' not in old:continue
+                new=results['circle'][key];base_track=dict(snapshots_by_id[key]);base_track.pop('known_radius_guard',None)
+                original=models['circle'].forecast(base_track,stamp)
+                delta=float(np.max(np.abs(new['prediction_centers']-old['prediction_centers'])))
+                lower=float(np.min(new['prediction_axes']-original['prediction_axes']))
+                upper=float(np.max(new['prediction_axes']-old['prediction_axes']))
+                geometry_comparison.append(dict(time=t,track_id=key,centre_difference=delta,
+                    minimum_original_axis_difference=lower,maximum_coarse_axis_difference=upper,
+                    current_area_ratio=float(np.prod(new['prediction_axes'][0])/np.prod(old['prediction_axes'][0])),
+                    all_stage_area_ratios=(np.prod(new['prediction_axes'],axis=1)/np.prod(old['prediction_axes'],axis=1)).tolist()))
         snapshots[round(stamp,8)]=models[configured_key].snapshot(stamp)
         saved={r['id']:r for r in frame['tracks']};found=results[configured_key]
         if set(saved)!=set(found):raise AssertionError('Recorded track set cannot be reproduced')
@@ -161,7 +180,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         metric_labelled_frames=len(records),configured_observer=meta.get('geometry_observer','mvee'),
         metric_target_labels=labels,
         configured_circle_prior_retention=meta.get('circle_prior_retention',False),
-        comparison_includes_circle_prior=compare_retention,counterfactual_known_radius=counterfactual_known_radius,
+        comparison_includes_circle_prior=compare_retention,counterfactual_known_radius=counterfactual_known_radius,counterfactual_known_radius_refine=counterfactual_known_radius_refine,
         offline_quality_rejection_interval=reject_circle_interval,
         configured_replay_checks=replay_checks,configured_maximum_difference=replay_error,
         configured_replay_passed=replay_checks>0 and replay_error<1e-8,window=[4.,20.],
@@ -169,6 +188,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         control_replay_passed=control_checks>0 and not missing and control_error<1e-8,
         control_replay_missing=missing,
         circle_gate_counts=gates,circle_hold_frames=holds,circle_maximum_resets=resets,summary=summary,records=records,
+        geometry_comparison=geometry_comparison,
         interpretation='Same measurements, not a closed-loop counterfactual. Primary velocity/displacement errors cancel fixed centre offsets; absolute centre error changes target semantics. Coverage is for known evaluation cylinders with a conservative angular remainder; 2 s uses held hard-window axes. Truth never enters either observer.')
 
 

@@ -352,7 +352,46 @@ def circle_enclosure_radius(center, ellipse, physical_radius=0., padding=.03):
     return max(cover,float(physical_radius)+padding)
 
 
-def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error=.01):
+def tighten_radius_center_guard(points, reach, upper, coarse):
+    """Outer disks of the full disk intersection; retain coarse on failure.
+
+    Coordinate extrema of a nonempty disk intersection occur at a circle's
+    axial extrema or at two boundary intersections. Outward numeric padding
+    and coarse fallback avoid replacing an unresolved set by an empty fit.
+    Additional pair/mean disks follow the squared-distance averaging identity.
+    """
+    points=np.unique(np.asarray(points,float),axis=0)
+    def fallback(reason):return dict(coarse,refinement_status=reason)
+    if not coarse['consistent']:return fallback('inconsistent_coarse_retained')
+    if len(points)>64:return fallback('point_limit_coarse_retained')
+    origin=points.mean(0);q=points-origin
+    pad=1e-9*(1.+float(np.max(abs(points))))
+    axial=(q[:,None,:]+reach*np.array([[1.,0.],[-1.,0.],[0.,1.],[0.,-1.]])).reshape(-1,2)
+    ii,jj=np.triu_indices(len(points),1);delta=q[jj]-q[ii];distance=np.linalg.norm(delta,axis=1)
+    if len(distance) and distance.max()>2*reach+pad:return fallback('empty_intersection_coarse_retained')
+    keep=(distance>pad)&(distance<=2*reach+pad)
+    mid=.5*(q[ii[keep]]+q[jj[keep]])
+    normal=np.column_stack((-delta[keep,1],delta[keep,0]))/distance[keep,None]
+    height=np.sqrt(np.maximum(0.,reach*reach-.25*distance[keep]**2))
+    candidates=np.vstack((axial,mid+height[:,None]*normal,mid-height[:,None]*normal))
+    valid=np.all(np.sum((candidates[:,None,:]-q[None,:,:])**2,axis=2)<=(reach+pad)**2,axis=1)
+    if not np.any(valid):return fallback('unresolved_intersection_coarse_retained')
+    lower=candidates[valid].min(0)-pad;higher=candidates[valid].max(0)+pad
+    disks=[dict(center=coarse['center'],radius=coarse['radius'],method='coarse'),
+        dict(center=(origin+.5*(lower+higher)).tolist(),radius=float(.5*np.linalg.norm(higher-lower)+upper),method='intersection_box')]
+    if len(distance):
+        pair=int(np.argmax(distance));rho=np.sqrt(max(0.,reach*reach-.25*distance[pair]**2))+pad
+        disks.append(dict(center=(origin+.5*(q[ii[pair]]+q[jj[pair]])).tolist(),radius=float(rho+upper),method='pair_disk'))
+    variance=float(np.mean(np.sum(q*q,axis=1)))
+    if variance<=reach*reach+pad:
+        disks.append(dict(center=origin.tolist(),radius=float(np.sqrt(max(0.,reach*reach-variance))+pad+upper),method='mean_disk'))
+    selected=disks[int(np.argmin([d['radius'] for d in disks]))]
+    return dict(coarse,center=selected['center'],radius=selected['radius'],center_radius=selected['radius']-upper,
+        method=selected['method'],center_box_lower=(origin+lower).tolist(),center_box_upper=(origin+higher).tolist(),
+        coarse_guard=disks[0],enclosing_disks=disks,refinement_status='disk_boundary_extrema')
+
+
+def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error=.01, refine=False):
     """Conditional set guard for a calibrated cylindrical target, not a fit.
 
     If all returns belong to this body and each is within point_error of its
@@ -380,10 +419,11 @@ def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error
         # bound, conditional on at least one genuine return; flag explicitly.
         center=points.mean(0);center_bound=float(np.linalg.norm(points-center,axis=1).max())+reach
         method='inconsistent_union_bound'
-    return dict(center=center.tolist(),radius=float(center_bound+upper),center_radius=float(center_bound),
+    coarse=dict(center=center.tolist(),radius=float(center_bound+upper),center_radius=float(center_bound),
         radius_prior=float(radius),radius_upper=float(upper),point_error_bound=float(point_error),
         method=method,consistent=bool(np.all(lower_box<=upper_box)),
         center_box_lower=lower_box.tolist(),center_box_upper=upper_box.tolist(),point_count=len(points))
+    return tighten_radius_center_guard(points,reach,upper,coarse) if refine else coarse
 
 
 def local_cluster_record(message, clusters, sensor_origin, frame):
@@ -449,7 +489,7 @@ class DynamicEllipseTracker:
                  ca_jerk_density=.01,ca_acceleration_variance=.04,singer_tau=1.,
                  acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False,
                  geometry_observer='mvee',circle_prior_retention=False,known_radius=0.,
-                 known_radius_tolerance=.005,known_point_error=.01):
+                 known_radius_tolerance=.005,known_point_error=.01,known_radius_refine=False):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -477,6 +517,8 @@ class DynamicEllipseTracker:
         if known_radius>0 and (mode!='cv' or geometry_observer!='circle' or not transport_geometry):
             raise ValueError('Known-radius initialization guard requires CV/circle and transported geometry')
         self.known_radius,self.known_radius_tolerance,self.known_point_error=known_radius,known_radius_tolerance,known_point_error
+        if known_radius_refine and known_radius<=0:raise ValueError('Centre-set refinement requires a known-radius guard')
+        self.known_radius_refine=bool(known_radius_refine)
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -643,10 +685,16 @@ class DynamicEllipseTracker:
         shape_guard=base*scale
         original_shape_guard=shape_guard.copy()
         initialization_guard=track.get('known_radius_guard')
+        coarse_shape_guard=None
+        selected_guard_disk=None
         if initialization_guard is not None:
-            offset=np.asarray(initialization_guard['center'])-track['measurement_reference_center']
-            required=initialization_guard['radius']+float(np.linalg.norm(offset))
+            options=initialization_guard.get('enclosing_disks',[initialization_guard])
+            required_radii=[g['radius']+float(np.linalg.norm(np.asarray(g['center'])-track['measurement_reference_center'])) for g in options]
+            selected_guard_disk=options[int(np.argmin(required_radii))]
+            required=min(required_radii)
             shape_guard=np.maximum(shape_guard,required)
+            if 'enclosing_disks' in initialization_guard:
+                coarse_shape_guard=np.maximum(original_shape_guard,required_radii[0])
         # Separate from upstream stochastic inflation: a deterministic execution
         # buffer for model/command tracking lag. Uniform radial scaling adds
         # exactly this margin to the existing b*(rho-1) barrier, not an
@@ -669,6 +717,10 @@ class DynamicEllipseTracker:
             if initialization_guard is not None:
                 original_inflated=original_shape_guard+uncertainty
                 stage_axes=np.maximum(stage_axes,original_inflated*(1.+margin/original_inflated[1]))
+                if coarse_shape_guard is not None:
+                    coarse_inflated=coarse_shape_guard+uncertainty
+                    coarse_axes=np.maximum(coarse_inflated*(1.+margin/coarse_inflated[1]),original_inflated*(1.+margin/original_inflated[1]))
+                    stage_axes=np.minimum(stage_axes,coarse_axes)
             axes.append(stage_axes)
         return dict(id=track['id'],name='tracked_'+str(track['id']),center=np.asarray(centers[0]),
             a=float(axes[0][0]),b=float(axes[0][1]),theta=float(x[4]),
@@ -686,7 +738,8 @@ class DynamicEllipseTracker:
             raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'],
             observation_kind=track.get('observation_kind','mvee'),position_observed=track.get('position_observed',True),
             observer_resets=track.get('observer_resets',0),
-            **(dict(known_radius_guard=dict(initialization_guard,shape_guard_axes=shape_guard.tolist())) if initialization_guard is not None else {}),
+            **(dict(known_radius_guard=dict(initialization_guard,shape_guard_axes=shape_guard.tolist(),
+                **(dict(selected_guard_disk=selected_guard_disk) if 'enclosing_disks' in initialization_guard else {}))) if initialization_guard is not None else {}),
             circle_prior_retention=self.circle_prior_retention,prior_shape_retained=track.get('prior_shape_retained',False),
             motion_observation_age=float(now-track.get('last_motion_observed',track['seen'])),
             circle_quality_degraded=bool(self.circle_prior_retention and track.get('observation_kind')=='circle'
@@ -1167,6 +1220,7 @@ class TurtleBot3CBFController:
             known_radius=float(get('/cbf/dynamic/known_radius',0.)),
             known_radius_tolerance=float(get('/cbf/dynamic/known_radius_tolerance',.005)),
             known_point_error=float(get('/cbf/dynamic/known_point_error',.01)),
+            known_radius_refine=bool(get('/cbf/dynamic/known_radius_refine',False)),
             **(get('/cbf/dynamic/reliability',{}) if dynamic_mode=='adaptive' else {}))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
@@ -1319,7 +1373,8 @@ class TurtleBot3CBFController:
                 tracker=getattr(self,'dynamic_tracker',None)
                 if tracker is not None and getattr(tracker,'known_radius',0.)>0:
                     ellipse.known_radius_guard=known_radius_center_guard(cluster,tracker.known_radius,
-                        tracker.known_radius_tolerance,tracker.known_point_error)
+                        tracker.known_radius_tolerance,tracker.known_point_error,
+                        refine=tracker.known_radius_refine and not getattr(ellipse,'circle_candidate',{}).get('accepted',False))
                 fits.append(ellipse)
                 clusters.append(cluster)
             moving=getattr(self,'dynamic_prediction',False)
