@@ -44,6 +44,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
     frame_source=private if private.exists() else p/'obstacle_predictions.jsonl'
     frames=[r for r in map(json.loads,frame_source.open()) if r['observer']==observer]
     records=[];replay_error=0.;replay_checks=0;gates={};holds=0;resets=0;snapshots={}
+    labels=dict(matched=0,no_target=0,ambiguous=0,non_target_clusters=0)
     for frame in frames:
         stamp=frame['stamp'];t=stamp-begin;results={};ids={}
         for kind,model in models.items():
@@ -76,12 +77,16 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
             points=np.asarray(measurement.get('points',[]),float)
             if len(points) and np.mean(abs(np.linalg.norm(points-actual(t),axis=1)-radius)<=.04)>=.8:
                 matched.append(index)
-        if len(matched)!=1:continue
+        labels['non_target_clusters']+=len(frame['measurements'])-len(matched)
+        if len(matched)!=1:
+            labels['no_target' if not matched else 'ambiguous']+=1;continue
+        labels['matched']+=1
         measurement_index=matched[0]
         row=dict(time=t,truth_position=actual(t).tolist(),truth_velocity=(actual(t+.5)-actual(t-.5)).tolist())
         for kind in evaluated_kinds:
             o=results[kind][ids[kind][measurement_index]];velocity=np.asarray(o['velocity']);center=o['center']
             entry=dict(velocity_error=float(np.linalg.norm(velocity-(actual(t+.5)-actual(t-.5)))),
+                track_id=int(ids[kind][measurement_index]),
                 centre_error=float(np.linalg.norm(center-actual(t))),observation_kind=o['observation_kind'],
                 position_observed=o['position_observed'],observer_resets=o['observer_resets'],
                 prior_shape_retained=o.get('prior_shape_retained',False),
@@ -111,7 +116,15 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
     summary={}
     for kind in evaluated_kinds:
         rows=[r[kind] for r in records]
+        if not rows:
+            summary[kind]=dict(frames=0,applicable=False,velocity_rmse=None,current_centre_rmse=None,
+                displacement_rmse={str(h):None for h in (1.,2.)},
+                absolute_centre_prediction_rmse={str(h):None for h in (1.,2.)},
+                occupied_circle_coverage={str(h):None for h in (0.,1.,2.)},
+                collision_proxy_coverage={str(h):None for h in (0.,1.,2.)})
+            continue
         summary[kind]=dict(frames=len(rows),velocity_rmse=float(np.sqrt(np.mean([r['velocity_error']**2 for r in rows]))),
+            applicable=True,target_track_switches=sum(a['track_id']!=b['track_id'] for a,b in zip(rows,rows[1:])),
             current_centre_rmse=float(np.sqrt(np.mean([r['centre_error']**2 for r in rows]))),
             displacement_rmse={str(h):float(np.sqrt(np.mean([r['displacement_error'][str(h)]**2 for r in rows]))) for h in (1.,2.)},
             absolute_centre_prediction_rmse={str(h):float(np.sqrt(np.mean([r['absolute_prediction_error'][str(h)]**2 for r in rows]))) for h in (1.,2.)},
@@ -136,6 +149,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
     return dict(source=str(p),observer=observer,frame_source=frame_source.name,
         metric_target_label='Offline radial cluster-to-actor match only; never used online',
         metric_labelled_frames=len(records),configured_observer=meta.get('geometry_observer','mvee'),
+        metric_target_labels=labels,
         configured_circle_prior_retention=meta.get('circle_prior_retention',False),
         comparison_includes_circle_prior=compare_retention,
         offline_quality_rejection_interval=reject_circle_interval,
