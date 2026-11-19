@@ -7,7 +7,9 @@ import numpy as np
 
 def audit(directory):
     p=Path(directory);circle=0;mvee=0;holds=0;errors=[];max_excess=-1e9;retained=0;prior_excess=-1e9
-    for frame in map(json.loads,(p/'obstacle_predictions.jsonl').open()):
+    private=sorted(p.glob('tb3_*_local_clusters.jsonl'))
+    frames=(frame for file in (private or [p/'obstacle_predictions.jsonl']) for frame in map(json.loads,file.open()))
+    for frame in frames:
         for item in frame['measurements']:
             points=np.asarray(item['points']);center=np.asarray(item['center']);c,s=np.cos(item['theta']),np.sin(item['theta'])
             local=(points-center)@np.array([[c,-s],[s,c]])

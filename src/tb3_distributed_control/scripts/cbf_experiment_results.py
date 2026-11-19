@@ -596,6 +596,7 @@ class ExperimentRecorder:
             log_cluster_points=rospy.get_param('/cbf/dynamic/log_cluster_points',False),
             geometry_observer=rospy.get_param('/cbf/dynamic/geometry_observer','mvee'),
             circle_prior_retention=rospy.get_param('/cbf/dynamic/circle_prior_retention',False),
+            local_cluster_recording=rospy.get_param('/cbf/dynamic/local_cluster_recording',False),
             local_reference_mode=rospy.get_param('/cbf/local_reference_mode','timed'),
             spatial_pass=rospy.get_param('/cbf/mpc/spatial_pass',False),
             spatial_activation_threshold=rospy.get_param('/cbf/mpc/spatial_activation_threshold',-1.),

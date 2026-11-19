@@ -1,4 +1,6 @@
 <launch>
+  <arg name="local_cluster_recording" default="false" />
+  <param name="/cbf/dynamic/local_cluster_recording" value="$(arg local_cluster_recording)" type="bool" />
   <arg name="scenario" default="active_overtaking" />
   <arg name="active_experiment" default="true" />
   <arg name="local_reference_mode" default="timed" />

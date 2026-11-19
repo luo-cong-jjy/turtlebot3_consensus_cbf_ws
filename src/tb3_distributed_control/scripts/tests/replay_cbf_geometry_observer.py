@@ -9,7 +9,7 @@ inline.reference_covariance_matrices=reference_covariance_matrices
 inline.reference_axis_inflation=reference_axis_inflation
 
 
-def replay(directory,compare_retention=False,reject_circle_interval=None):
+def replay(directory,compare_retention=False,reject_circle_interval=None,observer='tb3_0'):
     p=Path(directory);meta=json.loads((p/'run_metadata.json').read_text())
     if meta['prediction_mode']!='cv':raise ValueError('This stage validates CV geometry only')
     truth=list(csv.DictReader((p/'gazebo_truth.csv').open()))
@@ -40,7 +40,9 @@ def replay(directory,compare_retention=False,reject_circle_interval=None):
         models['_recorded']=inline.DynamicEllipseTracker(**args,geometry_observer=configured,
             circle_prior_retention=meta.get('circle_prior_retention',False))
         configured_key='_recorded'
-    frames=[r for r in map(json.loads,(p/'obstacle_predictions.jsonl').open()) if r['observer']=='tb3_0']
+    private=p/(observer+'_local_clusters.jsonl')
+    frame_source=private if private.exists() else p/'obstacle_predictions.jsonl'
+    frames=[r for r in map(json.loads,frame_source.open()) if r['observer']==observer]
     records=[];replay_error=0.;replay_checks=0;gates={};holds=0;resets=0;snapshots={}
     for frame in frames:
         stamp=frame['stamp'];t=stamp-begin;results={};ids={}
@@ -66,10 +68,19 @@ def replay(directory,compare_retention=False,reject_circle_interval=None):
             new=found[key]
             err=max(float(abs(new['prediction_centers']-old['centers']).max()),float(abs(new['prediction_axes']-old['axes']).max()))
             replay_error=max(replay_error,err);replay_checks+=1
-        if not 4<=t<=20 or len(frame['measurements'])!=1:continue
+        if not 4<=t<=20:continue
+        # OFFLINE ground-truth labels identify the one external evaluation
+        # actor, rather than quietly scoring a missed peer as that actor.
+        matched=[]
+        for index,measurement in enumerate(frame['measurements']):
+            points=np.asarray(measurement.get('points',[]),float)
+            if len(points) and np.mean(abs(np.linalg.norm(points-actual(t),axis=1)-radius)<=.04)>=.8:
+                matched.append(index)
+        if len(matched)!=1:continue
+        measurement_index=matched[0]
         row=dict(time=t,truth_position=actual(t).tolist(),truth_velocity=(actual(t+.5)-actual(t-.5)).tolist())
         for kind in evaluated_kinds:
-            o=results[kind][ids[kind][0]];velocity=np.asarray(o['velocity']);center=o['center']
+            o=results[kind][ids[kind][measurement_index]];velocity=np.asarray(o['velocity']);center=o['center']
             entry=dict(velocity_error=float(np.linalg.norm(velocity-(actual(t+.5)-actual(t-.5)))),
                 centre_error=float(np.linalg.norm(center-actual(t))),observation_kind=o['observation_kind'],
                 position_observed=o['position_observed'],observer_resets=o['observer_resets'],
@@ -107,8 +118,8 @@ def replay(directory,compare_retention=False,reject_circle_interval=None):
             occupied_circle_coverage={str(h):float(np.mean([r['occupied_circle_coverage'][str(h)] for r in rows])) for h in (0.,1.,2.)},
             collision_proxy_coverage={str(h):float(np.mean([r['collision_proxy_coverage'][str(h)] for r in rows])) for h in (0.,1.,2.)})
     control_checks=0;control_error=0.;missing=[]
-    rows={int(r['cycle_id']):r for r in csv.DictReader((p/'tb3_0.csv').open())}
-    for event in map(json.loads,(p/'tb3_0_solver_trace.jsonl').open()):
+    rows={int(r['cycle_id']):r for r in csv.DictReader((p/(observer+'.csv')).open())}
+    for event in map(json.loads,(p/(observer+'_solver_trace.jsonl')).open()):
         saved=event.get('manager',{}).get('input_snapshot')
         if saved is None:continue
         row=rows[event['cycle_id']];now=float(row['ros_time']);scan=now-float(row['geometry_age'])
@@ -122,7 +133,9 @@ def replay(directory,compare_retention=False,reject_circle_interval=None):
             difference=max(float(abs(np.asarray(obs['prediction_centers'])-found['prediction_centers']).max()),
                            float(abs(np.asarray(obs['prediction_axes'])-found['prediction_axes']).max()))
             control_error=max(control_error,difference);control_checks+=1
-    return dict(source=str(p),configured_observer=meta.get('geometry_observer','mvee'),
+    return dict(source=str(p),observer=observer,frame_source=frame_source.name,
+        metric_target_label='Offline radial cluster-to-actor match only; never used online',
+        metric_labelled_frames=len(records),configured_observer=meta.get('geometry_observer','mvee'),
         configured_circle_prior_retention=meta.get('circle_prior_retention',False),
         comparison_includes_circle_prior=compare_retention,
         offline_quality_rejection_interval=reject_circle_interval,
@@ -138,9 +151,10 @@ def replay(directory,compare_retention=False,reject_circle_interval=None):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('directory');parser.add_argument('--output',required=True)
     parser.add_argument('--compare-retention',action='store_true')
+    parser.add_argument('--observer',default='tb3_0')
     parser.add_argument('--reject-circle-interval',type=float,nargs=2,help='OFFLINE counterfactual only');a=parser.parse_args()
     out=Path(a.output)
     if out.exists():raise FileExistsError(out)
-    result=replay(a.directory,compare_retention=a.compare_retention,reject_circle_interval=a.reject_circle_interval);out.write_text(json.dumps(result,indent=2))
+    result=replay(a.directory,compare_retention=a.compare_retention,reject_circle_interval=a.reject_circle_interval,observer=a.observer);out.write_text(json.dumps(result,indent=2))
     print(json.dumps({k:v for k,v in result.items() if k!='records'},indent=2))
     if not result['configured_replay_passed']:raise SystemExit(1)

@@ -352,6 +352,14 @@ def circle_enclosure_radius(center, ellipse, physical_radius=0., padding=.03):
     return max(cover,float(physical_radius)+padding)
 
 
+def local_cluster_record(message, clusters, sensor_origin, frame):
+    """Private diagnostic copy; never add raw points to the public message."""
+    result=dict(message,sensor_origin=list(sensor_origin),points_frame=frame,
+                point_input_kind='voxel-downsampled non-peer obstacle cluster')
+    result['measurements']=[dict(m,points=cluster.tolist()) for m,cluster in zip(message['measurements'],clusters)]
+    return result
+
+
 def circle_observation(points, enclosure, sensor_origin, padding=.03):
     """Near-cylinder hypothesis from a partial arc; no supplied object radius.
 
@@ -1017,6 +1025,9 @@ class TurtleBot3CBFController:
         self.stream=(self.output/(self.name+'.csv')).open('w',newline='')
         self.writer=csv.DictWriter(self.stream,fieldnames=self.FIELDS);self.writer.writeheader()
         self.trace_stream=(self.output/(self.name+'_solver_trace.jsonl')).open('w')
+        self.local_cluster_lock=threading.RLock()
+        self.local_cluster_stream=((self.output/(self.name+'_local_clusters.jsonl')).open('w')
+            if rospy.get_param('/cbf/dynamic/local_cluster_recording',False) else None)
         self.counts=Counter();self.rows=0
         rospy.loginfo('%s: experiment CSV %s',self.name,self.output/(self.name+'.csv'))
         self.publish_observer(-1)
@@ -1299,6 +1310,12 @@ class TurtleBot3CBFController:
                 if getattr(self,'log_cluster_points',False):
                     prediction_message.update(sensor_origin=[translation.x,translation.y],points_frame=self.target_frame,
                         point_input_kind='voxel-downsampled non-peer obstacle cluster')
+                if getattr(self,'local_cluster_stream',None) is not None:
+                    local_message=local_cluster_record(prediction_message,clusters,[translation.x,translation.y],self.target_frame)
+                    with self.local_cluster_lock:
+                        if not self.local_cluster_stream.closed:
+                            self.local_cluster_stream.write(json.dumps(local_message)+'\n')
+                            self.local_cluster_stream.flush()
                 self.predictions_pub.publish(String(data=json.dumps(prediction_message)))
             self.publish_geometry(stamp, world_points, fits, clusters)
             self.processed_scan = scan
@@ -1973,6 +1990,8 @@ class TurtleBot3CBFController:
         self.stop_motion()
         self.stream.flush();self.stream.close()
         with self.trace_lock:self.trace_stream.flush();self.trace_stream.close()
+        if getattr(self,'local_cluster_stream',None) is not None:
+            with self.local_cluster_lock:self.local_cluster_stream.flush();self.local_cluster_stream.close()
         (self.output/(self.name+'_summary.json')).write_text(json.dumps(
             dict(robot=self.name,rows=self.rows,status=dict(self.counts),watchdog_stops=self.watchdog_stops,
                  peer_laser_fits=dict(self.peer_laser_fits),solver=self.manager.summary(),
