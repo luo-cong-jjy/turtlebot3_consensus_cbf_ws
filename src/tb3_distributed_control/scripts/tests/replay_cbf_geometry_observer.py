@@ -9,7 +9,7 @@ inline.reference_covariance_matrices=reference_covariance_matrices
 inline.reference_axis_inflation=reference_axis_inflation
 
 
-def replay(directory,compare_retention=False):
+def replay(directory,compare_retention=False,reject_circle_interval=None):
     p=Path(directory);meta=json.loads((p/'run_metadata.json').read_text())
     if meta['prediction_mode']!='cv':raise ValueError('This stage validates CV geometry only')
     truth=list(csv.DictReader((p/'gazebo_truth.csv').open()))
@@ -30,6 +30,16 @@ def replay(directory,compare_retention=False):
     configured=meta.get('geometry_observer','mvee')
     configured_key=('circle_prior' if compare_retention and configured=='circle'
         and meta.get('circle_prior_retention',False) else configured)
+    evaluated_kinds=tuple(models)
+    if reject_circle_interval is not None:
+        if len(reject_circle_interval)!=2 or reject_circle_interval[0]>=reject_circle_interval[1]:
+            raise ValueError('Expected ordered offline quality-rejection interval')
+        # Validate the UNMODIFIED recorded model separately from the stressed
+        # counterfactual observers. No original prediction is certified after
+        # silently changing its input validity.
+        models['_recorded']=inline.DynamicEllipseTracker(**args,geometry_observer=configured,
+            circle_prior_retention=meta.get('circle_prior_retention',False))
+        configured_key='_recorded'
     frames=[r for r in map(json.loads,(p/'obstacle_predictions.jsonl').open()) if r['observer']=='tb3_0']
     records=[];replay_error=0.;replay_checks=0;gates={};holds=0;resets=0;snapshots={}
     for frame in frames:
@@ -39,9 +49,12 @@ def replay(directory,compare_retention=False):
             for measurement in frame['measurements']:
                 raw=measurement.get('base_enclosure',measurement)
                 e=inline.Ellipse(*raw['center'],raw['a'],raw['b'],raw['theta'],raw['point_count'])
-                if kind!='mvee':
+                if model.geometry_observer=='circle':
                     if 'points' not in measurement:raise ValueError('No saved cluster points; do not fabricate observations')
                     e.circle_candidate=inline.circle_observation(measurement['points'],e,frame['sensor_origin'])
+                    if (reject_circle_interval is not None and kind!='_recorded'
+                            and reject_circle_interval[0]<=t<=reject_circle_interval[1]):
+                        e.circle_candidate=dict(accepted=False,reason='offline_injected_quality_loss')
                     reason=e.circle_candidate['reason'];gates[reason]=gates.get(reason,0)+1
                 fits.append(e)
             model.update(fits,stamp);current=model.obstacles(model.snapshot(stamp),stamp)
@@ -55,7 +68,7 @@ def replay(directory,compare_retention=False):
             replay_error=max(replay_error,err);replay_checks+=1
         if not 4<=t<=20 or len(frame['measurements'])!=1:continue
         row=dict(time=t,truth_position=actual(t).tolist(),truth_velocity=(actual(t+.5)-actual(t-.5)).tolist())
-        for kind in models:
+        for kind in evaluated_kinds:
             o=results[kind][ids[kind][0]];velocity=np.asarray(o['velocity']);center=o['center']
             entry=dict(velocity_error=float(np.linalg.norm(velocity-(actual(t+.5)-actual(t-.5)))),
                 centre_error=float(np.linalg.norm(center-actual(t))),observation_kind=o['observation_kind'],
@@ -85,7 +98,7 @@ def replay(directory,compare_retention=False):
             row[kind]=entry
         records.append(row)
     summary={}
-    for kind in models:
+    for kind in evaluated_kinds:
         rows=[r[kind] for r in records]
         summary[kind]=dict(frames=len(rows),velocity_rmse=float(np.sqrt(np.mean([r['velocity_error']**2 for r in rows]))),
             current_centre_rmse=float(np.sqrt(np.mean([r['centre_error']**2 for r in rows]))),
@@ -112,6 +125,7 @@ def replay(directory,compare_retention=False):
     return dict(source=str(p),configured_observer=meta.get('geometry_observer','mvee'),
         configured_circle_prior_retention=meta.get('circle_prior_retention',False),
         comparison_includes_circle_prior=compare_retention,
+        offline_quality_rejection_interval=reject_circle_interval,
         configured_replay_checks=replay_checks,configured_maximum_difference=replay_error,
         configured_replay_passed=replay_checks>0 and replay_error<1e-8,window=[4.,20.],
         control_replay_checks=control_checks,control_maximum_difference=control_error,
@@ -123,9 +137,10 @@ def replay(directory,compare_retention=False):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('directory');parser.add_argument('--output',required=True)
-    parser.add_argument('--compare-retention',action='store_true');a=parser.parse_args()
+    parser.add_argument('--compare-retention',action='store_true')
+    parser.add_argument('--reject-circle-interval',type=float,nargs=2,help='OFFLINE counterfactual only');a=parser.parse_args()
     out=Path(a.output)
     if out.exists():raise FileExistsError(out)
-    result=replay(a.directory,compare_retention=a.compare_retention);out.write_text(json.dumps(result,indent=2))
+    result=replay(a.directory,compare_retention=a.compare_retention,reject_circle_interval=a.reject_circle_interval);out.write_text(json.dumps(result,indent=2))
     print(json.dumps({k:v for k,v in result.items() if k!='records'},indent=2))
     if not result['configured_replay_passed']:raise SystemExit(1)
