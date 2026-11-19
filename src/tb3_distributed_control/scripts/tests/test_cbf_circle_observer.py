@@ -1,5 +1,7 @@
 """Partial-arc centre reconstruction, enclosure and honest missing updates."""
 import unittest
+import xml.etree.ElementTree as ET
+from pathlib import Path
 import numpy as np
 from test_cbf_inline_geometry import inline
 from mpc_dcbf_static_obstacles import reference_covariance_matrices,reference_axis_inflation
@@ -64,3 +66,13 @@ class CircleObserverChecks(unittest.TestCase):
 
     def test_unvalidated_prediction_mode_is_rejected(self):
         with self.assertRaises(ValueError):inline.DynamicEllipseTracker(mode='ca',geometry_observer='circle')
+
+    def test_launch_args_and_forwarded_args_are_unique(self):
+        launch=Path(__file__).resolve().parents[2]/'launch'
+        for name in ['multi_turtlebot3_consensus_gazebo_cbf','multi_turtlebot3_consensus_gazebo_cbf_dynamic',
+                     'single_turtlebot3_cbf_dynamic','two_turtlebot3_cbf_dynamic',
+                     'single_turtlebot3_cbf_trigger022','single_turtlebot3_cbf_motion_geometry']:
+            root=ET.parse(launch/(name+'.launch')).getroot()
+            for scope in [root,*root.findall('.//include')]:
+                names=[a.attrib['name'] for a in scope.findall('arg')]
+                self.assertEqual(len(names),len(set(names)),name)

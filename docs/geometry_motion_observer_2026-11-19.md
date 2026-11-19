@@ -31,3 +31,9 @@
 冻结算法后进行八次40 s实际Gazebo：三场景（斜向/迎面/追越）211种子的circle/mvee同条件配对，共六次；circle斜向451一次新增预定种子；circle斜向211一次GUI截图。保留当前提前回归、0.22/2 s、全部裕量和求解预算，原连续验收不变。所有运行均保存本机点簇/预测/输入/Marker，以便重放；点簇仅为单机本地研究记录，部署默认关闭。451只算一次额外种子检查，不冒称未见场景或统计可靠性。每次失败保留，不以offline回放代替真实闭环。
 
 原single_turtlebot3_cbf_trigger022.launch默认仍MVEE。新增近圆柱研究入口single_turtlebot3_cbf_motion_geometry.launch，只有闭环完成后才评估是否推荐。圆候选不支持未验证的CA/IMM/多机器人场景，也不是独立的新通用避障理论贡献。
+
+### 启动接线失败与V2重跑
+
+第一批八次均在roslaunch参数校验处退出，没有进入闭环；原因是新增geometry_observer字符串参数与旧RViz观察者整数参数重名。初次检查错误后shell仍继续到提交/批量，属于执行流程疏漏，全部失败目录/日志保留，不计实际完成控制或算法安全失败。新方法参数改为motion_geometry_observer，旧geometry_observer整数保持；命令行相应为--motion-geometry-observer。新增顶层/转发参数唯一性检查，circle及MVEE两入口实际展开通过，检查命令出错立即停止。
+
+V2共229项检查通过。在任何新闭环结果出现前，重新冻结原八次计划，所有目录增加v2_前缀，不覆盖前八次启动失败；算法圆拟合/Kalman/裕量本身未改变。V1源码2bbee52及其失败保留，后续source以修复提交为准。

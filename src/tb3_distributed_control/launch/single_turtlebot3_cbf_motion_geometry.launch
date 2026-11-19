@@ -8,7 +8,7 @@
   <arg name="log_cluster_points" default="false" />
   <param name="/cbf/dynamic/log_cluster_points" value="$(arg log_cluster_points)" type="bool" />
   <include file="$(find tb3_distributed_control)/launch/single_turtlebot3_cbf_trigger022.launch">
-    <arg name="geometry_observer" value="circle" />
+    <arg name="motion_geometry_observer" value="circle" />
     <arg name="scenario" value="$(arg scenario)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="open_rviz" value="$(arg open_rviz)" />

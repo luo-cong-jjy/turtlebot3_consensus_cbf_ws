@@ -47,7 +47,7 @@
   <arg name="progress_abstain" default="true" />
   <arg name="progress_guidance" default="false" />
   <arg name="prediction_mode" default="cv" />
-  <arg name="geometry_observer" default="mvee" />
+  <arg name="motion_geometry_observer" default="mvee" />
   <arg name="moving_frame_projection" default="false" />
   <arg name="singer_tau" default="1.0" />
   <arg name="acceleration_buffer" default="true" />
@@ -114,7 +114,7 @@
     <arg name="progress_abstain" value="$(arg progress_abstain)" />
     <arg name="progress_guidance" value="$(arg progress_guidance)" />
     <arg name="prediction_mode" value="$(arg prediction_mode)" />
-    <arg name="geometry_observer" value="$(arg geometry_observer)" />
+    <arg name="motion_geometry_observer" value="$(arg motion_geometry_observer)" />
     <arg name="dynamic_reaction_time" value="$(arg dynamic_reaction_time)" />
     <arg name="dynamic_extra_margin" value="$(arg dynamic_extra_margin)" />
     <arg name="total_time" value="$(arg total_time)" />

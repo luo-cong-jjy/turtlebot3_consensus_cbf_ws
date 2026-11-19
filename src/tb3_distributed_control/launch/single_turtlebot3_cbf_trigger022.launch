@@ -1,6 +1,6 @@
 <launch>
   <arg name="spatial_predictive_return" default="true" />
-  <arg name="geometry_observer" default="mvee" />
+  <arg name="motion_geometry_observer" default="mvee" />
   <arg name="scenario" default="active_overtaking" />
   <arg name="gui" default="true" />
   <arg name="open_rviz" default="true" />
@@ -22,7 +22,7 @@
     <arg name="spatial_prefix_retention" value="true" />
     <arg name="local_reference_mode" value="timed" />
     <arg name="prediction_mode" value="cv" />
-    <arg name="geometry_observer" value="$(arg geometry_observer)" />
+    <arg name="motion_geometry_observer" value="$(arg motion_geometry_observer)" />
     <arg name="execution_backup" value="true" />
     <arg name="transport_geometry" value="true" />
     <arg name="log_mpc_inputs" value="true" />
