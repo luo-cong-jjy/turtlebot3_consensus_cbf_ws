@@ -391,7 +391,32 @@ def tighten_radius_center_guard(points, reach, upper, coarse):
         coarse_guard=disks[0],enclosing_disks=disks,refinement_status='disk_boundary_extrema')
 
 
-def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error=.01, refine=False):
+def scan_gaussian_error_bound(sigma,alpha,raw_ray_count,range_error=0.,transform_error=0.,floor=0.):
+    """Union-bound event for all raw range errors in ONE robot scan.
+
+    P(any |eta_i|>sigma*z)<=N*erfc(z/sqrt(2))<=alpha. Independence
+    is not required. Quantization/pose terms require separate deterministic
+    bounds. This is neither trajectory collision risk nor a pose guarantee.
+    """
+    if (not all(np.isfinite(v) for v in (sigma,alpha,range_error,transform_error,floor))
+            or sigma<=0 or not 0<alpha<1 or min(range_error,transform_error,floor)<0
+            or raw_ray_count is None or isinstance(raw_ray_count,bool)
+            or not np.isfinite(raw_ray_count) or int(raw_ray_count)!=raw_ray_count or raw_ray_count<1):
+        raise ValueError('Positive sigma, valid per-scan alpha and actual raw ray count required')
+    count=int(raw_ray_count);target=alpha/count;lo,hi=0.,8.
+    while math.erfc(hi/math.sqrt(2.))>target:hi*=2.
+    for unused in range(52):
+        mid=.5*(lo+hi)
+        if math.erfc(mid/math.sqrt(2.))>target:lo=mid
+        else:hi=mid
+    z=hi+1e-12;error=max(floor,sigma*z+range_error+transform_error)
+    return dict(scope='one_robot_one_scan_raw_range_noise',sigma=float(sigma),alpha=float(alpha),
+        raw_ray_count=count,z=float(z),union_tail_bound=float(count*math.erfc(z/math.sqrt(2.))),
+        range_error_bound=float(range_error),transform_error_bound=float(transform_error),
+        error_floor=float(floor),effective_point_error=float(error))
+
+
+def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error=.01, refine=False,noise_sigma=0.,noise_alpha=.01,raw_ray_count=None,range_error=0.,transform_error=0.):
     """Conditional set guard for a calibrated cylindrical target, not a fit.
 
     If all returns belong to this body and each is within point_error of its
@@ -404,6 +429,11 @@ def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error
     if not len(points) or not np.isfinite(points).all():raise ValueError('Finite nonempty target returns required')
     if not all(np.isfinite(v) for v in (radius,radius_tolerance,point_error)) or radius<=0 or min(radius_tolerance,point_error)<0:
         raise ValueError('Invalid calibrated radius or error bounds')
+    noise=None
+    if noise_sigma>0:
+        noise=scan_gaussian_error_bound(noise_sigma,noise_alpha,raw_ray_count,range_error,transform_error,point_error)
+        point_error=noise['effective_point_error']
+    elif noise_sigma!=0:raise ValueError('Negative or nonfinite noise sigma')
     upper=radius+radius_tolerance;reach=upper+point_error
     lower_box=np.max(points-reach,axis=0);upper_box=np.min(points+reach,axis=0)
     if np.all(lower_box<=upper_box):
@@ -423,7 +453,9 @@ def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error
         radius_prior=float(radius),radius_upper=float(upper),point_error_bound=float(point_error),
         method=method,consistent=bool(np.all(lower_box<=upper_box)),
         center_box_lower=lower_box.tolist(),center_box_upper=upper_box.tolist(),point_count=len(points))
-    return tighten_radius_center_guard(points,reach,upper,coarse) if refine else coarse
+    result=tighten_radius_center_guard(points,reach,upper,coarse) if refine else coarse
+    if noise is not None:result['scan_noise_confidence']=noise
+    return result
 
 
 def local_cluster_record(message, clusters, sensor_origin, frame):
@@ -489,7 +521,8 @@ class DynamicEllipseTracker:
                  ca_jerk_density=.01,ca_acceleration_variance=.04,singer_tau=1.,
                  acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False,
                  geometry_observer='mvee',circle_prior_retention=False,known_radius=0.,
-                 known_radius_tolerance=.005,known_point_error=.01,known_radius_refine=False):
+                 known_radius_tolerance=.005,known_point_error=.01,known_radius_refine=False,
+                 known_noise_sigma=0.,known_noise_alpha=.01,known_range_error=0.,known_transform_error=0.):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -519,6 +552,11 @@ class DynamicEllipseTracker:
         self.known_radius,self.known_radius_tolerance,self.known_point_error=known_radius,known_radius_tolerance,known_point_error
         if known_radius_refine and known_radius<=0:raise ValueError('Centre-set refinement requires a known-radius guard')
         self.known_radius_refine=bool(known_radius_refine)
+        if not all(np.isfinite(v) and v>=0 for v in (known_noise_sigma,known_range_error,known_transform_error)) or not 0<known_noise_alpha<1:
+            raise ValueError('Invalid range-noise confidence settings')
+        if known_noise_sigma>0 and known_radius<=0:raise ValueError('Noise-aware initialization requires a known object radius')
+        self.known_noise_sigma,self.known_noise_alpha=known_noise_sigma,known_noise_alpha
+        self.known_range_error,self.known_transform_error=known_range_error,known_transform_error
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -1221,6 +1259,10 @@ class TurtleBot3CBFController:
             known_radius_tolerance=float(get('/cbf/dynamic/known_radius_tolerance',.005)),
             known_point_error=float(get('/cbf/dynamic/known_point_error',.01)),
             known_radius_refine=bool(get('/cbf/dynamic/known_radius_refine',False)),
+            known_noise_sigma=float(get('/cbf/dynamic/known_noise_sigma',0.)),
+            known_noise_alpha=float(get('/cbf/dynamic/known_noise_alpha',.01)),
+            known_range_error=float(get('/cbf/dynamic/known_range_error',0.)),
+            known_transform_error=float(get('/cbf/dynamic/known_transform_error',0.)),
             **(get('/cbf/dynamic/reliability',{}) if dynamic_mode=='adaptive' else {}))
         self.dynamic_snapshot=[]
         self.static_map_voxel = float(get('~static_map_voxel', 0.04))
@@ -1374,7 +1416,9 @@ class TurtleBot3CBFController:
                 if tracker is not None and getattr(tracker,'known_radius',0.)>0:
                     ellipse.known_radius_guard=known_radius_center_guard(cluster,tracker.known_radius,
                         tracker.known_radius_tolerance,tracker.known_point_error,
-                        refine=tracker.known_radius_refine and not getattr(ellipse,'circle_candidate',{}).get('accepted',False))
+                        refine=tracker.known_radius_refine and not getattr(ellipse,'circle_candidate',{}).get('accepted',False),
+                        noise_sigma=tracker.known_noise_sigma,noise_alpha=tracker.known_noise_alpha,raw_ray_count=len(scan.ranges),
+                        range_error=tracker.known_range_error,transform_error=tracker.known_transform_error)
                 fits.append(ellipse)
                 clusters.append(cluster)
             moving=getattr(self,'dynamic_prediction',False)
@@ -1420,6 +1464,7 @@ class TurtleBot3CBFController:
                         score_count=o['score_count'],score_origin=o['score_origin'],model_switches=o['model_switches'])
                 prediction_message=dict(stamp=stamp.to_sec(),
                     observer=self.name,dt=self.dt,mode=self.dynamic_tracker.mode,tracks=rows,
+                    **(dict(raw_ray_count=len(scan.ranges)) if getattr(self.dynamic_tracker,'known_noise_sigma',0.)>0 else {}),
                     measurements=[dict(center=[e.cx,e.cy],a=e.a,b=e.b,theta=e.theta,
                         point_count=e.point_count,**(dict(points=cluster.tolist())
                         if getattr(self,'log_cluster_points',False) else {})) for e,cluster in zip(fits,clusters)])

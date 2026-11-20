@@ -37,7 +37,8 @@ def audit(root):
                     ambiguous+=int(len(selections)>1);continue
                 measurement,distance=selections[0];guard=measurement.get('known_radius_guard')
                 is_active=guard is not None and any('known_radius_guard' in tr and all(tr['known_radius_guard'].get(k)==v for k,v in guard.items()) for tr in frame['tracks'])
-                excess=float(distance.max()-reach);bad=excess>1e-9
+                effective=meta['known_radius']+meta['known_radius_tolerance']+(guard['point_error_bound'] if guard is not None else meta['known_point_error'])
+                excess=float(distance.max()-effective);bad=excess>1e-9
                 matched+=1;violations+=int(bad);active+=int(is_active);active_bad+=int(is_active and bad);maximum=max(maximum,excess)
                 if is_active and bad:details.append(dict(observer=frame['observer'],time=t,maximum_disk_excess=excess))
         reports[case.name]=dict(matched_clusters=matched,necessary_disk_condition_violations=violations,

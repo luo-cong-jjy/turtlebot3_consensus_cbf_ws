@@ -78,6 +78,10 @@
   <arg name="known_radius_tolerance" default="0.005" />
   <arg name="known_point_error" default="0.01" />
   <arg name="known_radius_refine" default="false" />
+  <arg name="known_noise_sigma" default="0.0" />
+  <arg name="known_noise_alpha" default="0.01" />
+  <arg name="known_range_error" default="0.0" />
+  <arg name="known_transform_error" default="0.0" />
   <arg name="moving_frame_projection" default="false" />
   <arg name="singer_tau" default="1.0" />
   <arg name="acceleration_buffer" default="true" />
@@ -145,6 +149,10 @@
   <param name="/cbf/dynamic/known_radius_tolerance" value="$(arg known_radius_tolerance)" type="double" />
   <param name="/cbf/dynamic/known_point_error" value="$(arg known_point_error)" type="double" />
   <param name="/cbf/dynamic/known_radius_refine" value="$(arg known_radius_refine)" type="bool" />
+  <param name="/cbf/dynamic/known_noise_sigma" value="$(arg known_noise_sigma)" type="double" />
+  <param name="/cbf/dynamic/known_noise_alpha" value="$(arg known_noise_alpha)" type="double" />
+  <param name="/cbf/dynamic/known_range_error" value="$(arg known_range_error)" type="double" />
+  <param name="/cbf/dynamic/known_transform_error" value="$(arg known_transform_error)" type="double" />
   <param name="/cbf/dynamic/reaction_time" value="$(arg dynamic_reaction_time)" />
   <param name="/cbf/dynamic/extra_margin" value="$(arg dynamic_extra_margin)" />
   <param name="/cbf/dynamic_scenario" value="$(arg dynamic_scenario)" />

@@ -19,7 +19,9 @@ def audit(directory):
                 if radius<=0:continue
                 expected=inline.known_radius_center_guard(measured['points'],radius,
                     meta['known_radius_tolerance'],meta['known_point_error'],
-                    refine=meta.get('known_radius_refine',False) and not measured.get('circle_quality',{}).get('accepted',False))
+                    refine=meta.get('known_radius_refine',False) and not measured.get('circle_quality',{}).get('accepted',False),
+                    noise_sigma=meta.get('known_noise_sigma',0.),noise_alpha=meta.get('known_noise_alpha',.01),raw_ray_count=frame.get('raw_ray_count'),
+                    range_error=meta.get('known_range_error',0.),transform_error=meta.get('known_transform_error',0.))
                 measurements+=1
                 if measured.get('known_radius_guard')!=expected:
                     errors.append(dict(stamp=frame['stamp'],error='Centre-set construction differs from raw own returns'))
