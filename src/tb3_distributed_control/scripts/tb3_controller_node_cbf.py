@@ -1186,7 +1186,7 @@ class TurtleBot3CBFController:
         if self.cfg['realtime'] and self.cfg['stagger_callbacks']:
             phase=self.robot_id*self.dt/len(self.names)
             self.control_start_timer=rospy.Timer(rospy.Duration(.001+phase),self.start_control_timer,oneshot=True,reset=True)
-            self.geometry_start_timer=rospy.Timer(rospy.Duration(.001+phase+.5/self.geometry_rate),
+            self.geometry_start_timer=rospy.Timer(rospy.Duration(.001+phase+(.85 if self.cfg.get('cycle_scheduler_guard',False) else .5)/self.geometry_rate),
                                                  self.start_geometry_timer,oneshot=True,reset=True)
         else:
             self.timer=rospy.Timer(rospy.Duration(self.dt),self.control,reset=True)
@@ -1492,7 +1492,8 @@ class TurtleBot3CBFController:
             self.geometry_timing_sequence+=1
             self.geometry_timing=dict(sequence=self.geometry_timing_sequence,stamp=stamp.to_sec(),
                 wall_ms=self.geometry_ms,peer_wall_ms=peer_wall_ms,
-                cpu_ms=1000*(time.thread_time()-geometry_cpu_begin),peer_cpu_ms=peer_cpu_ms)
+                cpu_ms=1000*(time.thread_time()-geometry_cpu_begin),peer_cpu_ms=peer_cpu_ms,
+                **(dict(wall_begin=geometry_begin,wall_end=time.perf_counter()) if getattr(self,'cfg',{}).get('cycle_scheduler_guard',False) else {}))
             rospy.loginfo_throttle(2.0, 'Laser geometry: %d returns, %d obstacle clusters',
                                   len(points), len(fits))
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException,
@@ -1887,6 +1888,7 @@ class TurtleBot3CBFController:
         self.cycle_validated_steps=0
         self.recovery_record=None
         with self.lock:
+            if self.cfg.get('cycle_scheduler_guard',False):now=rospy.get_time()
             self.metric_context={}
             poses={k:(s,x.copy(),v.copy()) for k,(s,x,v) in self.poses.items()}
             observed=list(self.observed);stamp=self.geometry_stamp
@@ -2137,6 +2139,7 @@ class TurtleBot3CBFController:
                     status=status,command=control.tolist(),control_wall_ms=row['solve_ms'],
                     command_wall_ms=self.command_wall_ms,cycle_end_ms=1000*(time.perf_counter()-begin),
                     cycle_cpu_ms=1000*(time.thread_time()-self.cycle_cpu_begin),manager=detail,
+                    **(dict(geometry_interval=dict(self.record_geometry_timing)) if self.cfg.get('cycle_scheduler_guard',False) else {}),
                     local_reference_mode=getattr(self,'local_reference_mode','timed'),
                     reference_projection_applied=getattr(self,'reference_projection_applied',False),
                     reference_projection_error=getattr(self,'reference_projection_error',None),

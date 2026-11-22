@@ -99,4 +99,15 @@ class FeasibleCostAdmissionTests(unittest.TestCase):
         self.assertIsNone(core.feasible_objective_certificate(candidate,dict(cfg,prediction_risk=True),(np.zeros((10,2)),0.)))
 
 
+class SchedulerAdmissionTests(unittest.TestCase):
+    def test_setup_delay_cannot_start_a_native_solve_past_its_window(self):
+        cfg=default_config();cfg.update(cycle_budget_guard=True,cycle_scheduler_guard=True,realtime=True)
+        p=core.CachedMPCProblem(cfg,0,False);u=np.zeros((10,2));goals=np.zeros((11,3))
+        with patch.object(core.time,'perf_counter',side_effect=[100.]+[100.020]*10):
+            with self.assertRaisesRegex(RuntimeError,'native-solve window'):
+                p.solve(np.zeros(3),goals,[],[-.22,.22],np.zeros(2),u,u,deadline=100.025)
+        self.assertFalse(p.last_attempt['native_started']);self.assertEqual(p.last_attempt['status'],'setup_exhausted_native_window')
+        self.assertEqual(p.last_attempt['validation_ms'],0.)
+
+
 if __name__=='__main__':unittest.main()

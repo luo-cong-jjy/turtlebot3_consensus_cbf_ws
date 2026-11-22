@@ -1618,6 +1618,11 @@ class CachedMPCProblem:
             self.deadline_callback.deadline=deadline if deadline is not None else float('inf')
             self.deadline_callback.iterations=0;self.deadline_callback.stopped=False
         self.last_attempt['setup_ms']=1000*(time.perf_counter()-begin)
+        if cfg.get('cycle_scheduler_guard',False) and deadline is not None and time.perf_counter()>=deadline-.008:
+            self.last_attempt.update(status='setup_exhausted_native_window',native_started=False,
+                wall_ms=1000*(time.perf_counter()-begin),cpu_ms=1000*(time.thread_time()-cpu_begin))
+            raise RuntimeError('Insufficient native-solve window after parameter setup')
+        self.last_attempt['native_started']=True
         solve_begin=time.perf_counter();solve_cpu_begin=time.thread_time();sol=None;error=None
         try:
             sol=op.solve()
@@ -1877,7 +1882,7 @@ class MPCSolverManager:
         begin=time.perf_counter();cfg=self.config;n=cfg['horizon'];dt=cfg['dt']
         command_deadline=deadline if deadline is not None else begin+cfg.get('manager_wall_time',.085)
         budget_guard=bool(cfg.get('cycle_budget_guard',False))
-        finish_reserve=cfg.get('cycle_finish_reserve',.008) if budget_guard else 0.
+        finish_reserve=cfg.get('cycle_finish_reserve',.015 if cfg.get('cycle_scheduler_guard',False) else .008) if budget_guard else 0.
         deadline=min(command_deadline-finish_reserve,begin+cfg.get('manager_wall_time',.085))
         state=np.asarray(state,float);goals=np.asarray(goals,float)
         if previous is None:previous=np.zeros(2)
@@ -2063,7 +2068,7 @@ class MPCSolverManager:
         if budget_guard:
             record['cycle_budget']=dict(command_deadline=command_deadline,work_deadline=deadline,
                 finish_reserve_ms=1000*finish_reserve,postprocess_reserve_ms=1000*reserve,
-                nlp_started=bool(trace),observed_postprocess_ms=1000*post_history[-1],
+                nlp_started=any(a.get('native_started',True) for a in trace),observed_postprocess_ms=1000*post_history[-1],
                 remaining_at_return_ms=1000*(command_deadline-time.perf_counter()),
                 objective_certificate=objective_certificate)
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
