@@ -1494,6 +1494,8 @@ class CachedMPCProblem:
         objective += quad(r[-1, :]-goal[-1, :2], config['q_plan'])
         objective += quad(x[-1, :2]-r[-1, :], config['q_coupling'])
         op.minimize(objective+risk_objective)
+        self.solution_pack=(ca.vertcat(ca.vec(u),ca.vec(q),ca.vec(x),op.f)
+            if config.get('cycle_budget_guard',False) else None)
         self.cost_function=None
         if config.get('execution_backup',False) or self.risk_enabled:
             # Keep the baseline cost signature; obstacle-dependent risk is
@@ -1628,19 +1630,37 @@ class CachedMPCProblem:
         validate_begin=time.perf_counter()
         try:
             value=sol.value if sol is not None else op.debug.value
-            controls=np.asarray(value(self.u)).reshape(self.n,2)
-            plans=np.asarray(value(self.q)).reshape(self.n,2)
-            states=np.asarray(value(self.x)).reshape(self.n+1,3)
+            fast=bool(cfg.get('cycle_budget_guard',False));captured={}
+            extract_begin=time.perf_counter()
+            if fast:
+                packed=np.asarray(value(self.solution_pack)).reshape(-1)
+                edge=2*self.n
+                controls=packed[:edge].reshape((self.n,2),order='F')
+                plans=packed[edge:2*edge].reshape((self.n,2),order='F')
+                states=packed[2*edge:-1].reshape((self.n+1,3),order='F')
+                packed_cost=float(packed[-1])
+            else:
+                controls=np.asarray(value(self.u)).reshape(self.n,2)
+                plans=np.asarray(value(self.q)).reshape(self.n,2)
+                states=np.asarray(value(self.x)).reshape(self.n+1,3)
+            self.last_attempt['extraction_ms']=1000*(time.perf_counter()-extract_begin)
+            if fast:
+                candidate=dict(states=states,controls=controls,plan_controls=plans,
+                    cost=packed_cost,status=self.last_attempt['status'],converged=sol is not None)
+                check_begin=time.perf_counter()
+                valid=self.validate(candidate,state,obstacles,bounds,previous,_diagnostics=captured)
+                self.last_attempt['feasibility_ms']=1000*(time.perf_counter()-check_begin)
             finite=all(np.isfinite(v).all() for v in (states,controls,plans))
             self.last_attempt['finite_candidate']=bool(finite)
-            self.last_attempt['max_dynamics_error']=float(np.max(np.abs(rollout(state,controls,self.dt)-states)))
+            self.last_attempt['max_dynamics_error']=(captured['dynamics_error'] if 'dynamics_error' in captured
+                else float(np.max(np.abs(rollout(state,controls,self.dt)-states))))
             if finite:
                 self.last_attempt['max_control_bound_violation']=float(max(0.,bounds[0]-controls[:,0].min(),
                     controls[:,0].max()-bounds[1],np.abs(controls[:,1]).max()-cfg['omega_max']))
                 self.last_attempt['max_plan_bound_violation']=float(max(0.,np.abs(plans).max()-cfg['plan_v_max']))
-                h=barrier_values(states,obstacles,cfg['margin'])
+                h=captured['values'] if 'values' in captured else barrier_values(states,obstacles,cfg['margin'])
                 if h.size:
-                    slack=safety_residuals(h,obstacles,cfg)
+                    slack=captured['slack'] if 'slack' in captured else safety_residuals(h,obstacles,cfg)
                     k,j=np.unravel_index(int(np.argmin(slack)),slack.shape)
                     self.last_attempt.update(raw_min_cbf_slack=float(slack[k,j]),
                         worst_obstacle=obstacles[k].get('name',str(k)),worst_stage=int(j))
@@ -1648,10 +1668,11 @@ class CachedMPCProblem:
                         self.last_attempt['constraint_residuals']=[dict(obstacle=o.get('name',str(i)),
                             initial_h=float(h[i,0]),min_slack=float(slack[i].min()),
                             stage=int(np.argmin(slack[i]))) for i,o in enumerate(obstacles)]
-            candidate=dict(states=states,controls=controls,plan_controls=plans,
-                cost=float(value(op.f)),status=self.last_attempt['status'],converged=sol is not None)
+            if not fast:
+                candidate=dict(states=states,controls=controls,plan_controls=plans,
+                    cost=float(value(op.f)),status=self.last_attempt['status'],converged=sol is not None)
+                valid=self.validate(candidate,state,obstacles,bounds,previous)
             candidate['risk_cost']=self.prediction_risk_cost(states,obstacles,controls) if finite else None
-            valid=self.validate(candidate,state,obstacles,bounds,previous)
             self.last_attempt.update(feasible=bool(valid),min_cbf_slack=candidate.get('min_slack'))
             if valid and (sol is not None or cfg.get('realtime',False)):
                 if sol is not None:candidate['lam_g']=np.asarray(sol.value(op.lam_g)).reshape(-1)
@@ -1678,12 +1699,14 @@ class CachedMPCProblem:
             self.last_attempt.update(validation_ms=1000*(time.perf_counter()-validate_begin),
                 wall_ms=1000*(time.perf_counter()-begin),cpu_ms=1000*(time.thread_time()-cpu_begin))
 
-    def validate(self, candidate, state, obstacles, bounds, previous, one_step=False):
+    def validate(self, candidate, state, obstacles, bounds, previous, one_step=False, _diagnostics=None):
         cfg, tol = self.config, 2e-6
         controls, states = candidate['controls'], candidate['states']
         if not all(np.isfinite(candidate[k]).all() for k in ('states', 'controls', 'plan_controls')):
             return False
-        if np.max(np.abs(rollout(state, controls, self.dt)-states)) > tol:
+        dynamics_error=float(np.max(np.abs(rollout(state, controls, self.dt)-states)))
+        if _diagnostics is not None:_diagnostics['dynamics_error']=dynamics_error
+        if dynamics_error > tol:
             return False
         if (np.min(controls[:, 0]) < bounds[0]-tol or np.max(controls[:, 0]) > bounds[1]+tol
                 or np.max(np.abs(controls[:, 1])) > cfg['omega_max']+tol
@@ -1696,8 +1719,10 @@ class CachedMPCProblem:
             if np.any(np.abs(increments) > np.array([cfg['delta_v'], cfg['delta_w']])+tol):
                 return False
         values = barrier_values(states, obstacles, cfg['margin'])
+        if _diagnostics is not None:_diagnostics['values']=values
         if values.size:
             slack=safety_residuals(values,obstacles,cfg)
+            if _diagnostics is not None:_diagnostics['slack']=slack
             checked = slack[:, :1] if one_step else slack
             candidate['min_slack'] = float(checked.min())
             candidate['min_h'] = float((values[:, :2] if one_step else values).min())
@@ -1825,7 +1850,9 @@ class MPCSolverManager:
     def _solve_realtime(self,state,goals,obstacles,bounds,last,label,deadline,previous,shift,token):
         begin=time.perf_counter();cfg=self.config;n=cfg['horizon'];dt=cfg['dt']
         command_deadline=deadline if deadline is not None else begin+cfg.get('manager_wall_time',.085)
-        deadline=min(command_deadline,begin+cfg.get('manager_wall_time',.085))
+        budget_guard=bool(cfg.get('cycle_budget_guard',False))
+        finish_reserve=cfg.get('cycle_finish_reserve',.008) if budget_guard else 0.
+        deadline=min(command_deadline-finish_reserve,begin+cfg.get('manager_wall_time',.085))
         state=np.asarray(state,float);goals=np.asarray(goals,float)
         if previous is None:previous=np.zeros(2)
         previous=np.asarray(previous,float)
@@ -1834,6 +1861,10 @@ class MPCSolverManager:
             self.problems[key]=CachedMPCProblem(cfg,*key);self.builds+=1
         problem=self.problems[key]
         memory=self.robot_memory.setdefault(label,dict(positions=deque(maxlen=11),cooldown=0,preferred=1,hold=0))
+        if budget_guard:
+            post_history=memory.setdefault('postprocess_history',deque(maxlen=16));post_history.append(0.)
+            measured_reserve=.008+1.25*max(post_history)
+        else:measured_reserve=0.
         memory['positions'].append(state[:2].copy())
         memory['cooldown']=max(0,memory['cooldown']-1)
         if cfg.get('progress_guidance',False) or cfg.get('rear_pass',False) or cfg.get('spatial_pass',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
@@ -1861,7 +1892,7 @@ class MPCSolverManager:
             prepare_begin=time.perf_counter()
             # Do this before reference preview or NLP can spend the remaining budget.
             prepared,checked,screen_valid=self._screen_backup(problem,state,goals,obstacles,bounds,
-                previous,plan,guess,(np.zeros((n,2)),0.),command_deadline)
+                previous,plan,guess,(np.zeros((n,2)),0.),deadline if budget_guard else command_deadline)
             prepare_ms=1000*(time.perf_counter()-prepare_begin)
         preview_begin=time.perf_counter();preview_budget_hit=False;timeout_carry=False
         preview_config=(dict(cfg,bounded_local_reference=cfg.get('bounded_local_reference',True),
@@ -1915,7 +1946,7 @@ class MPCSolverManager:
         trace=[];best=None;errors=[]
         # Exactly one NLP per period. Alternative seeds are carried to later
         # periods rather than serially consuming this period's control budget.
-        reserve=max(cfg.get('fallback_reserve',.010),.020 if execution_backup else 0.)
+        reserve=max(cfg.get('fallback_reserve',.010),.020 if execution_backup else 0.,measured_reserve)
         if time.perf_counter()<deadline-reserve-.005:
             try:
                 best=problem.solve(state,goals,obstacles,bounds,previous,guess,plan,guidance,
@@ -1923,6 +1954,7 @@ class MPCSolverManager:
                 best['seed']=seed
             except RuntimeError as exc:errors.append(str(exc).splitlines()[-1])
             trace.append(dict(problem.last_attempt,seed=seed))
+            if budget_guard:post_history[-1]=max(0.,problem.last_attempt.get('validation_ms',0.)/1000.)
         else:errors.append('No remaining NLP budget')
         if full_backup is not None and (best is None or full_backup['cost']<best['cost']):best=full_backup
         if best is None and prepared is not None:best=prepared
@@ -2001,6 +2033,11 @@ class MPCSolverManager:
             if best is not None and best.get('status')=='best_effort_escape':
                 record.update(escape_zero_min_slack=best['escape_zero_min_slack'],
                     escape_initial_h=best['escape_initial_h'],escape_next_h=best['escape_next_h'])
+        if budget_guard:
+            record['cycle_budget']=dict(command_deadline=command_deadline,work_deadline=deadline,
+                finish_reserve_ms=1000*finish_reserve,postprocess_reserve_ms=1000*reserve,
+                nlp_started=bool(trace),observed_postprocess_ms=1000*post_history[-1],
+                remaining_at_return_ms=1000*(command_deadline-time.perf_counter()))
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         if cfg.get('rear_pass',False):record['rear_pass']=dict(memory.get('rear_summary',{}))

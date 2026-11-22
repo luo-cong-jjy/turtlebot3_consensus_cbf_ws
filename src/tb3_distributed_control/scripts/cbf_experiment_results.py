@@ -601,6 +601,7 @@ class ExperimentRecorder:
             known_radius_tolerance=rospy.get_param('/cbf/dynamic/known_radius_tolerance',.005),
             known_point_error=rospy.get_param('/cbf/dynamic/known_point_error',.01),
             known_radius_refine=rospy.get_param('/cbf/dynamic/known_radius_refine',False),
+            cycle_budget_guard=rospy.get_param('/cbf/mpc/cycle_budget_guard',False),
             known_noise_sigma=rospy.get_param('/cbf/dynamic/known_noise_sigma',0.),
             known_noise_alpha=rospy.get_param('/cbf/dynamic/known_noise_alpha',.01),
             known_range_error=rospy.get_param('/cbf/dynamic/known_range_error',0.),
