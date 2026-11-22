@@ -110,4 +110,19 @@ class SchedulerAdmissionTests(unittest.TestCase):
         self.assertEqual(p.last_attempt['validation_ms'],0.)
 
 
+class CompactHistoryTests(unittest.TestCase):
+    def test_full_inputs_remain_for_disk_trace_while_summary_history_is_small(self):
+        for compact in (False,True):
+            cfg=default_config();cfg.update(realtime=True,execution_backup=True,cycle_budget_guard=True,
+                compact_solver_history=compact,log_mpc_inputs=True,manager_wall_time=.085)
+            m=core.MPCSolverManager(cfg);p=core.CachedMPCProblem(cfg,0,False)
+            p.solve=Mock(side_effect=RuntimeError('forced'));m.problems[(0,False)]=p
+            goals=np.zeros((11,3));u=np.tile([.15,0.],(10,1))
+            with patch.object(core.time,'perf_counter',return_value=100.),patch.object(core,'continuous_guidance',return_value=(u,0.)):
+                m.solve(np.zeros(3),goals,[],[-.22,.22],dict(controls=u,plan_controls=u),'r',deadline=100.097,applied_previous=u[0])
+            self.assertIn('input_snapshot',m.last_records['r'])
+            self.assertEqual('input_snapshot' in m.histories['r'][-1],not compact)
+            self.assertIn('r',m.summary()['robots'])
+
+
 if __name__=='__main__':unittest.main()

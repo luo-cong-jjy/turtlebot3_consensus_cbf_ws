@@ -2077,7 +2077,9 @@ class MPCSolverManager:
         if cfg.get('spatial_pass',False):record['spatial_pass']=dict(memory.get('spatial_summary',{}))
         if cfg.get('spatial_timeout_carry',False):record['spatial_timeout_carry']=timeout_carry
         if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
-        self.histories.setdefault(label,[]).append(record);self.last_records[label]=record
+        history_record=({k:v for k,v in record.items() if k!='input_snapshot'}
+            if cfg.get('compact_solver_history',False) else record)
+        self.histories.setdefault(label,[]).append(history_record);self.last_records[label]=record
         if best is None:
             raise RuntimeError(label+': no validated control within the current computation budget')
         best.update(success=converged,signature=signature,obstacle_count=len(obstacles))
