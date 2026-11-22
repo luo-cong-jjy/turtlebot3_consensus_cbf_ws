@@ -1,0 +1,2994 @@
+{
+  "tests": 263,
+  "actual_attempts": 10,
+  "actual_passed": 3,
+  "versions": {
+    "V1": {
+      "commit": "c4829decae342a0313c283fbb4497f0b2967b526",
+      "passed": 1,
+      "completed": 3,
+      "cases": {
+        "V1_head_on_211": {
+          "passed": true,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.08559641635278914,
+          "peer_proxy_gap": 0.06410155703544679,
+          "dynamic_proxy_gap": 0.18883086868703147,
+          "final_pair_error": 0.003312307683152952,
+          "maximum_recorded_ms": 91.17956401314586,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.08559641635278914,
+              "final_error": 0.0013911401226399177
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.1402675576642567,
+              "final_error": 0.00024412747933507702
+            },
+            "tb3_2": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.1331532740014305,
+              "final_error": 0.001199599764910603
+            },
+            "tb3_3": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.1257509142722011,
+              "final_error": 0.00012817334677072849
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14178662764905114,
+              "final_error": 0.0019222201146175371
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.004914262735150358,
+              "rows": 400,
+              "last_time": 39.977999999999994,
+              "statuses": {
+                "feasible_iterate": 102,
+                "validated_one_step": 12,
+                "ok": 286
+              },
+              "timing_p95_ms": 65.7820101128891,
+              "timing_max_ms": 91.17956401314586,
+              "final_error": 0.004914262735150358,
+              "dynamic_cycles": 262,
+              "max_estimated_speed": 0.07498246370809337
+            },
+            "1": {
+              "window_final_error": 0.0032062578636771716,
+              "rows": 400,
+              "last_time": 39.998000000000005,
+              "statuses": {
+                "feasible_iterate": 48,
+                "ok": 352
+              },
+              "timing_p95_ms": 63.05633399169892,
+              "timing_max_ms": 84.84853303525597,
+              "final_error": 0.0032062578636771716,
+              "dynamic_cycles": 261,
+              "max_estimated_speed": 0.12859810582365822
+            },
+            "2": {
+              "window_final_error": 0.004654558558623521,
+              "rows": 401,
+              "last_time": 40.012,
+              "statuses": {
+                "feasible_iterate": 73,
+                "ok": 328
+              },
+              "timing_p95_ms": 64.19777392875403,
+              "timing_max_ms": 84.0416660066694,
+              "final_error": 0.004654558558623521,
+              "dynamic_cycles": 299,
+              "max_estimated_speed": 0.09225290730707775
+            },
+            "3": {
+              "window_final_error": 0.003516678823878314,
+              "rows": 401,
+              "last_time": 40.038,
+              "statuses": {
+                "feasible_iterate": 71,
+                "ok": 330
+              },
+              "timing_p95_ms": 64.32685698382556,
+              "timing_max_ms": 86.9687320664525,
+              "final_error": 0.0036600149546451074,
+              "dynamic_cycles": 301,
+              "max_estimated_speed": 0.07224367221202932
+            },
+            "4": {
+              "window_final_error": 0.0015446176755174134,
+              "rows": 401,
+              "last_time": 40.05800000000001,
+              "statuses": {
+                "feasible_iterate": 39,
+                "ok": 362
+              },
+              "timing_p95_ms": 64.81550796888769,
+              "timing_max_ms": 77.38890696782619,
+              "final_error": 0.001519181433423487,
+              "dynamic_cycles": 258,
+              "max_estimated_speed": 0.09504445854149993
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2003,
+          "native_solves": 2003,
+          "setup_abstentions": 0,
+          "objective_certificates": 0,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 2003,
+              "uncertified_other_statuses": 0,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 400,
+                  "prior_plan_samples_audited": 383,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.009282831317155635,
+                  "max_plan_execution_error": 0.046694308673942614,
+                  "max_nominal_error_during_plan_samples": 0.9154835159903092
+                },
+                "1": {
+                  "rows": 400,
+                  "prior_plan_samples_audited": 398,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.003676460853698328,
+                  "max_plan_execution_error": 0.043372739888920674,
+                  "max_nominal_error_during_plan_samples": 0.34472560627818727
+                },
+                "2": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 395,
+                  "reference_quality_counts": {
+                    "0": 1,
+                    "2": 1,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.008882583563127234,
+                  "max_plan_execution_error": 0.044219812220425564,
+                  "max_nominal_error_during_plan_samples": 0.526801297273039
+                },
+                "3": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 398,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006543927424535882,
+                  "max_plan_execution_error": 0.04382500941337508,
+                  "max_nominal_error_during_plan_samples": 0.5584507260213845
+                },
+                "4": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0037455237956110794,
+                  "max_plan_execution_error": 0.04188227448599768,
+                  "max_nominal_error_during_plan_samples": 0.378887772838602
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1392,
+              "mvee_measurements": 193,
+              "geometry_only_circle_holds": 426,
+              "maximum_old_enclosure_excess": -0.001569282372324482,
+              "retained_prior_checks": 426,
+              "maximum_retained_prior_excess": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 8002,
+              "hard_regions": 2187,
+              "soft_regions": 1458,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 2187,
+              "direction_icons": 712,
+              "velocity_labels": 729,
+              "center_markers": 729,
+              "identical_local_selected_frames": 119,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2102,
+              "measurements": 1585,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1585,
+              "active_forecast_guards": 223,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": false,
+              "certificates": 0,
+              "applied": 0,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        },
+        "V1_oblique_crossing_211": {
+          "passed": false,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.026220330037308726,
+          "peer_proxy_gap": 0.05683554764432569,
+          "dynamic_proxy_gap": 0.18960547434813446,
+          "final_pair_error": 0.004348897385168629,
+          "maximum_recorded_ms": 108.6300821043551,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [
+                "total_standstill_within_measurement_tolerance",
+                "no_crawling_time_avoidance",
+                "no_fault_stop",
+                "spatial_detour_required_satisfied"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.026220330037308726,
+              "final_error": 0.003223044873069492
+            },
+            "tb3_1": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.14682624492717622,
+              "final_error": 0.006063562677985438
+            },
+            "tb3_2": {
+              "failed_checks": [
+                "no_crawling_time_avoidance",
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.06181724582046044,
+              "final_error": 0.006480322456082583
+            },
+            "tb3_3": {
+              "failed_checks": [
+                "total_standstill_within_measurement_tolerance",
+                "no_crawling_time_avoidance",
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.03880820492909054,
+              "final_error": 0.0021566199609751387
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.12874203186719857,
+              "final_error": 0.006115302544534956
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.0003675855944230259,
+              "rows": 402,
+              "last_time": 40.165,
+              "statuses": {
+                "solver_failed_stop": 1,
+                "validated_one_step": 13,
+                "ok": 220,
+                "feasible_iterate": 168
+              },
+              "timing_p95_ms": 86.37059678439982,
+              "timing_max_ms": 96.94783494342119,
+              "final_error": 0.00045824679385000444,
+              "dynamic_cycles": 261,
+              "max_estimated_speed": 0.11424703731717359
+            },
+            "1": {
+              "window_final_error": 0.003083810582361735,
+              "rows": 401,
+              "last_time": 40.08400000000001,
+              "statuses": {
+                "late_fallback_stop": 1,
+                "ok": 308,
+                "feasible_iterate": 92
+              },
+              "timing_p95_ms": 76.60735805984586,
+              "timing_max_ms": 108.6300821043551,
+              "final_error": 0.003274447645016711,
+              "dynamic_cycles": 234,
+              "max_estimated_speed": 0.17803082479424592
+            },
+            "2": {
+              "window_final_error": 0.0039475495581295945,
+              "rows": 402,
+              "last_time": 40.16100000000001,
+              "statuses": {
+                "validated_one_step": 3,
+                "late_fallback_stop": 1,
+                "ok": 276,
+                "feasible_iterate": 122
+              },
+              "timing_p95_ms": 83.4111672476865,
+              "timing_max_ms": 102.05498000141233,
+              "final_error": 0.0042548952810527035,
+              "dynamic_cycles": 260,
+              "max_estimated_speed": 0.12022487103678409
+            },
+            "3": {
+              "window_final_error": 0.0001936591789502414,
+              "rows": 402,
+              "last_time": 40.166000000000004,
+              "statuses": {
+                "late_fallback_stop": 2,
+                "ok": 242,
+                "feasible_iterate": 158
+              },
+              "timing_p95_ms": 83.70959134190343,
+              "timing_max_ms": 105.99271103274077,
+              "final_error": 0.0008453016589754484,
+              "dynamic_cycles": 254,
+              "max_estimated_speed": 0.1212985665936235
+            },
+            "4": {
+              "window_final_error": 0.0036532177049430157,
+              "rows": 401,
+              "last_time": 40.09799999999999,
+              "statuses": {
+                "ok": 274,
+                "feasible_iterate": 127
+              },
+              "timing_p95_ms": 66.53072196058929,
+              "timing_max_ms": 90.05678608082235,
+              "final_error": 0.0033342815686803894,
+              "dynamic_cycles": 276,
+              "max_estimated_speed": 0.11799721037940625
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2008,
+          "native_solves": 1983,
+          "setup_abstentions": 0,
+          "objective_certificates": 0,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 2003,
+              "uncertified_other_statuses": 5,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 387,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.00882833686976615,
+                  "max_plan_execution_error": 0.04190114910910766,
+                  "max_nominal_error_during_plan_samples": 0.7955572651905137
+                },
+                "1": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 395,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.002569220595703244,
+                  "max_plan_execution_error": 0.03792801120291624,
+                  "max_nominal_error_during_plan_samples": 0.20275867404554113
+                },
+                "2": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 380,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.005458792051877816,
+                  "max_plan_execution_error": 0.039509018406651546,
+                  "max_nominal_error_during_plan_samples": 0.23072626410999986
+                },
+                "3": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 399,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.00517732785184012,
+                  "max_plan_execution_error": 0.044048622205537076,
+                  "max_nominal_error_during_plan_samples": 0.5837047254368147
+                },
+                "4": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 387,
+                  "reference_quality_counts": {
+                    "2": 15,
+                    "1": 379,
+                    "3": 7
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.00774316138321538,
+                  "max_plan_execution_error": 0.05914830343808653,
+                  "max_nominal_error_during_plan_samples": 0.5377195305305283
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1253,
+              "mvee_measurements": 130,
+              "geometry_only_circle_holds": 365,
+              "maximum_old_enclosure_excess": -0.0014979946332904504,
+              "retained_prior_checks": 365,
+              "maximum_retained_prior_excess": 2.7755575615628914e-17,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 7259,
+              "hard_regions": 1983,
+              "soft_regions": 1322,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 1983,
+              "direction_icons": 649,
+              "velocity_labels": 661,
+              "center_markers": 661,
+              "identical_local_selected_frames": 111,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2066,
+              "measurements": 1383,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1383,
+              "active_forecast_guards": 166,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": false,
+              "certificates": 0,
+              "applied": 0,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        },
+        "V1_overtaking_211": {
+          "passed": false,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.12503016865522643,
+          "peer_proxy_gap": 0.09009926322586365,
+          "dynamic_proxy_gap": 0.1816112013675072,
+          "final_pair_error": 0.0032412355307118216,
+          "maximum_recorded_ms": 110.69912801031023,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.1455613740588424,
+              "final_error": 0.0041210210648752
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14544285372201182,
+              "final_error": 0.007362252750395903
+            },
+            "tb3_2": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.14663749073011534,
+              "final_error": 0.005109906295491815
+            },
+            "tb3_3": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.12503016865522643,
+              "final_error": 0.004838512160094918
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.13864998737089218,
+              "final_error": 0.005531947465033298
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.0006184998126995653,
+              "rows": 400,
+              "last_time": 39.984,
+              "statuses": {
+                "ok": 348,
+                "feasible_iterate": 51,
+                "late_fallback_stop": 1
+              },
+              "timing_p95_ms": 69.69976720865782,
+              "timing_max_ms": 109.76887797005475,
+              "final_error": 0.0006184998126995653,
+              "dynamic_cycles": 196,
+              "max_estimated_speed": 0.061409325817644314
+            },
+            "1": {
+              "window_final_error": 0.003810299965504527,
+              "rows": 401,
+              "last_time": 40.04500000000001,
+              "statuses": {
+                "ok": 382,
+                "feasible_iterate": 19
+              },
+              "timing_p95_ms": 59.939209022559226,
+              "timing_max_ms": 72.8658769512549,
+              "final_error": 0.003764827803624904,
+              "dynamic_cycles": 198,
+              "max_estimated_speed": 0.0944222750307293
+            },
+            "2": {
+              "window_final_error": 0.001761872190795221,
+              "rows": 400,
+              "last_time": 39.99399999999999,
+              "statuses": {
+                "ok": 355,
+                "feasible_iterate": 44,
+                "late_fallback_stop": 1
+              },
+              "timing_p95_ms": 71.15805824869308,
+              "timing_max_ms": 110.69912801031023,
+              "final_error": 0.001761872190795221,
+              "dynamic_cycles": 197,
+              "max_estimated_speed": 0.06691787768264208
+            },
+            "3": {
+              "window_final_error": 0.0014433819858870173,
+              "rows": 401,
+              "last_time": 40.02700000000001,
+              "statuses": {
+                "ok": 371,
+                "feasible_iterate": 30
+              },
+              "timing_p95_ms": 60.84877601824701,
+              "timing_max_ms": 86.97691897395998,
+              "final_error": 0.0012520705502787526,
+              "dynamic_cycles": 201,
+              "max_estimated_speed": 0.07070439142597196
+            },
+            "4": {
+              "window_final_error": 0.0018849335281134094,
+              "rows": 400,
+              "last_time": 39.99399999999999,
+              "statuses": {
+                "ok": 356,
+                "feasible_iterate": 44
+              },
+              "timing_p95_ms": 72.9952258639969,
+              "timing_max_ms": 93.20816502440721,
+              "final_error": 0.0018849335281134094,
+              "dynamic_cycles": 165,
+              "max_estimated_speed": 0.07877339494315004
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2002,
+          "native_solves": 1991,
+          "setup_abstentions": 0,
+          "objective_certificates": 0,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 2000,
+              "uncertified_other_statuses": 2,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 400,
+                  "prior_plan_samples_audited": 398,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.008470723383737144,
+                  "max_plan_execution_error": 0.04286724924146284,
+                  "max_nominal_error_during_plan_samples": 0.5471038002953352
+                },
+                "1": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.007062080427714702,
+                  "max_plan_execution_error": 0.04362573480478414,
+                  "max_nominal_error_during_plan_samples": 0.5251381887570453
+                },
+                "2": {
+                  "rows": 400,
+                  "prior_plan_samples_audited": 398,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006804344271720343,
+                  "max_plan_execution_error": 0.043710216260736644,
+                  "max_nominal_error_during_plan_samples": 0.54810838530348
+                },
+                "3": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006960969452054099,
+                  "max_plan_execution_error": 0.04358165447388189,
+                  "max_nominal_error_during_plan_samples": 0.5217644748601036
+                },
+                "4": {
+                  "rows": 400,
+                  "prior_plan_samples_audited": 399,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0070734297866429765,
+                  "max_plan_execution_error": 0.04371731765334392,
+                  "max_nominal_error_during_plan_samples": 0.5256720544670834
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1773,
+              "mvee_measurements": 153,
+              "geometry_only_circle_holds": 283,
+              "maximum_old_enclosure_excess": -0.0014127728159847863,
+              "retained_prior_checks": 283,
+              "maximum_retained_prior_excess": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 10022,
+              "hard_regions": 2739,
+              "soft_regions": 1826,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 2739,
+              "direction_icons": 892,
+              "velocity_labels": 913,
+              "center_markers": 913,
+              "identical_local_selected_frames": 160,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2071,
+              "measurements": 1926,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1926,
+              "active_forecast_guards": 168,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": false,
+              "certificates": 0,
+              "applied": 0,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        }
+      }
+    },
+    "V2": {
+      "commit": "0570f4e4afa3546cc62001a9c93b169568f13a8d",
+      "passed": 0,
+      "completed": 3,
+      "cases": {
+        "V1_head_on_211": {
+          "passed": false,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.045483865381705124,
+          "peer_proxy_gap": 0.04424975114493318,
+          "dynamic_proxy_gap": 0.20588448389018466,
+          "final_pair_error": 0.0035800050724753966,
+          "maximum_recorded_ms": 123.62589605618268,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [
+                "no_crawling_time_avoidance",
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.045483865381705124,
+              "final_error": 0.0014272188395712314
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14418668040382832,
+              "final_error": 0.004977734269946438
+            },
+            "tb3_2": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 4,
+              "min_rolling_speed": 0.13485189497372563,
+              "final_error": 0.00317644332770227
+            },
+            "tb3_3": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 2,
+              "min_rolling_speed": 0.08927163553193251,
+              "final_error": 0.002667409005650519
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.12803570113386797,
+              "final_error": 0.001678318461356034
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.0005591883077988991,
+              "rows": 401,
+              "last_time": 40.076,
+              "statuses": {
+                "validated_one_step": 7,
+                "ok": 231,
+                "late_fallback_stop": 1,
+                "feasible_iterate": 162
+              },
+              "timing_p95_ms": 73.2146300142631,
+              "timing_max_ms": 112.00535204261541,
+              "final_error": 0.0008781848562937027,
+              "dynamic_cycles": 276,
+              "max_estimated_speed": 0.07170417285362427
+            },
+            "1": {
+              "window_final_error": 0.004110168446298604,
+              "rows": 401,
+              "last_time": 40.101000000000006,
+              "statuses": {
+                "solver_failed_stop": 1,
+                "ok": 205,
+                "feasible_iterate": 195
+              },
+              "timing_p95_ms": 61.17859098594636,
+              "timing_max_ms": 101.38433193787932,
+              "final_error": 0.004244518446234673,
+              "dynamic_cycles": 272,
+              "max_estimated_speed": 0.1327680605634996
+            },
+            "2": {
+              "window_final_error": 0.0020057843405036375,
+              "rows": 401,
+              "last_time": 40.085,
+              "statuses": {
+                "validated_one_step": 3,
+                "ok": 249,
+                "late_fallback_stop": 4,
+                "feasible_iterate": 145
+              },
+              "timing_p95_ms": 75.06415597163141,
+              "timing_max_ms": 123.62589605618268,
+              "final_error": 0.0027866249432099313,
+              "dynamic_cycles": 286,
+              "max_estimated_speed": 0.10454389254887947
+            },
+            "3": {
+              "window_final_error": 0.00188374302586824,
+              "rows": 401,
+              "last_time": 40.089000000000006,
+              "statuses": {
+                "validated_one_step": 4,
+                "ok": 251,
+                "solver_failed_stop": 2,
+                "feasible_iterate": 144
+              },
+              "timing_p95_ms": 70.83108799997717,
+              "timing_max_ms": 98.6077981069684,
+              "final_error": 0.001965219810070425,
+              "dynamic_cycles": 287,
+              "max_estimated_speed": 0.07619930666665344
+            },
+            "4": {
+              "window_final_error": 0.000673953558295846,
+              "rows": 401,
+              "last_time": 40.046,
+              "statuses": {
+                "ok": 262,
+                "feasible_iterate": 139
+              },
+              "timing_p95_ms": 63.251815969124436,
+              "timing_max_ms": 102.2026619175449,
+              "final_error": 0.0007543155815586004,
+              "dynamic_cycles": 246,
+              "max_estimated_speed": 0.08603005488513137
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2005,
+          "native_solves": 1409,
+          "setup_abstentions": 0,
+          "objective_certificates": 536,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 1997,
+              "uncertified_other_statuses": 8,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 392,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.010526500915617337,
+                  "max_plan_execution_error": 0.04647420489433221,
+                  "max_nominal_error_during_plan_samples": 1.0233305358140519
+                },
+                "1": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 392,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0039975687691250076,
+                  "max_plan_execution_error": 0.04359293379594018,
+                  "max_nominal_error_during_plan_samples": 0.3524834661718614
+                },
+                "2": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 393,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0085560098162641,
+                  "max_plan_execution_error": 0.04381974319499723,
+                  "max_nominal_error_during_plan_samples": 0.5781050844704619
+                },
+                "3": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 393,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.005788764092167299,
+                  "max_plan_execution_error": 0.04388257715577454,
+                  "max_nominal_error_during_plan_samples": 0.46962410148349004
+                },
+                "4": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.004026316713010428,
+                  "max_plan_execution_error": 0.04352596155385724,
+                  "max_nominal_error_during_plan_samples": 0.3452847517817501
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1320,
+              "mvee_measurements": 217,
+              "geometry_only_circle_holds": 372,
+              "maximum_old_enclosure_excess": -0.0018504455081444215,
+              "retained_prior_checks": 372,
+              "maximum_retained_prior_excess": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 8046,
+              "hard_regions": 2199,
+              "soft_regions": 1466,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 2199,
+              "direction_icons": 716,
+              "velocity_labels": 733,
+              "center_markers": 733,
+              "identical_local_selected_frames": 122,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2082,
+              "measurements": 1537,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1537,
+              "active_forecast_guards": 258,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": true,
+              "certificates": 536,
+              "applied": 536,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 3.469446951953614e-17,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        },
+        "V1_oblique_crossing_211": {
+          "passed": false,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.015166607765461304,
+          "peer_proxy_gap": 0.05828429979768879,
+          "dynamic_proxy_gap": 0.17160386090798213,
+          "final_pair_error": 0.0038184853232054324,
+          "maximum_recorded_ms": 135.41891903150827,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [
+                "no_sustained_standstill",
+                "total_standstill_within_measurement_tolerance",
+                "no_crawling_time_avoidance",
+                "no_fault_stop",
+                "spatial_detour_required_satisfied"
+              ],
+              "faults": 9,
+              "min_rolling_speed": 0.015166607765461304,
+              "final_error": 0.0025090509825924957
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14701855092577443,
+              "final_error": 0.0014305511049431737
+            },
+            "tb3_2": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.13052628173481295,
+              "final_error": 0.0014063531019445727
+            },
+            "tb3_3": {
+              "failed_checks": [
+                "no_sustained_standstill",
+                "total_standstill_within_measurement_tolerance",
+                "no_crawling_time_avoidance",
+                "no_fault_stop"
+              ],
+              "faults": 6,
+              "min_rolling_speed": 0.02982761031498926,
+              "final_error": 0.0020548005459955026
+            },
+            "tb3_4": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 5,
+              "min_rolling_speed": 0.09927246440297233,
+              "final_error": 0.0005838651844915182
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.003864434162320675,
+              "rows": 402,
+              "last_time": 40.146,
+              "statuses": {
+                "solver_failed_stop": 7,
+                "ok": 229,
+                "validated_one_step": 17,
+                "late_fallback_stop": 3,
+                "feasible_iterate": 146
+              },
+              "timing_p95_ms": 86.3218912912998,
+              "timing_max_ms": 114.51715708244592,
+              "final_error": 0.00417908502030871,
+              "dynamic_cycles": 267,
+              "max_estimated_speed": 0.12267988336523851
+            },
+            "1": {
+              "window_final_error": 0.003583748702057393,
+              "rows": 402,
+              "last_time": 40.168000000000006,
+              "statuses": {
+                "ok": 146,
+                "feasible_iterate": 256
+              },
+              "timing_p95_ms": 65.69085167138837,
+              "timing_max_ms": 105.60077906120569,
+              "final_error": 0.0019964569652868446,
+              "dynamic_cycles": 230,
+              "max_estimated_speed": 0.14091676208795334
+            },
+            "2": {
+              "window_final_error": 0.0004955257254888114,
+              "rows": 402,
+              "last_time": 40.162000000000006,
+              "statuses": {
+                "ok": 209,
+                "feasible_iterate": 192,
+                "validated_one_step": 1
+              },
+              "timing_p95_ms": 67.57675713161004,
+              "timing_max_ms": 89.89030204247683,
+              "final_error": 0.001045063736396316,
+              "dynamic_cycles": 243,
+              "max_estimated_speed": 0.15881813277649298
+            },
+            "3": {
+              "window_final_error": 0.004293568953174544,
+              "rows": 402,
+              "last_time": 40.146,
+              "statuses": {
+                "ok": 249,
+                "late_fallback_stop": 6,
+                "feasible_iterate": 143,
+                "validated_one_step": 4
+              },
+              "timing_p95_ms": 84.24337207688949,
+              "timing_max_ms": 135.41891903150827,
+              "final_error": 0.002054028793571463,
+              "dynamic_cycles": 258,
+              "max_estimated_speed": 0.12978639020936128
+            },
+            "4": {
+              "window_final_error": 0.0007251331349692624,
+              "rows": 402,
+              "last_time": 40.128,
+              "statuses": {
+                "ok": 245,
+                "late_fallback_stop": 5,
+                "feasible_iterate": 150,
+                "validated_one_step": 2
+              },
+              "timing_p95_ms": 86.77878712187521,
+              "timing_max_ms": 121.97504891082644,
+              "final_error": 0.0009502078662230096,
+              "dynamic_cycles": 281,
+              "max_estimated_speed": 0.11926237629738946
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2010,
+          "native_solves": 1345,
+          "setup_abstentions": 0,
+          "objective_certificates": 585,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 1989,
+              "uncertified_other_statuses": 21,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 367,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.009844562341656241,
+                  "max_plan_execution_error": 0.04198086441247452,
+                  "max_nominal_error_during_plan_samples": 1.005798231624837
+                },
+                "1": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 397,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0004113942171169807,
+                  "max_plan_execution_error": 0.01824129121364026,
+                  "max_nominal_error_during_plan_samples": 0.05141257888135427
+                },
+                "2": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 398,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.002738383587979893,
+                  "max_plan_execution_error": 0.036187818017320274,
+                  "max_nominal_error_during_plan_samples": 0.18197506771758146
+                },
+                "3": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 388,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.00718413404646452,
+                  "max_plan_execution_error": 0.043897161921381385,
+                  "max_nominal_error_during_plan_samples": 0.8907107467884335
+                },
+                "4": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 394,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.005797176255059798,
+                  "max_plan_execution_error": 0.044080933253184,
+                  "max_nominal_error_during_plan_samples": 0.5383719879312684
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1230,
+              "mvee_measurements": 134,
+              "geometry_only_circle_holds": 304,
+              "maximum_old_enclosure_excess": -0.0017312132974218464,
+              "retained_prior_checks": 304,
+              "maximum_retained_prior_excess": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 7195,
+              "hard_regions": 1965,
+              "soft_regions": 1310,
+              "maximum_numeric_error": 1.887379141862766e-15,
+              "prediction_envelopes": 1965,
+              "direction_icons": 645,
+              "velocity_labels": 655,
+              "center_markers": 655,
+              "identical_local_selected_frames": 113,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2065,
+              "measurements": 1364,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1364,
+              "active_forecast_guards": 166,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": true,
+              "certificates": 585,
+              "applied": 585,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 3.469446951953614e-17,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        },
+        "V1_overtaking_211": {
+          "passed": false,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.08672234598234052,
+          "peer_proxy_gap": 0.10982377598631676,
+          "dynamic_proxy_gap": 0.18643333663930417,
+          "final_pair_error": 0.0043308313161331885,
+          "maximum_recorded_ms": 112.16382205020636,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.1252909054344047,
+              "final_error": 0.00121848011783293
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14617770890532888,
+              "final_error": 0.004022473847674052
+            },
+            "tb3_2": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14824955103102777,
+              "final_error": 0.00285664487279017
+            },
+            "tb3_3": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 3,
+              "min_rolling_speed": 0.08672234598234052,
+              "final_error": 0.005547865875120781
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14455014701299929,
+              "final_error": 0.0022623871794359763
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.0003263287264423855,
+              "rows": 401,
+              "last_time": 40.073,
+              "statuses": {
+                "feasible_iterate": 201,
+                "late_fallback_stop": 1,
+                "ok": 196,
+                "validated_one_step": 3
+              },
+              "timing_p95_ms": 68.55185597669333,
+              "timing_max_ms": 112.16382205020636,
+              "final_error": 0.00022110171702642816,
+              "dynamic_cycles": 190,
+              "max_estimated_speed": 0.06332344213824623
+            },
+            "1": {
+              "window_final_error": 0.0021850564889421124,
+              "rows": 401,
+              "last_time": 40.05700000000001,
+              "statuses": {
+                "feasible_iterate": 213,
+                "ok": 188
+              },
+              "timing_p95_ms": 73.48233996890485,
+              "timing_max_ms": 96.13322897348553,
+              "final_error": 0.002626313022971121,
+              "dynamic_cycles": 200,
+              "max_estimated_speed": 0.0890429471215289
+            },
+            "2": {
+              "window_final_error": 0.0011787165220757193,
+              "rows": 401,
+              "last_time": 40.01500000000001,
+              "statuses": {
+                "feasible_iterate": 168,
+                "ok": 232,
+                "validated_one_step": 1
+              },
+              "timing_p95_ms": 66.64522492792457,
+              "timing_max_ms": 89.77866906207055,
+              "final_error": 0.0014993714802244585,
+              "dynamic_cycles": 195,
+              "max_estimated_speed": 0.0643763611704003
+            },
+            "3": {
+              "window_final_error": 0.003577999887443867,
+              "rows": 401,
+              "last_time": 40.07,
+              "statuses": {
+                "feasible_iterate": 172,
+                "late_fallback_stop": 3,
+                "ok": 226
+              },
+              "timing_p95_ms": 87.02834707219154,
+              "timing_max_ms": 110.87203701026738,
+              "final_error": 0.0044023817215867265,
+              "dynamic_cycles": 227,
+              "max_estimated_speed": 0.06095182487662345
+            },
+            "4": {
+              "window_final_error": 0.0003074151247326298,
+              "rows": 401,
+              "last_time": 40.01199999999999,
+              "statuses": {
+                "feasible_iterate": 158,
+                "ok": 243
+              },
+              "timing_p95_ms": 63.65816493052989,
+              "timing_max_ms": 106.9950358942151,
+              "final_error": 0.000903249533965383,
+              "dynamic_cycles": 206,
+              "max_estimated_speed": 0.08003428311523746
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2005,
+          "native_solves": 1353,
+          "setup_abstentions": 0,
+          "objective_certificates": 579,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 2001,
+              "uncertified_other_statuses": 4,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 396,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.008027399568592046,
+                  "max_plan_execution_error": 0.04239544329394808,
+                  "max_nominal_error_during_plan_samples": 0.5443085318506286
+                },
+                "1": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 399,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.007016151072430974,
+                  "max_plan_execution_error": 0.04393813415274889,
+                  "max_nominal_error_during_plan_samples": 0.5309803407315165
+                },
+                "2": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 399,
+                  "reference_quality_counts": {
+                    "2": 4,
+                    "1": 374,
+                    "3": 23
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0068121409061301106,
+                  "max_plan_execution_error": 0.04376820766954401,
+                  "max_nominal_error_during_plan_samples": 0.5721204152600267
+                },
+                "3": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 373,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.00850065176072264,
+                  "max_plan_execution_error": 0.044047808644778585,
+                  "max_nominal_error_during_plan_samples": 0.5456414633248918
+                },
+                "4": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 397,
+                    "3": 2
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006763668285751749,
+                  "max_plan_execution_error": 0.043963711283385644,
+                  "max_nominal_error_during_plan_samples": 0.5279723583653063
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1767,
+              "mvee_measurements": 159,
+              "geometry_only_circle_holds": 302,
+              "maximum_old_enclosure_excess": -0.0016161233605772873,
+              "retained_prior_checks": 302,
+              "maximum_retained_prior_excess": 2.7755575615628914e-17,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 10101,
+              "hard_regions": 2760,
+              "soft_regions": 1840,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 2760,
+              "direction_icons": 901,
+              "velocity_labels": 920,
+              "center_markers": 920,
+              "identical_local_selected_frames": 161,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2058,
+              "measurements": 1926,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1926,
+              "active_forecast_guards": 171,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": true,
+              "certificates": 579,
+              "applied": 579,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 3.469446951953614e-17,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        }
+      }
+    },
+    "V3": {
+      "commit": "939824057785f1e879c3b8c8af8f5c7089b64acb",
+      "passed": 1,
+      "completed": 3,
+      "cases": {
+        "V1_head_on_211": {
+          "passed": false,
+          "base_passed": false,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.010693254103106398,
+          "peer_proxy_gap": 0.04496652136994228,
+          "dynamic_proxy_gap": 0.13051239494437833,
+          "final_pair_error": 0.6921437610620077,
+          "maximum_recorded_ms": 130.35041699185967,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [
+                "no_sustained_standstill",
+                "total_standstill_within_measurement_tolerance",
+                "no_crawling_time_avoidance",
+                "tracking_recovered",
+                "no_fault_stop"
+              ],
+              "faults": 10,
+              "min_rolling_speed": 0.010693254103106398,
+              "final_error": 0.6898155742897041
+            },
+            "tb3_1": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 2,
+              "min_rolling_speed": 0.13538817453538066,
+              "final_error": 0.002332529797218333
+            },
+            "tb3_2": {
+              "failed_checks": [
+                "no_crawling_time_avoidance",
+                "no_fault_stop"
+              ],
+              "faults": 8,
+              "min_rolling_speed": 0.06902021048339169,
+              "final_error": 0.06191793836439478
+            },
+            "tb3_3": {
+              "failed_checks": [
+                "no_crawling_time_avoidance",
+                "no_fault_stop"
+              ],
+              "faults": 3,
+              "min_rolling_speed": 0.04137761489228464,
+              "final_error": 0.12447954300793479
+            },
+            "tb3_4": {
+              "failed_checks": [
+                "no_fault_stop"
+              ],
+              "faults": 1,
+              "min_rolling_speed": 0.1274851264658512,
+              "final_error": 0.0016294033211049015
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.6892641042616393,
+              "rows": 401,
+              "last_time": 40.108,
+              "statuses": {
+                "ok": 225,
+                "solver_failed_stop": 11,
+                "validated_one_step": 31,
+                "feasible_iterate": 134
+              },
+              "timing_p95_ms": 64.23754896968603,
+              "timing_max_ms": 104.94650702457875,
+              "final_error": 0.6825537815751223,
+              "dynamic_cycles": 299,
+              "max_estimated_speed": 0.07658005998158174
+            },
+            "1": {
+              "window_final_error": 0.003254301813446097,
+              "rows": 401,
+              "last_time": 40.07,
+              "statuses": {
+                "ok": 261,
+                "validated_one_step": 1,
+                "feasible_iterate": 135,
+                "late_fallback_stop": 4
+              },
+              "timing_p95_ms": 75.24122495669872,
+              "timing_max_ms": 124.7063500341028,
+              "final_error": 0.0033392997249511356,
+              "dynamic_cycles": 240,
+              "max_estimated_speed": 0.0796140908009377
+            },
+            "2": {
+              "window_final_error": 0.06321263489528142,
+              "rows": 401,
+              "last_time": 40.089999999999996,
+              "statuses": {
+                "ok": 159,
+                "validated_one_step": 26,
+                "solver_failed_stop": 9,
+                "feasible_iterate": 207
+              },
+              "timing_p95_ms": 83.30792002379894,
+              "timing_max_ms": 130.35041699185967,
+              "final_error": 0.05786127141857189,
+              "dynamic_cycles": 292,
+              "max_estimated_speed": 0.0710543994993666
+            },
+            "3": {
+              "window_final_error": 0.12421350434842704,
+              "rows": 401,
+              "last_time": 40.097,
+              "statuses": {
+                "ok": 225,
+                "validated_one_step": 25,
+                "solver_failed_stop": 3,
+                "feasible_iterate": 148
+              },
+              "timing_p95_ms": 74.01545799802989,
+              "timing_max_ms": 110.58185494039208,
+              "final_error": 0.12481571211459587,
+              "dynamic_cycles": 249,
+              "max_estimated_speed": 0.08452919790358539
+            },
+            "4": {
+              "window_final_error": 0.002525777400299364,
+              "rows": 401,
+              "last_time": 40.10399999999999,
+              "statuses": {
+                "ok": 293,
+                "validated_one_step": 6,
+                "solver_failed_stop": 1,
+                "feasible_iterate": 101
+              },
+              "timing_p95_ms": 65.08284492883831,
+              "timing_max_ms": 123.98451392073184,
+              "final_error": 0.002552254375445191,
+              "dynamic_cycles": 235,
+              "max_estimated_speed": 0.07213179648817332
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2005,
+          "native_solves": 1633,
+          "setup_abstentions": 90,
+          "objective_certificates": 0,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 1977,
+              "uncertified_other_statuses": 28,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 358,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 397,
+                    "3": 2
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.01484210915719795,
+                  "max_plan_execution_error": 0.04692154568318141,
+                  "max_nominal_error_during_plan_samples": 1.3203450133820025
+                },
+                "1": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 393,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.003773644614454744,
+                  "max_plan_execution_error": 0.04337005355400764,
+                  "max_nominal_error_during_plan_samples": 0.34684678220930043
+                },
+                "2": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 348,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 399
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.007936755543256433,
+                  "max_plan_execution_error": 0.050408271510534904,
+                  "max_nominal_error_during_plan_samples": 0.446378118126367
+                },
+                "3": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 372,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 398,
+                    "3": 1
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.011747040290763028,
+                  "max_plan_execution_error": 0.04236322083681766,
+                  "max_nominal_error_during_plan_samples": 0.43497964155035734
+                },
+                "4": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 393,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 398,
+                    "3": 1
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.003957238208807321,
+                  "max_plan_execution_error": 0.04069365474458361,
+                  "max_nominal_error_during_plan_samples": 0.3498799575532006
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1269,
+              "mvee_measurements": 299,
+              "geometry_only_circle_holds": 342,
+              "maximum_old_enclosure_excess": -0.002420010700344144,
+              "retained_prior_checks": 342,
+              "maximum_retained_prior_excess": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 8260,
+              "hard_regions": 2259,
+              "soft_regions": 1506,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 2259,
+              "direction_icons": 730,
+              "velocity_labels": 753,
+              "center_markers": 753,
+              "identical_local_selected_frames": 133,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2080,
+              "measurements": 1568,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1568,
+              "active_forecast_guards": 342,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": false,
+              "certificates": 0,
+              "applied": 0,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        },
+        "V1_oblique_crossing_211": {
+          "passed": false,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.01829908779877365,
+          "peer_proxy_gap": 0.06598528660763969,
+          "dynamic_proxy_gap": 0.18158655464414541,
+          "final_pair_error": 0.0022894224500728273,
+          "maximum_recorded_ms": 110.10500602424145,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [
+                "no_sustained_standstill",
+                "total_standstill_within_measurement_tolerance",
+                "no_crawling_time_avoidance",
+                "no_fault_stop"
+              ],
+              "faults": 3,
+              "min_rolling_speed": 0.01829908779877365,
+              "final_error": 0.0025603150400513707
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.12703040852795322,
+              "final_error": 0.00027180249745589594
+            },
+            "tb3_2": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.12138368362716201,
+              "final_error": 0.0015522397604774293
+            },
+            "tb3_3": {
+              "failed_checks": [
+                "no_crawling_time_avoidance"
+              ],
+              "faults": 0,
+              "min_rolling_speed": 0.0543473744640286,
+              "final_error": 0.001502263859331503
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.11674834072620954,
+              "final_error": 0.0008882825556361844
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.0002920206606054765,
+              "rows": 401,
+              "last_time": 40.1,
+              "statuses": {
+                "validated_one_step": 26,
+                "ok": 219,
+                "feasible_iterate": 153,
+                "solver_failed_stop": 3
+              },
+              "timing_p95_ms": 58.96950303576887,
+              "timing_max_ms": 110.10500602424145,
+              "final_error": 0.00028236035292529766,
+              "dynamic_cycles": 255,
+              "max_estimated_speed": 0.11415896477250446
+            },
+            "1": {
+              "window_final_error": 0.002697534339135984,
+              "rows": 402,
+              "last_time": 40.12,
+              "statuses": {
+                "validated_one_step": 1,
+                "ok": 361,
+                "feasible_iterate": 40
+              },
+              "timing_p95_ms": 53.40644464595243,
+              "timing_max_ms": 83.62382301129401,
+              "final_error": 0.002710571235008003,
+              "dynamic_cycles": 244,
+              "max_estimated_speed": 0.12349017397150693
+            },
+            "2": {
+              "window_final_error": 0.0013061479861745532,
+              "rows": 402,
+              "last_time": 40.141,
+              "statuses": {
+                "validated_one_step": 1,
+                "ok": 369,
+                "feasible_iterate": 32
+              },
+              "timing_p95_ms": 51.69853703700937,
+              "timing_max_ms": 86.21568500529975,
+              "final_error": 0.0012281020632741461,
+              "dynamic_cycles": 241,
+              "max_estimated_speed": 0.18406010359662103
+            },
+            "3": {
+              "window_final_error": 0.0022196642416747667,
+              "rows": 401,
+              "last_time": 40.103,
+              "statuses": {
+                "validated_one_step": 5,
+                "ok": 244,
+                "feasible_iterate": 152
+              },
+              "timing_p95_ms": 56.34197499603033,
+              "timing_max_ms": 87.94748701620847,
+              "final_error": 0.00087819024492596,
+              "dynamic_cycles": 262,
+              "max_estimated_speed": 0.12353155221986681
+            },
+            "4": {
+              "window_final_error": 0.0019949932112907987,
+              "rows": 401,
+              "last_time": 40.07999999999999,
+              "statuses": {
+                "validated_one_step": 2,
+                "ok": 334,
+                "feasible_iterate": 65
+              },
+              "timing_p95_ms": 65.66857604775578,
+              "timing_max_ms": 85.65508807078004,
+              "final_error": 0.001770349741991747,
+              "dynamic_cycles": 277,
+              "max_estimated_speed": 0.12170884046689046
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2007,
+          "native_solves": 1890,
+          "setup_abstentions": 33,
+          "objective_certificates": 0,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 2004,
+              "uncertified_other_statuses": 3,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 371,
+                  "reference_quality_counts": {
+                    "2": 14,
+                    "1": 200,
+                    "3": 187
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.004234412152441246,
+                  "max_plan_execution_error": 0.031661530441171905,
+                  "max_nominal_error_during_plan_samples": 0.6712703402799236
+                },
+                "1": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 399,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0028604620966710625,
+                  "max_plan_execution_error": 0.03959665740474992,
+                  "max_nominal_error_during_plan_samples": 0.2594922379475621
+                },
+                "2": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.004602420419245628,
+                  "max_plan_execution_error": 0.03839836561837567,
+                  "max_nominal_error_during_plan_samples": 0.27044284634882476
+                },
+                "3": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 392,
+                  "reference_quality_counts": {
+                    "2": 5,
+                    "1": 396
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.008736589085165643,
+                  "max_plan_execution_error": 0.04531999843671677,
+                  "max_nominal_error_during_plan_samples": 0.6663201438534837
+                },
+                "4": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 398,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006987089049931163,
+                  "max_plan_execution_error": 0.04362028076139143,
+                  "max_nominal_error_during_plan_samples": 0.5440560427865244
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1251,
+              "mvee_measurements": 123,
+              "geometry_only_circle_holds": 315,
+              "maximum_old_enclosure_excess": -0.0013954546881809748,
+              "retained_prior_checks": 315,
+              "maximum_retained_prior_excess": 1.3877787807814457e-16,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 7094,
+              "hard_regions": 1938,
+              "soft_regions": 1292,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 1938,
+              "direction_icons": 634,
+              "velocity_labels": 646,
+              "center_markers": 646,
+              "identical_local_selected_frames": 109,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2093,
+              "measurements": 1374,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1374,
+              "active_forecast_guards": 181,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": false,
+              "certificates": 0,
+              "applied": 0,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        },
+        "V1_overtaking_211": {
+          "passed": true,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.121037944047241,
+          "peer_proxy_gap": 0.11705559801826632,
+          "dynamic_proxy_gap": 0.19533820126763984,
+          "final_pair_error": 0.0028610865563855753,
+          "maximum_recorded_ms": 85.13655501883477,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.121037944047241,
+              "final_error": 0.00674707633994391
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14454984793849235,
+              "final_error": 0.004701375320781991
+            },
+            "tb3_2": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.1478931643353092,
+              "final_error": 0.003887738761252097
+            },
+            "tb3_3": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14706943853031573,
+              "final_error": 0.004865065759843315
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14367884814663334,
+              "final_error": 0.0041688326097182975
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.005621110647628904,
+              "rows": 401,
+              "last_time": 40.092000000000006,
+              "statuses": {
+                "ok": 299,
+                "feasible_iterate": 101,
+                "validated_one_step": 1
+              },
+              "timing_p95_ms": 52.38647200167179,
+              "timing_max_ms": 85.13655501883477,
+              "final_error": 0.005182115402010586,
+              "dynamic_cycles": 211,
+              "max_estimated_speed": 0.061692929203700196
+            },
+            "1": {
+              "window_final_error": 0.0033673906143489103,
+              "rows": 402,
+              "last_time": 40.11199999999999,
+              "statuses": {
+                "ok": 396,
+                "feasible_iterate": 6
+              },
+              "timing_p95_ms": 49.99941952992231,
+              "timing_max_ms": 59.23516501206905,
+              "final_error": 0.0033140015392508645,
+              "dynamic_cycles": 186,
+              "max_estimated_speed": 0.07576488131430698
+            },
+            "2": {
+              "window_final_error": 0.0030060672368033272,
+              "rows": 402,
+              "last_time": 40.142999999999994,
+              "statuses": {
+                "ok": 400,
+                "feasible_iterate": 2
+              },
+              "timing_p95_ms": 43.52532242774032,
+              "timing_max_ms": 56.1068479437381,
+              "final_error": 0.0023314073276676957,
+              "dynamic_cycles": 196,
+              "max_estimated_speed": 0.059465545530892505
+            },
+            "3": {
+              "window_final_error": 0.003979143392412567,
+              "rows": 401,
+              "last_time": 40.076,
+              "statuses": {
+                "ok": 390,
+                "feasible_iterate": 11
+              },
+              "timing_p95_ms": 54.143736022524536,
+              "timing_max_ms": 71.00077299401164,
+              "final_error": 0.003335019378541361,
+              "dynamic_cycles": 207,
+              "max_estimated_speed": 0.08102615675406483
+            },
+            "4": {
+              "window_final_error": 0.0030764479221581844,
+              "rows": 401,
+              "last_time": 40.073,
+              "statuses": {
+                "ok": 388,
+                "feasible_iterate": 13
+              },
+              "timing_p95_ms": 48.1830780627206,
+              "timing_max_ms": 80.13687503989786,
+              "final_error": 0.0025727811780861167,
+              "dynamic_cycles": 210,
+              "max_estimated_speed": 0.08548382719554652
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2007,
+          "native_solves": 1997,
+          "setup_abstentions": 2,
+          "objective_certificates": 0,
+          "gc": {},
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 2007,
+              "uncertified_other_statuses": 0,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 399,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.00847083048647373,
+                  "max_plan_execution_error": 0.0512874967152496,
+                  "max_nominal_error_during_plan_samples": 0.5266540141569872
+                },
+                "1": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 401,
+                  "reference_quality_counts": {
+                    "0": 1,
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.007143339136445595,
+                  "max_plan_execution_error": 0.043783907688976394,
+                  "max_nominal_error_during_plan_samples": 0.5300884458594514
+                },
+                "2": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 401,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.0070081770444178,
+                  "max_plan_execution_error": 0.04366167917214703,
+                  "max_nominal_error_during_plan_samples": 0.5691625766262275
+                },
+                "3": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.007224527344508945,
+                  "max_plan_execution_error": 0.043792951700079345,
+                  "max_nominal_error_during_plan_samples": 0.6155454805920209
+                },
+                "4": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006904522757921925,
+                  "max_plan_execution_error": 0.04360402440966151,
+                  "max_nominal_error_during_plan_samples": 0.5296048398023447
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1770,
+              "mvee_measurements": 156,
+              "geometry_only_circle_holds": 287,
+              "maximum_old_enclosure_excess": -0.0014048569372331343,
+              "retained_prior_checks": 287,
+              "maximum_retained_prior_excess": 2.7755575615628914e-17,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 10056,
+              "hard_regions": 2748,
+              "soft_regions": 1832,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 2748,
+              "direction_icons": 896,
+              "velocity_labels": 916,
+              "center_markers": 916,
+              "identical_local_selected_frames": 160,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2084,
+              "measurements": 1926,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1926,
+              "active_forecast_guards": 169,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": false,
+              "certificates": 0,
+              "applied": 0,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        }
+      }
+    },
+    "V4": {
+      "commit": "4eec2d64fb7534bfeaeca833c154f62fdb9a1164",
+      "passed": 1,
+      "completed": 1,
+      "cases": {
+        "V1_overtaking_211": {
+          "passed": true,
+          "base_passed": true,
+          "failure": null,
+          "source_matches_commit": true,
+          "minimum_rolling_speed": 0.12644052082570711,
+          "peer_proxy_gap": 0.11366220887086192,
+          "dynamic_proxy_gap": 0.18978637632413276,
+          "final_pair_error": 0.004230425929486787,
+          "maximum_recorded_ms": 95.00896802637726,
+          "robots": {
+            "tb3_0": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.12644052082570711,
+              "final_error": 0.0038115361077608653
+            },
+            "tb3_1": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.1423504412847474,
+              "final_error": 0.0006755862482731206
+            },
+            "tb3_2": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.1298435825909956,
+              "final_error": 0.0013991126400048222
+            },
+            "tb3_3": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.1320934606725408,
+              "final_error": 0.0015804783139209556
+            },
+            "tb3_4": {
+              "failed_checks": [],
+              "faults": 0,
+              "min_rolling_speed": 0.14373517419411241,
+              "final_error": 0.004902447847894772
+            }
+          },
+          "timing": {
+            "0": {
+              "window_final_error": 0.0033923960832474578,
+              "rows": 401,
+              "last_time": 40.084999999999994,
+              "statuses": {
+                "ok": 396,
+                "feasible_iterate": 5
+              },
+              "timing_p95_ms": 56.34451995138079,
+              "timing_max_ms": 72.39159499295056,
+              "final_error": 0.0034100592809334944,
+              "dynamic_cycles": 219,
+              "max_estimated_speed": 0.06138356930283787
+            },
+            "1": {
+              "window_final_error": 0.00022430204582835615,
+              "rows": 401,
+              "last_time": 40.098,
+              "statuses": {
+                "ok": 389,
+                "feasible_iterate": 12
+              },
+              "timing_p95_ms": 55.64644897822291,
+              "timing_max_ms": 66.08510203659534,
+              "final_error": 0.000306778531979513,
+              "dynamic_cycles": 169,
+              "max_estimated_speed": 0.0743640862643635
+            },
+            "2": {
+              "window_final_error": 0.000863777256906758,
+              "rows": 402,
+              "last_time": 40.11800000000001,
+              "statuses": {
+                "ok": 396,
+                "feasible_iterate": 6
+              },
+              "timing_p95_ms": 52.26872425992042,
+              "timing_max_ms": 95.00896802637726,
+              "final_error": 0.0010717311610914059,
+              "dynamic_cycles": 221,
+              "max_estimated_speed": 0.05945277807141147
+            },
+            "3": {
+              "window_final_error": 0.001283633073052005,
+              "rows": 402,
+              "last_time": 40.13799999999999,
+              "statuses": {
+                "ok": 397,
+                "feasible_iterate": 5
+              },
+              "timing_p95_ms": 48.56830516946502,
+              "timing_max_ms": 88.51881395094097,
+              "final_error": 0.0011597383668564534,
+              "dynamic_cycles": 242,
+              "max_estimated_speed": 0.06450646534987377
+            },
+            "4": {
+              "window_final_error": 0.004475882612907059,
+              "rows": 402,
+              "last_time": 40.158,
+              "statuses": {
+                "ok": 397,
+                "feasible_iterate": 5
+              },
+              "timing_p95_ms": 52.26128439535384,
+              "timing_max_ms": 67.35808902885765,
+              "final_error": 0.00448936086040774,
+              "dynamic_cycles": 182,
+              "max_estimated_speed": 0.07760351603434779
+            }
+          },
+          "own_scan_only": true,
+          "no_truth_input": true,
+          "trace_rows": 2008,
+          "native_solves": 2007,
+          "setup_abstentions": 0,
+          "objective_certificates": 0,
+          "gc": {
+            "tb3_4_gc_intervals": {
+              "enabled": true,
+              "thresholds": [
+                700,
+                10,
+                10
+              ],
+              "events": 154,
+              "generation2_events": 1,
+              "generation2_max_ms": 18.18229304626584,
+              "control_overlaps_over_5ms": []
+            },
+            "tb3_3_gc_intervals": {
+              "enabled": true,
+              "thresholds": [
+                700,
+                10,
+                10
+              ],
+              "events": 165,
+              "generation2_events": 1,
+              "generation2_max_ms": 20.131960976868868,
+              "control_overlaps_over_5ms": []
+            },
+            "tb3_1_gc_intervals": {
+              "enabled": true,
+              "thresholds": [
+                700,
+                10,
+                10
+              ],
+              "events": 152,
+              "generation2_events": 1,
+              "generation2_max_ms": 16.661344096064568,
+              "control_overlaps_over_5ms": [
+                {
+                  "time": 23.097999999999995,
+                  "status": "ok",
+                  "overlap_ms": 16.661344096064568,
+                  "command_ms": 41.954702930524945
+                }
+              ]
+            },
+            "tb3_2_gc_intervals": {
+              "enabled": true,
+              "thresholds": [
+                700,
+                10,
+                10
+              ],
+              "events": 164,
+              "generation2_events": 1,
+              "generation2_max_ms": 15.417343936860561,
+              "control_overlaps_over_5ms": [
+                {
+                  "time": 22.317999999999998,
+                  "status": "feasible_iterate",
+                  "overlap_ms": 15.417343936860561,
+                  "command_ms": 56.940884911455214
+                }
+              ]
+            },
+            "tb3_0_gc_intervals": {
+              "enabled": true,
+              "thresholds": [
+                700,
+                10,
+                10
+              ],
+              "events": 164,
+              "generation2_events": 1,
+              "generation2_max_ms": 14.904027921147645,
+              "control_overlaps_over_5ms": []
+            }
+          },
+          "audits": {
+            "solver": {
+              "applicable": true,
+              "passed": true,
+              "checked_adopted_first_steps": 2008,
+              "uncertified_other_statuses": 0,
+              "records_without_snapshot": 0,
+              "maximum_input_metric_pose_difference": 0.0,
+              "first_error": null,
+              "error_count": 0,
+              "interpretation": "Replay recorded first-command bounds/selected safety model on exact inputs.\n\nOnly statuses with an adopted validated command are checked. Deadline stops\nare counted separately; zero commands are not silently certified as safe.\nThis checks the sampled model, not continuous or physical safety.\n"
+            },
+            "metrics": {
+              "passed": true,
+              "robots": {
+                "0": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.008329808109212505,
+                  "max_plan_execution_error": 0.04310038503731188,
+                  "max_nominal_error_during_plan_samples": 0.5271522010830609
+                },
+                "1": {
+                  "rows": 401,
+                  "prior_plan_samples_audited": 400,
+                  "reference_quality_counts": {
+                    "2": 1,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006838596244060195,
+                  "max_plan_execution_error": 0.043655747923034754,
+                  "max_nominal_error_during_plan_samples": 0.5286525532115874
+                },
+                "2": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 401,
+                  "reference_quality_counts": {
+                    "0": 1,
+                    "1": 400,
+                    "2": 1
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.007023389058035137,
+                  "max_plan_execution_error": 0.043783409833980325,
+                  "max_nominal_error_during_plan_samples": 0.5686207929957324
+                },
+                "3": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 401,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 1.7763568394002505e-15,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.007147216371428759,
+                  "max_plan_execution_error": 0.043665623544318334,
+                  "max_nominal_error_during_plan_samples": 0.5194104821070159
+                },
+                "4": {
+                  "rows": 402,
+                  "prior_plan_samples_audited": 401,
+                  "reference_quality_counts": {
+                    "2": 2,
+                    "1": 400
+                  },
+                  "max_nominal_analytic_residual": 8.881784197001252e-16,
+                  "max_heading_analytic_residual": 0.0,
+                  "mean_plan_execution_error": 0.006774639582528185,
+                  "max_plan_execution_error": 0.04412509011270705,
+                  "max_nominal_error_during_plan_samples": 0.5216886377732582
+                }
+              },
+              "checks": [
+                "pose/reference same timestamp",
+                "target-minus-actual heading sign",
+                "prior accepted plan trace reconstruction",
+                "no fabricated plan zero",
+                "no nominal/plan alias",
+                "analytic prescribed leader cross-check"
+              ]
+            },
+            "circle": {
+              "passed": true,
+              "circle_measurements": 1795,
+              "mvee_measurements": 155,
+              "geometry_only_circle_holds": 305,
+              "maximum_old_enclosure_excess": -0.0014812082481129585,
+              "retained_prior_checks": 305,
+              "maximum_retained_prior_excess": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Checks measured geometry inclusion, not unknown physical-object or future safety certification."
+            },
+            "display": {
+              "passed": true,
+              "checked_regions": 10068,
+              "hard_regions": 2751,
+              "soft_regions": 1834,
+              "maximum_numeric_error": 1.9984014443252818e-15,
+              "prediction_envelopes": 2751,
+              "direction_icons": 898,
+              "velocity_labels": 917,
+              "center_markers": 917,
+              "identical_local_selected_frames": 160,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Display-to-input geometry audit only; does not certify future physical safety."
+            },
+            "confidence": {
+              "passed": true,
+              "frames": 2083,
+              "measurements": 1950,
+              "raw_ray_count_min": 360,
+              "raw_ray_count_max": 360,
+              "effective_error_min": 0.05690959065279328,
+              "effective_error_max": 0.05690959065279328,
+              "error_count": 0,
+              "first_error": null,
+              "scope": "One robot / one scan / raw range-noise event. Not trajectory, association, pose or collision confidence."
+            },
+            "guard": {
+              "passed": true,
+              "measurements_checked": 1950,
+              "active_forecast_guards": 179,
+              "inconsistent_active_guards": 0,
+              "error_count": 0,
+              "first_error": null,
+              "interpretation": "Recorded centre-set construction and its scan-time forecast containment.\n\nConditional measured-geometry audit, not ground-truth safety certification.\n"
+            },
+            "certificate": {
+              "passed": true,
+              "applicable": false,
+              "certificates": 0,
+              "applied": 0,
+              "dropped_by_controller": 0,
+              "maximum_cost_difference": 0.0,
+              "error_count": 0,
+              "first_error": null,
+              "note": "Full numerical model feasibility and nonnegative-objective gap; no exact global optimizer or physical safety claim."
+            }
+          }
+        }
+      }
+    }
+  },
+  "v5_tested": false,
+  "execution_rejected": true,
+  "promoted_as_stable": false,
+  "v5_protocol_commit": "d4807d50050629b7cec5e62470c44c1227c98508",
+  "v5_not_run": {
+    "version": "V5",
+    "protocol_commit": "d4807d5",
+    "status": "not_run",
+    "reason": "Gazebo execution permission rejected by user before process creation",
+    "unit_tests_passed": 263,
+    "closed_loop_tested": false
+  },
+  "offline_validation": {
+    "validation_comparisons": 6060,
+    "validation_mismatches": [],
+    "extraction_trials": 100,
+    "maximum_extraction_difference": 0.0,
+    "timing": {
+      "four_wall_ms": {
+        "median": 1.0722664883360267,
+        "p95": 1.1034302006009966,
+        "maximum": 1.1329730041325092
+      },
+      "four_cpu_ms": {
+        "median": 1.0726125000000142,
+        "p95": 1.1009554500002183,
+        "maximum": 1.1333389999999
+      },
+      "packed_wall_ms": {
+        "median": 0.9743284317664802,
+        "p95": 0.9955437039025128,
+        "maximum": 1.0340240551158786
+      },
+      "packed_cpu_ms": {
+        "median": 0.9744944999998673,
+        "p95": 0.992481400000278,
+        "maximum": 1.0226339999999112
+      }
+    },
+    "note": "Same frozen validator on real input snapshots with valid/invalid synthetic trajectories. Extraction microbenchmark is not real-time scheduling proof."
+  },
+  "adopted_step_checks": 19989,
+  "display_checks": 86103,
+  "decision": "No tested variant solves the timeout problem consistently. Preserve all failures. V5 is unit-tested only; Gazebo execution was rejected by user. No further simulation launched."
+}
