@@ -1371,6 +1371,9 @@ class IterationDeadline(ca.Callback):
 class CachedMPCProblem:
     def __init__(self, config, obstacle_count, first_delta_bound):
         self.config = dict(config)
+        gap=float(config.get('budget_objective_gap',0.))
+        if not np.isfinite(gap) or gap<0 or gap>0 and not config.get('cycle_budget_guard',False):
+            raise ValueError('Objective-gap admission requires cycle budget guard and finite nonnegative tolerance')
         self.constraint_mode=config.get('constraint_mode','dcbf')
         self.risk_penalty=config.get('risk_penalty','clearance_quartic')
         if self.constraint_mode not in ('dcbf','ellipse'):raise ValueError('Unknown constraint_mode')
@@ -1746,9 +1749,32 @@ def checked_spatial_guidance_carry(problem,state,obstacles,bounds,previous,contr
     return candidate
 
 
+def feasible_objective_certificate(candidate,config,guidance):
+    """Absolute model-objective gap from a feasible prefix and lower bound 0.
+
+    Applies only to the original inactive-guidance, risk-free nonnegative
+    quadratic objective. Feasibility must already have been checked fully.
+    This is not a physical safety or exact-optimality certificate.
+    """
+    tolerance=float(config.get('budget_objective_gap',0.))
+    weights=('q_state','q_terminal','q_plan','q_coupling','r_control','r_plan','r_delta','r_delta_plan')
+    if (tolerance<=0 or candidate is None or candidate.get('validated_steps')!=config['horizon']
+            or guidance[1]!=0 or config.get('prediction_risk',False)
+            or not all(np.isfinite(np.asarray(config[k],float)).all() and np.all(np.asarray(config[k],float)>=0) for k in weights)):
+        return None
+    cost=float(candidate['cost'])
+    if not np.isfinite(cost) or not 0<=cost<=tolerance:return None
+    return dict(lower_bound=0.,gap_upper_bound=cost,tolerance=tolerance,
+        controls=np.asarray(candidate['controls']).tolist(),states=np.asarray(candidate['states']).tolist(),
+        plan_controls=np.asarray(candidate['plan_controls']).tolist())
+
+
 class MPCSolverManager:
     def __init__(self, config, recovery=True):
         self.config = dict(config)
+        gap=float(config.get('budget_objective_gap',0.))
+        if not np.isfinite(gap) or gap<0 or gap>0 and not config.get('cycle_budget_guard',False):
+            raise ValueError('Objective-gap admission requires cycle budget guard and finite nonnegative tolerance')
         spatial_shift_durations(config)
         spatial_return_durations(config)
         activation=float(config.get('spatial_activation_threshold',-1.))
@@ -1947,7 +1973,8 @@ class MPCSolverManager:
         # Exactly one NLP per period. Alternative seeds are carried to later
         # periods rather than serially consuming this period's control budget.
         reserve=max(cfg.get('fallback_reserve',.010),.020 if execution_backup else 0.,measured_reserve)
-        if time.perf_counter()<deadline-reserve-.005:
+        objective_certificate=feasible_objective_certificate(full_backup,cfg,guidance) if budget_guard else None
+        if objective_certificate is None and time.perf_counter()<deadline-reserve-.005:
             try:
                 best=problem.solve(state,goals,obstacles,bounds,previous,guess,plan,guidance,
                     deadline=deadline-reserve,dual_guess=dual)
@@ -1955,7 +1982,7 @@ class MPCSolverManager:
             except RuntimeError as exc:errors.append(str(exc).splitlines()[-1])
             trace.append(dict(problem.last_attempt,seed=seed))
             if budget_guard:post_history[-1]=max(0.,problem.last_attempt.get('validation_ms',0.)/1000.)
-        else:errors.append('No remaining NLP budget')
+        elif objective_certificate is None:errors.append('No remaining NLP budget')
         if full_backup is not None and (best is None or full_backup['cost']<best['cost']):best=full_backup
         if best is None and prepared is not None:best=prepared
         full_candidate=best is not None
@@ -2037,7 +2064,8 @@ class MPCSolverManager:
             record['cycle_budget']=dict(command_deadline=command_deadline,work_deadline=deadline,
                 finish_reserve_ms=1000*finish_reserve,postprocess_reserve_ms=1000*reserve,
                 nlp_started=bool(trace),observed_postprocess_ms=1000*post_history[-1],
-                remaining_at_return_ms=1000*(command_deadline-time.perf_counter()))
+                remaining_at_return_ms=1000*(command_deadline-time.perf_counter()),
+                objective_certificate=objective_certificate)
         if current_h.size:record['min_model_h0']=float(current_h[:,0].min())
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         if cfg.get('rear_pass',False):record['rear_pass']=dict(memory.get('rear_summary',{}))

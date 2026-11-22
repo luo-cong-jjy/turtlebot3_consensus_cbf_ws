@@ -65,4 +65,38 @@ class CycleBudgetTests(unittest.TestCase):
         self.assertAlmostEqual(m.last_records['r']['cycle_budget']['postprocess_reserve_ms'],35.)
 
 
+
+class FeasibleCostAdmissionTests(unittest.TestCase):
+    def config(self,**values):
+        c=default_config();c.update(cycle_budget_guard=True,budget_objective_gap=.045,realtime=True,
+            execution_backup=True,fallback_reserve=.035,manager_wall_time=.085,nlp_wall_time=.065);c.update(values);return c
+
+    def test_low_cost_full_prefix_finishes_without_native_nlp(self):
+        cfg=self.config();m=core.MPCSolverManager(cfg);p=core.CachedMPCProblem(cfg,0,False)
+        p.solve=Mock(side_effect=RuntimeError('must not run'));m.problems[(0,False)]=p
+        goals=np.zeros((11,3));goals[:,0]=.015*np.arange(11);u=np.tile([.15,0.],(10,1))
+        with patch.object(core,'continuous_guidance',return_value=(np.zeros((10,2)),0.)):
+            result=m.solve(np.zeros(3),goals,[],[-.22,.22],dict(controls=u,plan_controls=u),'r',deadline=time.perf_counter()+.5,applied_previous=u[0])
+        p.solve.assert_not_called();self.assertFalse(result['success'])
+        self.assertTrue(p.validate(result,np.zeros(3),[],[-.22,.22],u[0]));self.assertEqual(result['validated_steps'],10)
+        c=m.last_records['r']['cycle_budget']['objective_certificate'];self.assertLessEqual(c['gap_upper_bound'],.045)
+        self.assertGreater(c['gap_upper_bound'],0.);self.assertEqual(c['lower_bound'],0.)
+
+    def test_high_cost_and_negative_weights_do_not_claim_a_certificate(self):
+        for changes in ({},{'q_plan':[-1.,20.]}):
+            cfg=self.config(**changes);m=core.MPCSolverManager(cfg);p=core.CachedMPCProblem(cfg,0,False)
+            p.solve=Mock(side_effect=RuntimeError('forced'));m.problems[(0,False)]=p
+            goals=np.zeros((11,3));goals[:,0]=.015*np.arange(11)+(0. if changes else .1);u=np.tile([.15,0.],(10,1))
+            with patch.object(core.time,'perf_counter',return_value=100.),patch.object(core,'continuous_guidance',return_value=(np.zeros((10,2)),0.)):
+                m.solve(np.zeros(3),goals,[],[-.22,.22],dict(controls=u,plan_controls=u),'r',deadline=100.097,applied_previous=u[0])
+            p.solve.assert_called_once();self.assertIsNone(m.last_records['r']['cycle_budget']['objective_certificate'])
+
+    def test_one_step_only_and_active_guidance_cannot_qualify(self):
+        cfg=self.config();candidate=dict(validated_steps=1,cost=0.)
+        self.assertIsNone(core.feasible_objective_certificate(candidate,cfg,(np.zeros((10,2)),0.)))
+        candidate['validated_steps']=10
+        self.assertIsNone(core.feasible_objective_certificate(candidate,cfg,(np.zeros((10,2)),1.)))
+        self.assertIsNone(core.feasible_objective_certificate(candidate,dict(cfg,prediction_risk=True),(np.zeros((10,2)),0.)))
+
+
 if __name__=='__main__':unittest.main()
