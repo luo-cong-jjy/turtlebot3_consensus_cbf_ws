@@ -78,6 +78,7 @@
   <arg name="known_radius_tolerance" default="0.005" />
   <arg name="known_point_error" default="0.01" />
   <arg name="known_radius_refine" default="false" />
+  <arg name="gc_diagnostics" default="false" />
   <arg name="cycle_budget_guard" default="false" />
   <arg name="cycle_scheduler_guard" default="false" />
   <arg name="budget_objective_gap" default="0.0" />
@@ -154,6 +155,7 @@
   <param name="/cbf/dynamic/known_radius_refine" value="$(arg known_radius_refine)" type="bool" />
   <param name="/cbf/mpc/budget_objective_gap" value="$(arg budget_objective_gap)" type="double" />
   <param name="/cbf/mpc/cycle_scheduler_guard" value="$(arg cycle_scheduler_guard)" type="bool" />
+  <param name="/cbf/mpc/gc_diagnostics" value="$(arg gc_diagnostics)" type="bool" />
   <param name="/cbf/mpc/cycle_budget_guard" value="$(arg cycle_budget_guard)" type="bool" />
   <param name="/cbf/dynamic/known_noise_sigma" value="$(arg known_noise_sigma)" type="double" />
   <param name="/cbf/dynamic/known_noise_alpha" value="$(arg known_noise_alpha)" type="double" />

@@ -1,5 +1,6 @@
 <launch>
   <arg name="cycle_budget_guard" default="true" />
+  <arg name="gc_diagnostics" default="false" />
   <arg name="budget_objective_gap" default="0.0" />
   <arg name="local_cluster_recording" default="false" />
   <param name="/cbf/dynamic/local_cluster_recording" value="$(arg local_cluster_recording)" type="bool" />
@@ -71,6 +72,7 @@
   <arg name="dynamic_extra_margin" default="0.02" />
   <include file="$(find tb3_distributed_control)/launch/multi_turtlebot3_consensus_gazebo_cbf.launch">
     <arg name="world_name" value="$(find tb3_distributed_control)/worlds/consensus_dynamic_obstacles.world" />
+    <arg name="gc_diagnostics" value="$(arg gc_diagnostics)" />
     <arg name="cycle_budget_guard" value="$(arg cycle_budget_guard)" />
     <arg name="budget_objective_gap" value="$(arg budget_objective_gap)" />
     <arg name="robot_count" value="5" />

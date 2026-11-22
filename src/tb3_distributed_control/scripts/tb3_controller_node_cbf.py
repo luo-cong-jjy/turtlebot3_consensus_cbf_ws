@@ -5,6 +5,7 @@ The original PDNN/CAPA node is intentionally untouched. No world obstacle truth 
 read here. Optional peer motion predictions use ordinary odometry messages.
 """
 import csv
+import gc
 import json
 import os
 from pathlib import Path
@@ -1178,6 +1179,11 @@ class TurtleBot3CBFController:
         self.local_cluster_stream=((self.output/(self.name+'_local_clusters.jsonl')).open('w')
             if rospy.get_param('/cbf/dynamic/local_cluster_recording',False) else None)
         self.counts=Counter();self.rows=0
+        self.gc_trace_callback=None
+        if self.cfg.get('gc_diagnostics',False):
+            self.gc_events=deque(maxlen=4096);self.gc_pending=None
+            self.gc_trace_callback=self.capture_gc_interval
+            gc.callbacks.append(self.gc_trace_callback)
         rospy.loginfo('%s: experiment CSV %s',self.name,self.output/(self.name+'.csv'))
         self.publish_observer(-1)
         rospy.set_param('/cbf/ready/'+self.name,False)
@@ -1195,6 +1201,13 @@ class TurtleBot3CBFController:
         self.prediction_timer=rospy.Timer(rospy.Duration(1./self.prediction_display_rate),
                                          self.publish_prediction_regions,reset=True)
         rospy.loginfo('%s: unified MPC, N=%d, %d slots; CAPA absent',self.name,self.n,self.slots)
+
+    def capture_gc_interval(self,phase,info):
+        if phase=='start':self.gc_pending=(time.perf_counter(),time.thread_time(),info.get('generation'))
+        elif self.gc_pending is not None:
+            begin,cpu,generation=self.gc_pending;self.gc_pending=None
+            self.gc_events.append(dict(wall_begin=begin,wall_end=time.perf_counter(),generation=generation,
+                cpu_ms=1000*(time.thread_time()-cpu),collected=info.get('collected'),uncollectable=info.get('uncollectable')))
 
     def start_control_timer(self,_event):
         if not self.closed:self.timer=rospy.Timer(rospy.Duration(self.dt),self.control,reset=True)
@@ -2139,6 +2152,7 @@ class TurtleBot3CBFController:
                     status=status,command=control.tolist(),control_wall_ms=row['solve_ms'],
                     command_wall_ms=self.command_wall_ms,cycle_end_ms=1000*(time.perf_counter()-begin),
                     cycle_cpu_ms=1000*(time.thread_time()-self.cycle_cpu_begin),manager=detail,
+                    **(dict(cycle_begin_wall=begin) if self.cfg.get('gc_diagnostics',False) else {}),
                     **(dict(geometry_interval=dict(self.record_geometry_timing)) if self.cfg.get('cycle_scheduler_guard',False) else {}),
                     local_reference_mode=getattr(self,'local_reference_mode','timed'),
                     reference_projection_applied=getattr(self,'reference_projection_applied',False),
@@ -2151,6 +2165,11 @@ class TurtleBot3CBFController:
     def close(self):
         if self.closed:return
         self.closed=True
+        if getattr(self,'gc_trace_callback',None) is not None:
+            gc.callbacks.remove(self.gc_trace_callback)
+            (self.output/(self.name+'_gc_intervals.json')).write_text(json.dumps(dict(events=list(self.gc_events),
+                enabled=gc.isenabled(),thresholds=gc.get_threshold()),indent=2))
+            self.gc_trace_callback=None
         if hasattr(self,'timer'):self.timer.shutdown()
         if hasattr(self,'observer_timer'):self.observer_timer.shutdown()
         if hasattr(self,'watchdog_timer'):self.watchdog_timer.shutdown()
