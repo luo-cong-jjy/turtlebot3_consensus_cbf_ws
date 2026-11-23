@@ -598,6 +598,7 @@ class ExperimentRecorder:
             geometry_observer=rospy.get_param('/cbf/dynamic/geometry_observer','mvee'),
             circle_prior_retention=rospy.get_param('/cbf/dynamic/circle_prior_retention',False),
             research_protection_mode=rospy.get_param('/cbf/research_protection_mode',''),
+            nominal_fixed_center=rospy.get_param('/cbf/dynamic/nominal_fixed_center',False),
             nominal_body_radius=rospy.get_param('/cbf/dynamic/nominal_body_radius',0.),
             nominal_body_padding=rospy.get_param('/tb3_controller_cbf_0/ellipse_padding',.03),
             known_radius=rospy.get_param('/cbf/dynamic/known_radius',0.),

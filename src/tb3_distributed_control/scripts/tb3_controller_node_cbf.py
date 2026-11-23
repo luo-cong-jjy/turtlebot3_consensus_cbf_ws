@@ -459,6 +459,39 @@ def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error
     return result
 
 
+def fixed_radius_observation(points,enclosure,sensor_origin,radius,padding=.03):
+    """Nominal two-parameter centre fit using a measured body radius.
+
+    Separate from the original three-parameter free-circle fit. Quality gates
+    are engineering diagnostics, not a simultaneous noise confidence bound.
+    """
+    p=np.asarray(points,float).reshape(-1,2)
+    def reject(reason):return dict(accepted=False,reason='fixed_radius_'+reason)
+    if len(p)<3 or not np.isfinite(p).all() or not np.isfinite(radius) or radius<=0:return reject('points')
+    mean=p.mean(0);ray=mean-np.asarray(sensor_origin);length=np.linalg.norm(ray)
+    if length<1e-8:return reject('sensor')
+    center=mean+radius*ray/length
+    try:
+        for unused in range(8):
+            delta=center-p;distance=np.linalg.norm(delta,axis=1)
+            if distance.min()<1e-8:return reject('degenerate')
+            jacobian=delta/distance[:,None];error=distance-radius
+            weights=np.minimum(1.,.01/np.maximum(abs(error),1e-9));normal=jacobian.T@(weights[:,None]*jacobian)
+            if np.linalg.cond(normal)>1000:return reject('conditioning')
+            step=np.linalg.solve(normal,-jacobian.T@(weights*error));center+=step
+            if np.linalg.norm(step)<1e-7:break
+        delta=center-p;distance=np.linalg.norm(delta,axis=1);error=distance-radius
+        jacobian=delta/distance[:,None];rms=float(np.sqrt(np.mean(error**2)))
+        covariance=max(.005,rms)**2*np.linalg.inv(jacobian.T@jacobian)
+        std=float(np.sqrt(np.linalg.eigvalsh(covariance).max()))
+    except np.linalg.LinAlgError:return reject('singular')
+    if rms>.01 or abs(error).max()>.025 or not np.isfinite(std) or std>.06:return reject('quality')
+    if (center-mean)@ray/length<-.015:return reject('sensor_side')
+    return dict(accepted=True,reason='fixed_radius',center=center,radius=float(radius),
+        enclosure_radius=circle_enclosure_radius(center,enclosure,radius,padding),
+        residual=rms,center_std=std,observation_model='known_body_radius',probability_claim=False)
+
+
 def nominal_body_completion(points,enclosure,radius,padding=.03):
     """Nominal known-body completion, not a probabilistic error certificate.
 
@@ -541,7 +574,7 @@ class DynamicEllipseTracker:
                  geometry_observer='mvee',circle_prior_retention=False,known_radius=0.,
                  known_radius_tolerance=.005,known_point_error=.01,known_radius_refine=False,
                  known_noise_sigma=0.,known_noise_alpha=.01,known_range_error=0.,known_transform_error=0.,
-                 nominal_body_radius=0.,nominal_body_padding=.03):
+                 nominal_body_radius=0.,nominal_body_padding=.03,nominal_fixed_center=False):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -581,6 +614,7 @@ class DynamicEllipseTracker:
         if nominal_body_radius>0 and (known_radius>0 or mode!='cv' or geometry_observer!='circle' or not transport_geometry):
             raise ValueError('Nominal completion requires exclusive CV/circle transported geometry')
         self.nominal_body_radius,self.nominal_body_padding=nominal_body_radius,nominal_body_padding
+        self.nominal_fixed_center=bool(nominal_fixed_center)
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -1296,6 +1330,7 @@ class TurtleBot3CBFController:
             geometry_observer=self.geometry_observer,
             circle_prior_retention=bool(get('/cbf/dynamic/circle_prior_retention',False)),
             nominal_body_radius=float(get('/cbf/dynamic/nominal_body_radius',0.)),nominal_body_padding=self.padding,
+            nominal_fixed_center=bool(get('/cbf/dynamic/nominal_fixed_center',False)),
             known_radius=float(get('/cbf/dynamic/known_radius',0.)),
             known_radius_tolerance=float(get('/cbf/dynamic/known_radius_tolerance',.005)),
             known_point_error=float(get('/cbf/dynamic/known_point_error',.01)),
@@ -1461,6 +1496,10 @@ class TurtleBot3CBFController:
                         noise_sigma=tracker.known_noise_sigma,noise_alpha=tracker.known_noise_alpha,raw_ray_count=len(scan.ranges),
                         range_error=tracker.known_range_error,transform_error=tracker.known_transform_error)
                 if tracker is not None and getattr(tracker,'nominal_body_radius',0.)>0:
+                    if tracker.nominal_fixed_center and not ellipse.circle_candidate.get('accepted',False):
+                        free_reason=ellipse.circle_candidate.get('reason')
+                        ellipse.circle_candidate=fixed_radius_observation(cluster,ellipse,[translation.x,translation.y],tracker.nominal_body_radius,tracker.nominal_body_padding)
+                        ellipse.circle_candidate['free_circle_reason']=free_reason
                     ellipse.nominal_body_guard=nominal_body_completion(cluster,ellipse,tracker.nominal_body_radius,tracker.nominal_body_padding)
                 fits.append(ellipse)
                 clusters.append(cluster)

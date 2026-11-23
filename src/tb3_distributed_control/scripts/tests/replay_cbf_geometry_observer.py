@@ -9,7 +9,7 @@ inline.reference_covariance_matrices=reference_covariance_matrices
 inline.reference_axis_inflation=reference_axis_inflation
 
 
-def replay(directory,compare_retention=False,reject_circle_interval=None,observer='tb3_0',counterfactual_known_radius=None,counterfactual_known_radius_refine=None,collect_geometry_comparison=False,counterfactual_noise=None,counterfactual_nominal_body_radius=None):
+def replay(directory,compare_retention=False,reject_circle_interval=None,observer='tb3_0',counterfactual_known_radius=None,counterfactual_known_radius_refine=None,collect_geometry_comparison=False,counterfactual_noise=None,counterfactual_nominal_body_radius=None,counterfactual_nominal_fixed_center=None):
     p=Path(directory);meta=json.loads((p/'run_metadata.json').read_text())
     if meta['prediction_mode']!='cv':raise ValueError('This stage validates CV geometry only')
     truth=list(csv.DictReader((p/'gazebo_truth.csv').open()))
@@ -37,7 +37,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01),
         known_radius_refine=(False if nominal_override else counterfactual_known_radius_refine if counterfactual_known_radius_refine is not None else meta.get('known_radius_refine',False)) if kind!='mvee' else False,
         nominal_body_radius=(counterfactual_nominal_body_radius if counterfactual_nominal_body_radius is not None else meta.get('nominal_body_radius',0.)) if kind!='mvee' else 0.,
-        nominal_body_padding=meta.get('nominal_body_padding',.03),**(noise_options() if kind!='mvee' else {})) for kind in kinds}
+        nominal_body_padding=meta.get('nominal_body_padding',.03),nominal_fixed_center=(counterfactual_nominal_fixed_center if counterfactual_nominal_fixed_center is not None else meta.get('nominal_fixed_center',False)),**(noise_options() if kind!='mvee' else {})) for kind in kinds}
     configured=meta.get('geometry_observer','mvee')
     configured_key=('circle_prior' if compare_retention and configured=='circle'
         and meta.get('circle_prior_retention',False) else configured)
@@ -45,7 +45,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
     if counterfactual_known_radius is not None or counterfactual_known_radius_refine is not None or counterfactual_noise is not None or counterfactual_nominal_body_radius is not None:
         models['_recorded']=inline.DynamicEllipseTracker(**args,geometry_observer=configured,
             circle_prior_retention=meta.get('circle_prior_retention',False),known_radius=meta.get('known_radius',0.),
-            known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01),known_radius_refine=meta.get('known_radius_refine',False),nominal_body_radius=meta.get('nominal_body_radius',0.),nominal_body_padding=meta.get('nominal_body_padding',.03),**noise_options(recorded=True))
+            known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01),known_radius_refine=meta.get('known_radius_refine',False),nominal_body_radius=meta.get('nominal_body_radius',0.),nominal_body_padding=meta.get('nominal_body_padding',.03),nominal_fixed_center=meta.get('nominal_fixed_center',False),**noise_options(recorded=True))
         configured_key='_recorded'
     if reject_circle_interval is not None:
         if len(reject_circle_interval)!=2 or reject_circle_interval[0]>=reject_circle_interval[1]:
@@ -56,7 +56,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         models['_recorded']=inline.DynamicEllipseTracker(**args,geometry_observer=configured,
             circle_prior_retention=meta.get('circle_prior_retention',False),known_radius=meta.get('known_radius',0.),
             known_radius_tolerance=meta.get('known_radius_tolerance',.005),known_point_error=meta.get('known_point_error',.01),
-            known_radius_refine=meta.get('known_radius_refine',False),nominal_body_radius=meta.get('nominal_body_radius',0.),nominal_body_padding=meta.get('nominal_body_padding',.03),**noise_options(recorded=True))
+            known_radius_refine=meta.get('known_radius_refine',False),nominal_body_radius=meta.get('nominal_body_radius',0.),nominal_body_padding=meta.get('nominal_body_padding',.03),nominal_fixed_center=meta.get('nominal_fixed_center',False),**noise_options(recorded=True))
         configured_key='_recorded'
     private=p/(observer+'_local_clusters.jsonl')
     frame_source=private if private.exists() else p/'obstacle_predictions.jsonl'
@@ -86,6 +86,10 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
                         raw_ray_count=frame.get('raw_ray_count',counterfactual_noise.get('raw_ray_count') if counterfactual_noise is not None and kind!='_recorded' else None),
                         range_error=model.known_range_error,transform_error=model.known_transform_error)
                 if model.nominal_body_radius>0:
+                    if model.nominal_fixed_center and not e.circle_candidate.get('accepted',False):
+                        free_reason=e.circle_candidate.get('reason')
+                        e.circle_candidate=inline.fixed_radius_observation(measurement['points'],e,frame['sensor_origin'],model.nominal_body_radius,model.nominal_body_padding)
+                        e.circle_candidate['free_circle_reason']=free_reason
                     e.nominal_body_guard=inline.nominal_body_completion(measurement['points'],e,model.nominal_body_radius,model.nominal_body_padding)
                 fits.append(e)
             model.update(fits,stamp);current=model.obstacles(model.snapshot(stamp),stamp)
@@ -193,7 +197,7 @@ def replay(directory,compare_retention=False,reject_circle_interval=None,observe
         metric_labelled_frames=len(records),configured_observer=meta.get('geometry_observer','mvee'),
         metric_target_labels=labels,
         configured_circle_prior_retention=meta.get('circle_prior_retention',False),
-        comparison_includes_circle_prior=compare_retention,counterfactual_known_radius=counterfactual_known_radius,counterfactual_known_radius_refine=counterfactual_known_radius_refine,counterfactual_noise=counterfactual_noise,counterfactual_nominal_body_radius=counterfactual_nominal_body_radius,
+        comparison_includes_circle_prior=compare_retention,counterfactual_known_radius=counterfactual_known_radius,counterfactual_known_radius_refine=counterfactual_known_radius_refine,counterfactual_noise=counterfactual_noise,counterfactual_nominal_body_radius=counterfactual_nominal_body_radius,counterfactual_nominal_fixed_center=counterfactual_nominal_fixed_center,
         offline_quality_rejection_interval=reject_circle_interval,
         configured_replay_checks=replay_checks,configured_maximum_difference=replay_error,
         configured_replay_passed=replay_checks>0 and replay_error<1e-8,window=[4.,20.],

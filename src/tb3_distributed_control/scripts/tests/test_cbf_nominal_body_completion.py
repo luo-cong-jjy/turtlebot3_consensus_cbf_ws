@@ -37,4 +37,19 @@ class NominalBodyTests(unittest.TestCase):
         with self.assertRaises(ValueError):inline.DynamicEllipseTracker(geometry_observer='circle',transport_geometry=True,known_radius=.12,nominal_body_radius=.12)
 
 
+
+
+class FixedRadiusObservationTests(unittest.TestCase):
+    def test_three_point_known_radius_recovers_nominal_centre(self):
+        center=np.array([1.,.1]);a=np.linspace(2.7,3.6,3);points=center+.12*np.column_stack([np.cos(a),np.sin(a)])
+        e=inline.enclosing_ellipse(points,.025,.03,.01,100);r=inline.fixed_radius_observation(points,e,[0,0],.12)
+        self.assertTrue(r['accepted']);np.testing.assert_allclose(r['center'],center,atol=1e-6)
+        self.assertFalse(r['probability_claim']);self.assertGreaterEqual(r['enclosure_radius'],.15)
+
+    def test_degenerate_or_inconsistent_points_are_not_a_forced_circle(self):
+        for points in ([[1,0]]*3,[[1,0],[1,.3],[1,.6]]):
+            e=inline.Ellipse(1,0,.1,.03,0,3);r=inline.fixed_radius_observation(points,e,[0,0],.12)
+            self.assertFalse(r['accepted'])
+
+
 if __name__=='__main__':unittest.main()

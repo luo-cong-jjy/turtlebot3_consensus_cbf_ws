@@ -1,5 +1,6 @@
 <launch>
   <arg name="protection_mode" default="nominal" />
+  <arg name="nominal_fixed_center" default="$(eval arg('protection_mode') == 'nominal')" />
   <param name="/cbf/research_protection_mode" value="$(eval arg('protection_mode') if arg('protection_mode') in ['nominal','scan_confidence'] else 1/0)" type="str" />
   <arg name="compact_solver_history" default="true" />
   <arg name="cycle_budget_guard" default="false" />
@@ -151,6 +152,7 @@
     <arg name="prediction_mode" value="$(arg prediction_mode)" />
     <arg name="motion_geometry_observer" value="$(arg motion_geometry_observer)" />
     <arg name="circle_prior_retention" value="$(arg circle_prior_retention)" />
+    <arg name="nominal_fixed_center" value="$(arg nominal_fixed_center)" />
     <arg name="nominal_body_radius" value="$(eval 0.12 if arg('protection_mode') == 'nominal' else 0.0)" />
     <arg name="known_radius" value="$(arg known_radius)" />
     <arg name="known_radius_tolerance" value="$(arg known_radius_tolerance)" />
