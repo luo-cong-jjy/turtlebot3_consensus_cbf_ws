@@ -459,6 +459,23 @@ def known_radius_center_guard(points, radius, radius_tolerance=.005, point_error
     return result
 
 
+def nominal_body_completion(points,enclosure,radius,padding=.03):
+    """Nominal known-body completion, not a probabilistic error certificate.
+
+    A centroid of noiseless same-body returns lies in its bounding disk;
+    a disk of radius 2R then covers the entire body. Existing fit padding
+    remains an engineering buffer. Gaussian noise has no hard padding bound.
+    Preserve the complete measured ellipse as well. No centre pseudo-update.
+    """
+    points=np.asarray(points,float).reshape(-1,2)
+    if not len(points) or not np.isfinite(points).all() or not np.isfinite(radius) or radius<=0 or not np.isfinite(padding) or padding<0:
+        raise ValueError('Valid finite nominal body geometry required')
+    center=points.mean(0)
+    guard=circle_enclosure_radius(center,enclosure,physical_radius=2*radius,padding=padding)
+    return dict(center=center.tolist(),radius=float(guard),body_radius=float(radius),padding=float(padding),
+        method='nominal_body_completion',probability_claim=False)
+
+
 def local_cluster_record(message, clusters, sensor_origin, frame):
     """Private diagnostic copy; never add raw points to the public message."""
     result=dict(message,sensor_origin=list(sensor_origin),points_frame=frame,
@@ -523,7 +540,8 @@ class DynamicEllipseTracker:
                  acceleration_buffer=True,stage_velocity_guidance=True,transport_geometry=False,
                  geometry_observer='mvee',circle_prior_retention=False,known_radius=0.,
                  known_radius_tolerance=.005,known_point_error=.01,known_radius_refine=False,
-                 known_noise_sigma=0.,known_noise_alpha=.01,known_range_error=0.,known_transform_error=0.):
+                 known_noise_sigma=0.,known_noise_alpha=.01,known_range_error=0.,known_transform_error=0.,
+                 nominal_body_radius=0.,nominal_body_padding=.03):
         if dt<=0 or horizon<1 or association_distance<=0 or timeout<=0 or mode not in ('cv','frozen','ca','singer'):
             raise ValueError('Invalid dynamic tracker configuration')
         self.dt,self.horizon,self.max_distance,self.timeout=dt,horizon,association_distance,timeout
@@ -558,6 +576,11 @@ class DynamicEllipseTracker:
         if known_noise_sigma>0 and known_radius<=0:raise ValueError('Noise-aware initialization requires a known object radius')
         self.known_noise_sigma,self.known_noise_alpha=known_noise_sigma,known_noise_alpha
         self.known_range_error,self.known_transform_error=known_range_error,known_transform_error
+        if not all(np.isfinite(v) and v>=0 for v in (nominal_body_radius,nominal_body_padding)):
+            raise ValueError('Invalid nominal body geometry')
+        if nominal_body_radius>0 and (known_radius>0 or mode!='cv' or geometry_observer!='circle' or not transport_geometry):
+            raise ValueError('Nominal completion requires exclusive CV/circle transported geometry')
+        self.nominal_body_radius,self.nominal_body_padding=nominal_body_radius,nominal_body_padding
         if mode in ('ca','singer'):self.P0[7,7]=self.P0[8,8]=ca_acceleration_variance
         # Positive quadrature weights retain PSD of the diffusion integral.
         self.quadrature_nodes,self.quadrature_weights=np.polynomial.legendre.leggauss(12)
@@ -689,6 +712,10 @@ class DynamicEllipseTracker:
                 if not hasattr(ellipse,'known_radius_guard'):raise ValueError('Missing calibrated-radius centre-set guard')
                 track['known_radius_guard']=ellipse.known_radius_guard
             else:track.pop('known_radius_guard',None)
+            if self.nominal_body_radius>0 and kind=='mvee':
+                if not hasattr(ellipse,'nominal_body_guard'):raise ValueError('Missing nominal body completion')
+                track['nominal_body_guard']=ellipse.nominal_body_guard
+            else:track.pop('nominal_body_guard',None)
             if self.circle_prior_retention and kind=='circle' and position_observed:
                 track['circle_prior_radius']=float(ellipse.a)
                 track['circle_prior_offset']=z[:2].copy()-track['x'][:2]
@@ -723,7 +750,7 @@ class DynamicEllipseTracker:
         scale=max(1.,np.linalg.norm(local/base)+np.linalg.norm(shape,2))
         shape_guard=base*scale
         original_shape_guard=shape_guard.copy()
-        initialization_guard=track.get('known_radius_guard')
+        initialization_guard=track.get('known_radius_guard',track.get('nominal_body_guard'))
         coarse_shape_guard=None
         selected_guard_disk=None
         if initialization_guard is not None:
@@ -777,8 +804,8 @@ class DynamicEllipseTracker:
             raw_a=track['raw_a'],raw_b=track['raw_b'],point_count=track['point_count'],missed=track['missed'],
             observation_kind=track.get('observation_kind','mvee'),position_observed=track.get('position_observed',True),
             observer_resets=track.get('observer_resets',0),
-            **(dict(known_radius_guard=dict(initialization_guard,shape_guard_axes=shape_guard.tolist(),
-                **(dict(selected_guard_disk=selected_guard_disk) if 'enclosing_disks' in initialization_guard else {}))) if initialization_guard is not None else {}),
+            **({('nominal_body_guard' if 'nominal_body_guard' in track else 'known_radius_guard'):dict(initialization_guard,shape_guard_axes=shape_guard.tolist(),
+                **(dict(selected_guard_disk=selected_guard_disk) if 'enclosing_disks' in initialization_guard else {}))} if initialization_guard is not None else {}),
             circle_prior_retention=self.circle_prior_retention,prior_shape_retained=track.get('prior_shape_retained',False),
             motion_observation_age=float(now-track.get('last_motion_observed',track['seen'])),
             circle_quality_degraded=bool(self.circle_prior_retention and track.get('observation_kind')=='circle'
@@ -1268,6 +1295,7 @@ class TurtleBot3CBFController:
             transport_geometry=bool(get('/cbf/dynamic/transport_geometry',False)),
             geometry_observer=self.geometry_observer,
             circle_prior_retention=bool(get('/cbf/dynamic/circle_prior_retention',False)),
+            nominal_body_radius=float(get('/cbf/dynamic/nominal_body_radius',0.)),nominal_body_padding=self.padding,
             known_radius=float(get('/cbf/dynamic/known_radius',0.)),
             known_radius_tolerance=float(get('/cbf/dynamic/known_radius_tolerance',.005)),
             known_point_error=float(get('/cbf/dynamic/known_point_error',.01)),
@@ -1432,6 +1460,8 @@ class TurtleBot3CBFController:
                         refine=tracker.known_radius_refine and not getattr(ellipse,'circle_candidate',{}).get('accepted',False),
                         noise_sigma=tracker.known_noise_sigma,noise_alpha=tracker.known_noise_alpha,raw_ray_count=len(scan.ranges),
                         range_error=tracker.known_range_error,transform_error=tracker.known_transform_error)
+                if tracker is not None and getattr(tracker,'nominal_body_radius',0.)>0:
+                    ellipse.nominal_body_guard=nominal_body_completion(cluster,ellipse,tracker.nominal_body_radius,tracker.nominal_body_padding)
                 fits.append(ellipse)
                 clusters.append(cluster)
             moving=getattr(self,'dynamic_prediction',False)
@@ -1471,13 +1501,14 @@ class TurtleBot3CBFController:
                     circle_quality_degraded=o.get('circle_quality_degraded',False)) for o in observed]
                 for row,o in zip(rows,observed):
                     if 'known_radius_guard' in o:row['known_radius_guard']=o['known_radius_guard']
+                    if 'nominal_body_guard' in o:row['nominal_body_guard']=o['nominal_body_guard']
                 if self.dynamic_tracker.mode=='adaptive':
                     for row,o in zip(rows,observed):row.update(model_weights=o['model_weights'].tolist(),
                         model_scores=o['model_scores'],selected_model=o['selected_model'],
                         score_count=o['score_count'],score_origin=o['score_origin'],model_switches=o['model_switches'])
                 prediction_message=dict(stamp=stamp.to_sec(),
                     observer=self.name,dt=self.dt,mode=self.dynamic_tracker.mode,tracks=rows,
-                    **(dict(raw_ray_count=len(scan.ranges)) if getattr(self.dynamic_tracker,'known_noise_sigma',0.)>0 else {}),
+                    **(dict(raw_ray_count=len(scan.ranges)) if getattr(self.dynamic_tracker,'known_noise_sigma',0.)>0 or getattr(self.dynamic_tracker,'nominal_body_radius',0.)>0 else {}),
                     measurements=[dict(center=[e.cx,e.cy],a=e.a,b=e.b,theta=e.theta,
                         point_count=e.point_count,**(dict(points=cluster.tolist())
                         if getattr(self,'log_cluster_points',False) else {})) for e,cluster in zip(fits,clusters)])
@@ -1486,6 +1517,7 @@ class TurtleBot3CBFController:
                         quality=getattr(e,'circle_candidate',{})
                         measurement.update(base_enclosure=e.base_enclosure,observation_kind=e.observation_kind,
                             position_observed=e.position_observed,circle_quality={k:v for k,v in quality.items() if k!='center'})
+                        if hasattr(e,'nominal_body_guard'):measurement['nominal_body_guard']=e.nominal_body_guard
                         if hasattr(e,'known_radius_guard'):measurement['known_radius_guard']=e.known_radius_guard
                         if hasattr(e,'retained_prior'):measurement['retained_prior']=e.retained_prior
                 if getattr(self,'log_cluster_points',False):

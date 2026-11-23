@@ -74,6 +74,7 @@
   <arg name="prediction_mode" default="cv" />
   <arg name="motion_geometry_observer" default="mvee" />
   <arg name="circle_prior_retention" default="false" />
+  <arg name="nominal_body_radius" default="0.0" />
   <arg name="known_radius" default="0.0" />
   <arg name="known_radius_tolerance" default="0.005" />
   <arg name="known_point_error" default="0.01" />
@@ -150,6 +151,7 @@
   <param name="/cbf/dynamic/prediction_mode" value="$(arg prediction_mode)" />
   <param name="/cbf/dynamic/geometry_observer" value="$(arg motion_geometry_observer)" />
   <param name="/cbf/dynamic/circle_prior_retention" value="$(arg circle_prior_retention)" type="bool" />
+  <param name="/cbf/dynamic/nominal_body_radius" value="$(arg nominal_body_radius)" type="double" />
   <param name="/cbf/dynamic/known_radius" value="$(arg known_radius)" type="double" />
   <param name="/cbf/dynamic/known_radius_tolerance" value="$(arg known_radius_tolerance)" type="double" />
   <param name="/cbf/dynamic/known_point_error" value="$(arg known_point_error)" type="double" />
