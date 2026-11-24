@@ -41,7 +41,7 @@ from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes, nea
                           peer_obstacle, padded_obstacles,LeaderMetricTimeline,
                           accepted_plan_reference,sample_plan_reference,wrap_angle,METRICS_SCHEMA_VERSION)
 from mpc_dcbf_cached_solver import (MPCSolverManager, CachedMPCProblem, barrier_values,
-    adapt_negative_recovery,obstacle_batch,progress_obstacles)
+    adapt_negative_recovery,obstacle_batch,progress_obstacles,LocalMPCWorker)
 from mpc_dcbf_static_obstacles import reference_covariance_matrices, reference_axis_inflation
 
 
@@ -1142,6 +1142,11 @@ class TurtleBot3CBFController:
         self.cfg['moving_frame_projection']=bool(rospy.get_param('/cbf/moving_frame_projection',False))
         self.cfg['feasible_seed_search']=bool(rospy.get_param('/cbf/feasible_seed_search',False))
         self.cfg['realtime']=bool(rospy.get_param('/cbf/realtime_solver',True))
+        self.local_worker_enabled=bool(self.cfg.get('local_worker',False))
+        self.worker_max_age=float(self.cfg.get('worker_max_age',.3))
+        if self.local_worker_enabled and (not self.cfg['realtime'] or not self.cfg['execution_backup']
+                or self.cfg['infeasible_escape'] or not np.isfinite(self.worker_max_age) or not 0<self.worker_max_age<=.3):
+            raise ValueError('Local worker requires realtime checked backup, no escape, and 0 < max age <= .3s')
         if self.cfg.get('spatial_pass',False) and (not (len(self.names)==1 or
                 len(self.names)==2 and rospy.get_param('/cbf/two_robot_experiment',False)
                 or len(self.names)==5 and rospy.get_param('/cbf/five_robot_experiment',False)) or self.local_reference_mode!='timed'
@@ -1207,6 +1212,9 @@ class TurtleBot3CBFController:
         self.problem_key=(self.slots,bool(self.cfg['realtime'] and self.cfg['delta_limit']))
         self.manager.problems[self.problem_key]=CachedMPCProblem(self.cfg,*self.problem_key)
         self.manager.builds=1
+        self.local_worker=(LocalMPCWorker(self.cfg,self.slots,self.manager.recovery)
+            if self.local_worker_enabled else None)
+        self.worker_result=None;self.worker_submissions=0;self.worker_dropped_submissions=0
         self.cmd_pub=rospy.Publisher('/'+self.name+'/cmd_vel',Twist,queue_size=1)
         self.observer_pub=rospy.Publisher('/'+self.name+'/observer_state',Float64MultiArray,
                                          queue_size=10,latch=True)
@@ -1999,13 +2007,18 @@ class TurtleBot3CBFController:
                 if since is None or now<since:self.sensor_ready_since=now
                 if now-self.sensor_ready_since<getattr(self,'sensor_ready_delay',0.):
                     self.stop_motion();return
-                dummy=padded_obstacles([],self.slots)
-                problem=self.manager.problems[self.problem_key]
-                try:
-                    problem.solve(state,np.tile(state,(self.n+1,1)),dummy,(-.22,.22),None,
-                        np.zeros((self.n,2)),np.zeros((self.n,2)))
-                except RuntimeError:
-                    self.stop_motion();return
+                if self.local_worker is not None:
+                    self.local_worker.poll()
+                    if not self.local_worker.ready or not self.local_worker.process.is_alive():
+                        self.stop_motion();return
+                else:
+                    dummy=padded_obstacles([],self.slots)
+                    problem=self.manager.problems[self.problem_key]
+                    try:
+                        problem.solve(state,np.tile(state,(self.n+1,1)),dummy,(-.22,.22),None,
+                            np.zeros((self.n,2)),np.zeros((self.n,2)))
+                    except RuntimeError:
+                        self.stop_motion();return
                 self.warmed=True
                 rospy.set_param('/cbf/ready/'+self.name,True)
             if not self.running or not self.reference.history:
@@ -2062,7 +2075,8 @@ class TurtleBot3CBFController:
         actual_obstacles=[o for o in obstacles if o['name']!='inactive']
         obstacles=padded_obstacles(obstacles,self.slots)
         # Only retain the immutable inputs here; render on the separate timer.
-        self.prediction_view_input=(rospy.Time.from_sec(now),tuple(actual_obstacles))
+        if self.local_worker is None:
+            self.prediction_view_input=(rospy.Time.from_sec(now),tuple(actual_obstacles))
         signature=[o['name'] for o in obstacles]
         memory=self.manager.robot_memory.get(self.name,{})
         index=memory.get('guide_index')
@@ -2080,10 +2094,25 @@ class TurtleBot3CBFController:
             shift=max(1,int(round(age_seed/self.dt)))
             if age_seed>self.stale:last=None
         try:
-            solution=self.manager.solve(state,goals,obstacles,
-                (-.22,.22),last,self.name,
-                deadline=begin+self.control_budget-.003 if self.cfg['realtime'] else None,
-                applied_previous=previous_control,seed_shift=shift,cycle_token=self.cycle_id)
+            if self.local_worker is not None:
+                message=self.local_worker.poll()
+                if message is not None and (self.worker_result is None or message['sequence']>self.worker_result['sequence']):
+                    self.worker_result=message
+                if self.local_worker.error or not self.local_worker.process.is_alive():
+                    raise RuntimeError('Local MPC worker unavailable: '+str(self.local_worker.error))
+                submitted=self.local_worker.submit(dict(sequence=self.cycle_id,stamp=now,
+                    submitted_wall=time.perf_counter(),state=state,goals=goals,obstacles=obstacles,
+                    bounds=(-.22,.22),previous=previous_control,last=last,shift=shift,label=self.name,
+                    budget=self.control_budget-.003))
+                self.worker_submissions+=int(submitted);self.worker_dropped_submissions+=int(not submitted)
+                solution=self.manager.select_local(state,goals,obstacles,(-.22,.22),previous_control,
+                    self.name,now,self.worker_result,last,self.last_solution_stamp,
+                    min(self.stale,self.worker_max_age),begin+self.control_budget-.003,self.cycle_id)
+            else:
+                solution=self.manager.solve(state,goals,obstacles,
+                    (-.22,.22),last,self.name,
+                    deadline=begin+self.control_budget-.003 if self.cfg['realtime'] else None,
+                    applied_previous=previous_control,seed_shift=shift,cycle_token=self.cycle_id)
             control=solution['controls'][0].copy()
             if solution.get('status')=='best_effort_escape':status='best_effort_escape'
             elif not solution['success']:
@@ -2230,6 +2259,10 @@ class TurtleBot3CBFController:
                     reference_projection_error=getattr(self,'reference_projection_error',None),
                     recovery_selection=getattr(self,'recovery_record',None)))+'\n')
                 if self.rows%10==0:self.trace_stream.flush()
+                # Publish only inputs already associated with a stored cycle.
+                # Terminal in-flight worker tasks never create orphan markers.
+                if getattr(self,'local_worker',None) is not None:
+                    self.prediction_view_input=(rospy.Time.from_sec(now),tuple(obstacles))
         rospy.loginfo_throttle(5.,'%s t=%.1f status=%s obs=%d e=%.3f solve=%.1fms',self.name,
             clock,status,len(obstacles),np.linalg.norm(state[:2]-nominal),row['solve_ms'])
 
@@ -2249,6 +2282,8 @@ class TurtleBot3CBFController:
         if hasattr(self,'control_start_timer'):self.control_start_timer.shutdown()
         if hasattr(self,'geometry_start_timer'):self.geometry_start_timer.shutdown()
         self.stop_motion()
+        if self.local_worker is not None:
+            self.local_worker.close()
         self.stream.flush();self.stream.close()
         with self.trace_lock:self.trace_stream.flush();self.trace_stream.close()
         if getattr(self,'local_cluster_stream',None) is not None:
@@ -2256,6 +2291,9 @@ class TurtleBot3CBFController:
         (self.output/(self.name+'_summary.json')).write_text(json.dumps(
             dict(robot=self.name,rows=self.rows,status=dict(self.counts),watchdog_stops=self.watchdog_stops,
                  peer_laser_fits=dict(self.peer_laser_fits),solver=self.manager.summary(),
+                 local_worker=dict(enabled=self.local_worker_enabled,submissions=self.worker_submissions,
+                    dropped_submissions=self.worker_dropped_submissions,
+                    exitcode=None if self.local_worker is None else self.local_worker.process.exitcode),
                  config=self.cfg,source='in-controller LaserScan geometry + odometry; no world truth'),indent=2))
 
 

@@ -1,4 +1,8 @@
 <launch>
+  <arg name="local_worker" default="false" />
+  <arg name="worker_max_age" default="0.3" />
+  <param name="/cbf/mpc/local_worker" value="$(arg local_worker)" type="bool" />
+  <param name="/cbf/mpc/worker_max_age" value="$(arg worker_max_age)" type="double" />
   <arg name="protection_mode" default="nominal" />
   <arg name="nominal_fixed_center" default="$(eval arg('protection_mode') == 'nominal')" />
   <param name="/cbf/research_protection_mode" value="$(eval arg('protection_mode') if arg('protection_mode') in ['nominal','scan_confidence'] else 1/0)" type="str" />

@@ -607,6 +607,8 @@ class ExperimentRecorder:
             known_radius_refine=rospy.get_param('/cbf/dynamic/known_radius_refine',False),
             cycle_budget_guard=rospy.get_param('/cbf/mpc/cycle_budget_guard',False),
             compact_solver_history=rospy.get_param('/cbf/mpc/compact_solver_history',False),
+            local_worker=rospy.get_param('/cbf/mpc/local_worker',False),
+            worker_max_age=rospy.get_param('/cbf/mpc/worker_max_age',.3),
             cycle_scheduler_guard=rospy.get_param('/cbf/mpc/cycle_scheduler_guard',False),
             budget_objective_gap=rospy.get_param('/cbf/mpc/budget_objective_gap',0.),
             known_noise_sigma=rospy.get_param('/cbf/dynamic/known_noise_sigma',0.),

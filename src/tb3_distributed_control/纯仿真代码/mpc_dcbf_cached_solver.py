@@ -8,11 +8,125 @@ unchanged. Optional tangential guidance adds soft velocity/heading costs.
 import time
 from collections import deque,namedtuple
 import math
+import multiprocessing
+import pickle
+import queue
 
 import casadi as ca
 import numpy as np
 
 from mpc_dcbf_static_obstacles import obstacle_axes
+
+
+def _replace_mailbox(mailbox, value):
+    """Bounded, nonblocking mailbox. Queue feeder races may drop a submission."""
+    try:
+        mailbox.put_nowait(value)
+        return True
+    except queue.Full:
+        try:mailbox.get_nowait()
+        except queue.Empty:return False
+        try:
+            mailbox.put_nowait(value)
+            return True
+        except queue.Full:return False
+
+
+def _local_mpc_worker(config, slots, recovery, requests, responses, stopped):
+    """Own all NLP/preview state in a spawn child, with no ROS subscriptions."""
+    try:
+        manager=MPCSolverManager(config,recovery)
+        key=(slots,bool(config['delta_limit']))
+        problem=CachedMPCProblem(config,*key);manager.problems[key]=problem;manager.builds=1
+        n=config['horizon'];zero=np.zeros(3)
+        dummy=[dict(center=np.array([1000.+i,1000.]),a=.1,b=.1,theta=0.,name='inactive',guidance=False)
+               for i in range(slots)]
+        problem.solve(zero,np.tile(zero,(n+1,1)),dummy,(-.22,.22),None,np.zeros((n,2)),np.zeros((n,2)))
+        responses.put(pickle.dumps(dict(kind='ready')),timeout=2.)
+        signature=None
+        while not stopped.is_set():
+            try:payload=requests.get(timeout=.1)
+            except queue.Empty:continue
+            # Discard superseded waiting work; the active solve is never forked.
+            try:
+                while True:payload=requests.get_nowait()
+            except queue.Empty:pass
+            task=pickle.loads(payload);begin=time.perf_counter()
+            current=tuple(o.get('name') for o in task['obstacles'])
+            if signature is not None and current!=signature:
+                memory=manager.robot_memory.get(task['label'],{})
+                memory['guide_index']=None;memory['guide_level']=0.;memory.pop('guide_vector',None)
+            signature=current
+            try:
+                solution=manager.solve(task['state'],task['goals'],task['obstacles'],task['bounds'],
+                    task['last'],task['label'],deadline=begin+task['budget'],
+                    applied_previous=task['previous'],seed_shift=task['shift'],cycle_token=task['sequence'])
+                error=None
+            except RuntimeError as exc:solution=None;error=str(exc).splitlines()[-1]
+            record=manager.last_records.get(task['label'],{})
+            result=dict(kind='result',sequence=task['sequence'],stamp=task['stamp'],
+                submitted_wall=task['submitted_wall'],finished_wall=time.perf_counter(),solution=solution,
+                record=record,error=error)
+            _replace_mailbox(responses,pickle.dumps(result,protocol=pickle.HIGHEST_PROTOCOL))
+            # Streaming disk traces live in the parent. Do not retain the entire
+            # child history, but keep the original bounded solver memory.
+            manager.histories.clear()
+    except BaseException as exc:
+        _replace_mailbox(responses,pickle.dumps(dict(kind='fatal',error=repr(exc))))
+
+
+class LocalMPCWorker:
+    """Per-robot local IPC only: one active and at most one pending request."""
+    def __init__(self,config,slots,recovery=True):
+        context=multiprocessing.get_context('spawn')
+        self.requests=context.Queue(maxsize=1);self.responses=context.Queue(maxsize=1)
+        self.stopped=context.Event();self.ready=False;self.error=None;self.closed=False
+        self.process=context.Process(target=_local_mpc_worker,
+            args=(dict(config),slots,recovery,self.requests,self.responses,self.stopped),daemon=True)
+        self.process.start()
+
+    def poll(self):
+        latest=None
+        while True:
+            try:message=pickle.loads(self.responses.get_nowait())
+            except queue.Empty:break
+            if message['kind']=='ready':self.ready=True
+            elif message['kind']=='fatal':self.error=message['error']
+            else:latest=message
+        return latest
+
+    def submit(self,task):
+        # Serialize before Queue's feeder thread runs: mutations of ROS snapshots
+        # or last_solution cannot change a request after submission.
+        return _replace_mailbox(self.requests,pickle.dumps(task,protocol=pickle.HIGHEST_PROTOCOL))
+
+    def close(self):
+        if self.closed:return
+        self.closed=True;self.stopped.set();self.process.join(timeout=1.)
+        if self.process.is_alive():self.process.terminate();self.process.join(timeout=1.)
+        for mailbox in (self.requests,self.responses):
+            mailbox.cancel_join_thread();mailbox.close()
+
+
+def current_worker_candidate(problem,message,now,state,obstacles,bounds,previous,max_age):
+    """A delayed solution is only a proposal; re-anchor and check CURRENT N steps."""
+    if message is None:return None,'pending'
+    age=float(now-message['stamp'])
+    if not np.isfinite(age) or age < -1e-9 or age>max_age:return None,'stale_or_future'
+    if 'submitted_wall' in message and time.perf_counter()-message['submitted_wall']>max_age:
+        return None,'stale_wall'
+    solution=message.get('solution')
+    if solution is None:return None,'worker_no_solution'
+    n=problem.config['horizon'];shift=int(math.floor(max(0.,age)/problem.dt+1e-7))
+    if shift>=n:return None,'exhausted'
+    arrays=[np.asarray(solution.get(k),float) for k in ('controls','plan_controls')]
+    if any(a.shape!=(n,2) or not np.isfinite(a).all() for a in arrays):return None,'invalid_shape_or_values'
+    controls,plan=[np.vstack((a[shift:],np.tile(a[-1],(shift,1)))) for a in arrays]
+    candidate=dict(controls=controls,plan_controls=plan,states=rollout(state,controls,problem.dt),
+        validated_steps=n,converged=False,success=False,status='validated_full_backup',
+        seed='local_worker_current',worker_sequence=message['sequence'],worker_age=age,worker_shift=shift)
+    if not problem.validate(candidate,state,obstacles,bounds,previous):return None,'current_validation_failed'
+    return candidate,'accepted'
 
 
 def _clip_scalar(value,lower,upper):
@@ -1808,6 +1922,53 @@ class MPCSolverManager:
         self.robot_memory = {}
         self.last_records = {}
         self.builds = 0
+
+    def select_local(self,state,goals,obstacles,bounds,previous,label,now,message,last,last_stamp,
+                     max_age,deadline,token):
+        """Foreground path: no preview, no Opti solve, current-input validation only."""
+        begin=time.perf_counter();cfg=self.config;n=cfg['horizon']
+        problem=self.problems[(len(obstacles),bool(cfg['delta_limit']))]
+        candidate,reason=current_worker_candidate(problem,message,now,state,obstacles,bounds,previous,max_age)
+        guidance=(np.zeros((n,2)),0.)
+        if candidate is None and last is not None and last_stamp is not None:
+            retained=dict(stamp=last_stamp,solution=last,sequence=token-1)
+            candidate,retained_reason=current_worker_candidate(problem,retained,now,state,obstacles,bounds,previous,max_age)
+            if candidate is not None:candidate['seed']='local_retained_current'
+        else:retained_reason='not_used'
+        checked=valid=0
+        if candidate is None:
+            delta=goals[1,:2]-state[:2];angle=math.atan2(delta[1],delta[0])-state[2]
+            angle=math.atan2(math.sin(angle),math.cos(angle))
+            guess=np.tile([np.clip(cfg['fallback_kv']*np.linalg.norm(delta)*math.cos(angle),*bounds),
+                np.clip(cfg['fallback_kw']*angle,-cfg['omega_max'],cfg['omega_max'])],(n,1))
+            plan=np.clip(np.diff(goals[:,:2],axis=0)/cfg['dt'],-cfg['plan_v_max'],cfg['plan_v_max'])
+            candidate=self._full_backup(problem,state,goals,obstacles,bounds,previous,guess,plan,guidance,'local_tracking_current')
+            if candidate is None:
+                candidate,checked,valid=self._screen_backup(problem,state,goals,obstacles,bounds,previous,plan,guess,guidance,deadline)
+        if candidate is not None:
+            candidate.update(success=False,converged=False)
+            candidate['cost']=problem.candidate_cost(candidate,goals,previous,guidance,obstacles)
+        worker_record={} if message is None else message.get('record',{})
+        record=dict(cycle_token=token,attempts=0,failed_attempts=0,success=False,
+            recovery_triggered=False,recovery_improved=False,
+            accepted_candidate=candidate is not None,status='no_validated_control' if candidate is None else candidate['status'],
+            seed=None if candidate is None else candidate['seed'],
+            cost=None if candidate is None else candidate['cost'],
+            min_cbf_slack=None if candidate is None else candidate.get('min_slack'),
+            wall_ms=1000*(time.perf_counter()-begin),guide_level=0.,guide_obstacle=None,
+            fallback_ms=1000*(time.perf_counter()-begin),fallback_checked=checked,fallback_screen_valid=valid,
+            dual_warm=False,budget_expired=time.perf_counter()>deadline,attempt_trace=[],
+            local_worker=dict(sequence=None if message is None else message['sequence'],
+                age=None if message is None else now-message['stamp'],decision=reason,
+                retained_decision=retained_reason,accepted_source=None if candidate is None else candidate['seed'],
+                # Worker snapshots and timing remain explicitly separate from
+                # the CURRENT applied-command input_snapshot below.
+                record=worker_record))
+        if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
+        self.last_records[label]=record
+        self.histories.setdefault(label,[]).append({k:v for k,v in record.items() if k not in ('input_snapshot','local_worker')})
+        if candidate is None:raise RuntimeError('Local foreground: no currently validated command')
+        return candidate
 
     def _screen_backup(self,problem,state,goals,obstacles,bounds,previous,plan,guess,guidance,deadline):
         """Prepare a checked FIRST command; repetition is not a full-window claim."""
