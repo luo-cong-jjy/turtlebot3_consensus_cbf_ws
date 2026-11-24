@@ -41,7 +41,7 @@ from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes, nea
                           peer_obstacle, padded_obstacles,LeaderMetricTimeline,
                           accepted_plan_reference,sample_plan_reference,wrap_angle,METRICS_SCHEMA_VERSION)
 from mpc_dcbf_cached_solver import (MPCSolverManager, CachedMPCProblem, barrier_values,
-    adapt_negative_recovery,obstacle_batch,progress_obstacles,LocalMPCWorker)
+    adapt_negative_recovery,obstacle_batch,progress_obstacles,LocalMPCWorker,delay_compensated_request)
 from mpc_dcbf_static_obstacles import reference_covariance_matrices, reference_axis_inflation
 
 
@@ -1144,6 +1144,10 @@ class TurtleBot3CBFController:
         self.cfg['realtime']=bool(rospy.get_param('/cbf/realtime_solver',True))
         self.local_worker_enabled=bool(self.cfg.get('local_worker',False))
         self.worker_max_age=float(self.cfg.get('worker_max_age',.3))
+        self.worker_compensation=bool(self.cfg.get('worker_delay_compensation',False))
+        if self.worker_compensation and (not self.local_worker_enabled or
+                rospy.get_param('/cbf/dynamic/prediction_mode','cv') not in ('cv','frozen')):
+            raise ValueError('Worker delay compensation requires local worker and CV/frozen prediction')
         if self.local_worker_enabled and (not self.cfg['realtime'] or not self.cfg['execution_backup']
                 or self.cfg['infeasible_escape'] or not np.isfinite(self.worker_max_age) or not 0<self.worker_max_age<=.3):
             raise ValueError('Local worker requires realtime checked backup, no escape, and 0 < max age <= .3s')
@@ -2100,11 +2104,12 @@ class TurtleBot3CBFController:
                     self.worker_result=message
                 if self.local_worker.error or not self.local_worker.process.is_alive():
                     raise RuntimeError('Local MPC worker unavailable: '+str(self.local_worker.error))
-                submitted=self.local_worker.submit(dict(sequence=self.cycle_id,stamp=now,
-                    submitted_wall=time.perf_counter(),state=state,goals=goals,obstacles=obstacles,
-                    bounds=(-.22,.22),previous=previous_control,last=last,shift=shift,label=self.name,
-                    budget=self.control_budget-.003))
-                self.worker_submissions+=int(submitted);self.worker_dropped_submissions+=int(not submitted)
+                if not self.worker_compensation:
+                    submitted=self.local_worker.submit(dict(sequence=self.cycle_id,stamp=now,
+                        submitted_wall=time.perf_counter(),state=state,goals=goals,obstacles=obstacles,
+                        bounds=(-.22,.22),previous=previous_control,last=last,shift=shift,label=self.name,
+                        budget=self.control_budget-.003))
+                    self.worker_submissions+=int(submitted);self.worker_dropped_submissions+=int(not submitted)
                 solution=self.manager.select_local(state,goals,obstacles,(-.22,.22),previous_control,
                     self.name,now,self.worker_result,last,self.last_solution_stamp,
                     min(self.stale,self.worker_max_age),begin+self.control_budget-.003,self.cycle_id)
@@ -2139,6 +2144,12 @@ class TurtleBot3CBFController:
         self.applied_control=control.copy()
         self.last_command_time=rospy.get_time()
         self.last_command_wall=time.perf_counter();self.command_wall_ms=1000*(self.last_command_wall-begin)
+        if self.local_worker is not None and self.worker_compensation and not self.closed:
+            task=dict(sequence=self.cycle_id,stamp=now,submitted_wall=time.perf_counter(),state=state,
+                goals=goals,obstacles=obstacles,bounds=(-.22,.22),previous=control,
+                last=solution,shift=1,label=self.name,budget=self.control_budget-.003)
+            submitted=self.local_worker.submit(delay_compensated_request(task,control,self.cfg))
+            self.worker_submissions+=int(submitted);self.worker_dropped_submissions+=int(not submitted)
         self.record(now,state,goals,actual_obstacles,age,status,begin,solution,control)
 
     def record(self,now,state,goals,obstacles,age,status,begin,solution=None,control=None):

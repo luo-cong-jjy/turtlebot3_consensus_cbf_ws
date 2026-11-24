@@ -65,6 +65,7 @@ def _local_mpc_worker(config, slots, recovery, requests, responses, stopped):
             except RuntimeError as exc:solution=None;error=str(exc).splitlines()[-1]
             record=manager.last_records.get(task['label'],{})
             result=dict(kind='result',sequence=task['sequence'],stamp=task['stamp'],
+                application_stamp=task.get('application_stamp',task['stamp']),
                 submitted_wall=task['submitted_wall'],finished_wall=time.perf_counter(),solution=solution,
                 record=record,error=error)
             _replace_mailbox(responses,pickle.dumps(result,protocol=pickle.HIGHEST_PROTOCOL))
@@ -117,7 +118,9 @@ def current_worker_candidate(problem,message,now,state,obstacles,bounds,previous
         return None,'stale_wall'
     solution=message.get('solution')
     if solution is None:return None,'worker_no_solution'
-    n=problem.config['horizon'];shift=int(math.floor(max(0.,age)/problem.dt+1e-7))
+    n=problem.config['horizon']
+    control_age=now-float(message.get('application_stamp',message['stamp']))
+    shift=int(math.floor(max(0.,control_age)/problem.dt+1e-7))
     if shift>=n:return None,'exhausted'
     arrays=[np.asarray(solution.get(k),float) for k in ('controls','plan_controls')]
     if any(a.shape!=(n,2) or not np.isfinite(a).all() for a in arrays):return None,'invalid_shape_or_values'
@@ -127,6 +130,38 @@ def current_worker_candidate(problem,message,now,state,obstacles,bounds,previous
         seed='local_worker_current',worker_sequence=message['sequence'],worker_age=age,worker_shift=shift)
     if not problem.validate(candidate,state,obstacles,bounds,previous):return None,'current_validation_failed'
     return candidate,'accepted'
+
+
+def delay_compensated_request(task,command,config):
+    """Plan for the next tick after holding the command actually issued now.
+
+    The shifted tail/peer extrapolation is a proposal approximation; acceptance
+    still uses the original CURRENT forecast and validator, never this forecast.
+    This initial adapter supports the current CV/frozen research protocol only.
+    """
+    dt=config['dt'];n=config['horizon'];result=dict(task)
+    result['state']=rollout(task['state'],np.asarray(command)[None,:],dt)[-1]
+    goals=np.asarray(task['goals']);tail=goals[-1]+goals[-1]-goals[-2]
+    result['goals']=np.vstack((goals[1:],tail))
+    predicted=progress_obstacles(task['obstacles'],(np.arange(n+1)+1)*dt,config)
+    for original,item in zip(task['obstacles'],predicted):
+        item['center']=item['prediction_centers'][0].copy()
+        item['a'],item['b']=item['prediction_axes'][0];item['theta']=item['prediction_angles'][0]
+        if 'guidance_motion' in original:
+            motion=original['guidance_motion'];models=[]
+            for model in motion['models']:
+                if model['mode'] not in ('cv','frozen'):raise ValueError('Delay compensation currently supports CV/frozen only')
+                m=dict(model)
+                if m['mode']=='cv':m['position']=(np.asarray(m['position'])+dt*np.asarray(m['velocity'])).tolist()
+                models.append(m)
+            item['guidance_motion']=dict(motion,stamp=motion['stamp']+dt,models=models)
+        for key in ('rear_prediction_centers','rear_prediction_axes'):
+            if key in original:
+                old=np.asarray(original[key]);last=old[-1]+(old[-1]-old[-2] if key.endswith('centers') else 0.)
+                item[key]=np.vstack((old[1:],last))
+    result.update(obstacles=predicted,previous=np.asarray(command).copy(),
+        application_stamp=task['stamp']+dt,shift=1)
+    return result
 
 
 def _clip_scalar(value,lower,upper):
@@ -1965,8 +2000,11 @@ class MPCSolverManager:
                 # the CURRENT applied-command input_snapshot below.
                 record=worker_record))
         if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
+        if cfg.get('log_mpc_inputs',False) and candidate is not None:
+            record['current_candidate']={k:np.asarray(candidate[k]).tolist() for k in ('states','controls','plan_controls')}
+            record['current_candidate']['validated_steps']=candidate.get('validated_steps',0)
         self.last_records[label]=record
-        self.histories.setdefault(label,[]).append({k:v for k,v in record.items() if k not in ('input_snapshot','local_worker')})
+        self.histories.setdefault(label,[]).append({k:v for k,v in record.items() if k not in ('input_snapshot','local_worker','current_candidate')})
         if candidate is None:raise RuntimeError('Local foreground: no currently validated command')
         return candidate
 

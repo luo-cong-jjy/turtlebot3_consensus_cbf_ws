@@ -61,6 +61,30 @@ class CurrentWorkerTests(unittest.TestCase):
         self.assertEqual((p.opti.nx,p.opti.ng,p.opti.np),
             (self.problem.opti.nx,self.problem.opti.ng,self.problem.opti.np))
 
+    def test_compensated_origin_keeps_unexecuted_first_command(self):
+        msg=self.message();msg['application_stamp']=10.1
+        c,reason=self.check(msg,now=10.1)
+        self.assertEqual(reason,'accepted');self.assertEqual(c['worker_shift'],0)
+        np.testing.assert_array_equal(c['controls'][0],msg['solution']['controls'][0])
+        msg['submitted_wall']=time.perf_counter()-.31
+        self.assertEqual(self.check(msg)[1],'stale_wall')
+
+    def test_future_request_uses_actual_command_and_cv_forecast_without_mutation(self):
+        cfg=config();state=np.array([.2,.3,.1]);command=np.array([.17,.3])
+        centers=np.column_stack([1.+.01*np.arange(11),np.ones(11)])
+        obstacle=dict(name='moving',center=centers[0],a=.2,b=.15,theta=0.,prediction_centers=centers,
+            guidance_motion=dict(stamp=10.,weights=[1.],models=[dict(mode='cv',position=[1.,1.],velocity=[.1,0.],acceleration=[0.,0.],tau=1.)]))
+        goals=np.zeros((11,3));goals[:,0]=.015*np.arange(11)
+        task=dict(state=state,stamp=10.,goals=goals,obstacles=[obstacle],previous=np.zeros(2))
+        request=core.delay_compensated_request(task,command,cfg)
+        np.testing.assert_allclose(request['state'],core.rollout(state,command[None,:],.1)[1])
+        np.testing.assert_allclose(request['goals'][:,0],.015*np.arange(1,12))
+        np.testing.assert_allclose(request['obstacles'][0]['prediction_centers'][:,0],1.+.01*np.arange(1,12))
+        np.testing.assert_allclose(core.progress_centers(request['obstacles'][0],[0.,.5,2.],.1),[[1.01,1],[1.06,1],[1.21,1]])
+        self.assertEqual(request['application_stamp'],10.1)
+        np.testing.assert_array_equal(request['previous'],command)
+        np.testing.assert_array_equal(task['state'],state);self.assertEqual(obstacle['guidance_motion']['models'][0]['position'],[1.,1.])
+
     def test_foreground_pending_and_invalid_worker_never_call_nlp(self):
         m=core.MPCSolverManager(config());m.problems[(1,False)]=self.problem
         original=self.problem.solve;self.problem.solve=Mock(side_effect=AssertionError('Foreground NLP'))
