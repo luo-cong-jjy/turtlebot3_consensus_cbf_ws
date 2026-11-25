@@ -1,6 +1,6 @@
 """Delayed IPC results must pass the original model at current inputs."""
 from pathlib import Path
-import sys,time,unittest
+import sys,time,unittest,json,csv,tempfile
 from unittest.mock import Mock
 import numpy as np
 P=Path(__file__).resolve().parents[2]
@@ -123,6 +123,31 @@ class SpawnWorkerTests(unittest.TestCase):
             self.assertIsNotNone(result['solution'])
         finally:worker.close()
         self.assertFalse(worker.process.is_alive());self.assertEqual(worker.process.exitcode,0)
+
+
+class WorkerAuditTests(unittest.TestCase):
+    def test_offline_current_validation_detects_changed_command_and_worker_input(self):
+        from audit_cbf_local_worker import audit
+        cfg=config();u=np.tile([.15,0.],(10,1));goals=np.zeros((11,3))
+        first=core.solver_input_snapshot(np.zeros(3),goals,[],[-.22,.22],np.zeros(2),cfg)
+        second=core.solver_input_snapshot(np.array([.015,0.,0.]),goals,[],[-.22,.22],u[0],cfg)
+        events=[]
+        for cycle,snapshot in [(1,first),(2,second)]:
+            candidate=dict(controls=u.tolist(),plan_controls=u.tolist(),
+                states=core.rollout(snapshot['state'],u,.1).tolist(),validated_steps=10)
+            events.append(dict(cycle_id=cycle,status='feasible_iterate',command=u[0].tolist(),
+                manager=dict(input_snapshot=snapshot,current_candidate=candidate,
+                    local_worker=dict(decision='pending' if cycle==1 else 'accepted',
+                        sequence=None if cycle==1 else 1,record={} if cycle==1 else dict(input_snapshot=first)))))
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)
+            with (path/'tb3_0.csv').open('w') as out:
+                writer=csv.DictWriter(out,fieldnames=['cycle_id','ros_time']);writer.writeheader()
+                writer.writerows([dict(cycle_id=1,ros_time=10.),dict(cycle_id=2,ros_time=10.1)])
+            def save():
+                (path/'tb3_0_solver_trace.jsonl').write_text(''.join(json.dumps(e)+'\n' for e in events))
+            save();self.assertTrue(audit(path)['passed'])
+            events[1]['command']=[.22,0.];save();self.assertFalse(audit(path)['passed'])
 
 
 if __name__=='__main__':unittest.main()
