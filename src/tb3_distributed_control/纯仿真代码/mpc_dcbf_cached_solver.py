@@ -146,6 +146,7 @@ def delay_compensated_request(task,command,config):
     predicted=progress_obstacles(task['obstacles'],(np.arange(n+1)+1)*dt,config)
     for original,item in zip(task['obstacles'],predicted):
         if 'recovery_stamp' in original:item['recovery_stamp']=original['recovery_stamp']+dt
+        if 'coordination_stamp' in original:item['coordination_stamp']=original['coordination_stamp']+dt
         item['center']=item['prediction_centers'][0].copy()
         item['a'],item['b']=item['prediction_axes'][0];item['theta']=item['prediction_angles'][0]
         if 'guidance_motion' in original:
@@ -248,7 +249,7 @@ def solver_input_snapshot(state,goals,obstacles,bounds,previous,config,guidance=
         if isinstance(value,dict):return {k:plain(v) for k,v in value.items()}
         if isinstance(value,(list,tuple)):return [plain(v) for v in value]
         return value
-    keys=('name','center','a','b','theta','gamma','peer','dynamic','guidance','recovery_stamp','prediction_model','stage_velocity_guidance','prediction_centers',
+    keys=('name','center','a','b','theta','gamma','peer','dynamic','guidance','recovery_stamp','coordination_stamp','formation_intent','intent_received_stamp','prediction_model','stage_velocity_guidance','prediction_centers',
         'prediction_axes','prediction_angles','guidance_motion','rear_prediction_centers','rear_prediction_axes')
     return plain(dict(state=state,goals=goals,previous=previous,bounds=bounds,
         config={k:v for k,v in config.items() if not k.startswith('_')},
@@ -1595,6 +1596,128 @@ def peer_recovery_guidance(state,goals,obstacles,config,memory,base):
     return vectors,1.,predicted[1:,2].copy()
 
 
+def validate_formation_intent(packet,now,last_sequence=-1):
+    """12 Float64 request parameters; never a measured or certified trajectory."""
+    try:p=np.asarray(packet,float)
+    except (TypeError,ValueError):return False,'invalid_values'
+    if p.shape!=(12,) or not np.isfinite(p).all():return False,'invalid_values'
+    if p[0]!=1 or p[1]<0 or p[1]!=int(p[1]) or p[6] not in (0,1,2):return False,'invalid_schema'
+    if p[1]<=last_sequence:return False,'old_sequence'
+    if not -.05<=now-p[2]<=.45:return False,'stale_or_future'
+    if (not .5<=p[8]<=10. or max(abs(p[9]),abs(p[11]))>3. or abs(p[10])>.3
+            or abs(p[5])>np.pi+1e-8 or abs(p[7]-p[2])>120.):return False,'invalid_parameters'
+    return True,'accepted'
+
+
+def sample_formation_intent(packet,times):
+    p=np.asarray(packet,float);age=np.asarray(times,float)-p[7];duration=p[8]
+    q=np.clip(age/duration,0.,1.);blend=10*q**3-15*q**4+6*q**5
+    basis=q-6*q**3+8*q**4-3*q**5
+    y=p[9]+(p[11]-p[9])*blend+duration*p[10]*basis
+    dy=(p[11]-p[9])*(30*q*q-60*q**3+30*q**4)/duration+p[10]*(1-18*q*q+32*q**3-15*q**4)
+    return y,np.where((age>=duration)|(age<0),0.,dy)
+
+
+def formation_intent_guidance(state,goals,obstacles,config,memory,base):
+    """Directed lateral support from bounded peer requests, with original hard check.
+
+    Positive requests support nominally higher neighbours; negative requests
+    support lower neighbours. Conflicting signs use a deterministic ID order.
+    No raw scans, central solve, global agreement or liveness claim.
+    """
+    n,dt=config['horizon'],config['dt'];robot=int(config['robot_id'])
+    feed=(goals[-1,:2]-goals[-2,:2])/dt;speed=float(np.linalg.norm(feed))
+    peers=[o for o in obstacles if o.get('peer',False)]
+    now=max((float(o.get('coordination_stamp',0.)) for o in peers),default=0.)
+    summary=dict(mode='inactive',stamp=now,sources=[],hard_steps=n)
+    memory['intent_summary']=summary
+    if speed<.02 or now<=0:return base
+    forward=feed/speed;normal=np.array([-forward[1],forward[0]]);yaw=math.atan2(feed[1],feed[0])
+    previous=np.asarray(memory.get('progress_previous',np.zeros(2)),float)
+    lateral=float((state[:2]-goals[0,:2])@normal)
+    dy=float(previous[0]*np.dot([np.cos(state[2]),np.sin(state[2])],normal))
+    selected=memory.get('spatial_selected');phase=0
+    start=now;duration=3.;y0=rate=target=0.
+    if selected is not None and memory.get('spatial_activation_active',False):
+        phase=2 if selected['returning'] else 1
+        start=now-(memory.get('spatial_time',0.)-selected['start'])
+        duration=selected['duration'];y0=selected['y0'];rate=selected['dy0'];target=selected['target']
+    packet=[1.,float(memory.get('intent_sequence',0)),now,float(goals[0,0]),float(goals[0,1]),yaw,
+            float(phase),start,duration,y0,rate,target]
+    memory['intent_proposal']=packet
+    requests=[];members=set(memory.get('intent_members',()))
+    if phase and max(abs(y0),abs(target))>.035:requests.append((robot,np.array(packet)))
+    valid_members=set()
+    for peer in peers:
+        raw=peer.get('formation_intent')
+        if raw is None:continue
+        valid,_=validate_formation_intent(raw,now)
+        if not valid:continue
+        p=np.asarray(raw,float);owner=int(peer['name'].split('_')[-1])
+        if abs(math.atan2(math.sin(p[5]-yaw),math.cos(p[5]-yaw)))>.15:continue
+        relative=goals[0,:2]-p[3:5]
+        if abs(relative@forward)>.90:continue
+        side=np.sign(p[11] if p[6]==1 else p[9])
+        eligible=bool(p[6]==1 and side and float(relative@normal)*side>=-.02)
+        if eligible or (p[6]==2 and owner in members):
+            requests.append((owner,p));valid_members.add(owner)
+    memory['intent_members']=sorted(valid_members)
+    clock=now+np.arange(n+1)*dt
+    if requests:
+        # Priority decides conflicting signs; same-side profiles use the outer
+        # envelope. Actual own control still passes the unchanged hard model.
+        requests.sort(key=lambda item:item[0]);priority=requests[0]
+        side=np.sign(priority[1][11] if priority[1][6]==1 else priority[1][9])
+        compatible=[(i,p) for i,p in requests if np.sign(p[11] if p[6]==1 else p[9])==side]
+        profiles=[sample_formation_intent(p,clock) for _,p in compatible]
+        y=np.array([v[0] for v in profiles]);d=np.array([v[1] for v in profiles])
+        chosen=np.argmax(side*y,axis=0);desired=y[chosen,np.arange(n+1)];derivative=d[chosen,np.arange(n+1)]
+        memory['intent_was_active']=True;memory.pop('intent_release',None)
+        summary.update(mode='support',sources=[i for i,_ in compatible],priority=priority[0],side=float(side),
+            peer_sources=[i for i,_ in compatible if i!=robot])
+    elif memory.get('intent_was_active',False) and abs(lateral)>.035:
+        release=memory.get('intent_release')
+        if release is None:
+            release=[1.,0.,now,*goals[0,:2],yaw,2.,now,4.5,lateral,dy,0.]
+            memory['intent_release']=release
+        desired,derivative=sample_formation_intent(release,clock)
+        summary.update(mode='release',sources=[],peer_sources=[])
+    else:
+        memory['intent_was_active']=False;memory.pop('intent_release',None);return base
+    _check_preview_budget(config)
+    states=np.empty((n+1,3));states[0]=state;controls=np.empty((n,2));last=previous.copy()
+    bounds=memory.get('progress_bounds',[-.22,.22]);reverse=bool(memory.get('intent_reverse',False))
+    for j in range(n):
+        along=float((goals[j+1,:2]-states[j,:2])@forward)
+        across=float((states[j,:2]-goals[j+1,:2])@normal)
+        velocity=np.clip(speed+.6*along,.10,bounds[1])*forward+(derivative[j+1]+1.2*(desired[j+1]-across))*normal
+        aim=math.atan2(velocity[1],velocity[0]);facing=math.cos(aim-states[j,2])
+        reverse=bool(bounds[0]<0 and (facing<-.25 or reverse and facing<.25))
+        heading=aim-np.pi if reverse else aim
+        angle=math.atan2(math.sin(heading-states[j,2]),math.cos(heading-states[j,2]))
+        vmax=min(.22,-bounds[0] if reverse else bounds[1])
+        command=np.array([(-1. if reverse else 1.)*min(vmax,np.linalg.norm(velocity))*max(math.cos(angle),0.),
+                          np.clip(3.*angle,-min(.9,config['omega_max']),min(.9,config['omega_max']))])
+        control=last+dt/(.2+dt)*(command-last)
+        control=np.clip(control,[bounds[0],-config['omega_max']],[bounds[1],config['omega_max']])
+        if config['delta_limit']:control=np.clip(control,last-[config['delta_v'],config['delta_w']],last+[config['delta_v'],config['delta_w']])
+        controls[j]=control;states[j+1]=rollout(states[j],control[None],dt)[1];last=control
+    memory['intent_reverse']=reverse
+    vectors=controls[:,:1]*np.column_stack((np.cos(states[1:,2]),np.sin(states[1:,2])))
+    candidate=dict(controls=controls,states=states,plan_controls=vectors)
+    checker=CachedMPCProblem.__new__(CachedMPCProblem);checker.config=config;checker.dt=dt;checker.constraint_mode='dcbf'
+    valid=checker.validate(candidate,state,obstacles,bounds,previous)
+    mean_speed=float(np.abs(controls[:,0]).mean())
+    summary.update(candidate_valid=bool(valid),mean_reference_speed=mean_speed,reverse_chart=reverse,
+        requested_displacement=desired.tolist(),requested_rate=derivative.tolist(),
+        reference_controls=controls.tolist(),reference_states=states.tolist())
+    if not valid or mean_speed<.09:
+        summary['mode']='rejected_hard_prefix' if not valid else 'rejected_low_motion';return base
+    memory['progress_plan']=dict(candidate,mode='formation_intent')
+    summary['adopted_reference']=True
+    return vectors,1.,states[1:,2].copy()
+
+
 def continuous_guidance(state,goals,obstacles,config,memory):
     if config.get('suppress_guidance',False):
         memory.pop('progress_plan',None);memory.pop('guide_index',None)
@@ -1604,6 +1727,7 @@ def continuous_guidance(state,goals,obstacles,config,memory):
     if config.get('rear_pass',False):return rear_pass_guidance(state,goals,obstacles,config,memory)
     if config.get('spatial_pass',False):
         base=spatial_pass_guidance(state,goals,obstacles,config,memory)
+        if config.get('formation_intent_support',False):return formation_intent_guidance(state,goals,obstacles,config,memory,base)
         return peer_recovery_guidance(state,goals,obstacles,config,memory,base) if config.get('peer_recovery_corridor',False) else base
     if config.get('progress_guidance',False):return progress_guidance(state,goals,obstacles,config,memory)
     return _legacy_continuous_guidance(state,goals,obstacles,config,memory)
@@ -2058,6 +2182,9 @@ class MPCSolverManager:
             raise ValueError('Peer recovery requires spatial pass and explicit nonnegative activation threshold')
         if config.get('peer_recovery_signed_chart',False) and not config.get('peer_recovery_corridor',False):
             raise ValueError('Signed reference chart requires peer recovery corridor')
+        if config.get('formation_intent_support',False) and (not config.get('spatial_pass',False)
+                or config.get('peer_recovery_corridor',False) or 'robot_id' not in config):
+            raise ValueError('Formation intent support requires spatial pass, robot_id, and disabled old recovery experiment')
         activation=float(config.get('spatial_activation_threshold',-1.))
         seconds=float(config.get('spatial_activation_preview_seconds',1.))
         activation_limit=max(config['horizon']*config['dt'],float(config.get('spatial_preview_seconds',8.)))
@@ -2223,6 +2350,7 @@ class MPCSolverManager:
             measured_reserve=.008+1.25*max(post_history)
         else:measured_reserve=0.
         memory['positions'].append(state[:2].copy())
+        if cfg.get('formation_intent_support',False):memory['intent_sequence']=token
         memory['cooldown']=max(0,memory['cooldown']-1)
         if cfg.get('progress_guidance',False) or cfg.get('rear_pass',False) or cfg.get('spatial_pass',False):memory.update(progress_previous=previous.copy(),progress_bounds=list(bounds))
         signature=tuple((o.get('name',str(i)),o.get('gamma',cfg['gamma'])) for i,o in enumerate(obstacles))
@@ -2402,6 +2530,9 @@ class MPCSolverManager:
         if cfg.get('rear_pass',False):record['rear_pass']=dict(memory.get('rear_summary',{}))
         if cfg.get('spatial_pass',False):record['spatial_pass']=dict(memory.get('spatial_summary',{}))
         if cfg.get('peer_recovery_corridor',False):record['peer_recovery']=dict(memory.get('peer_recovery_summary',{}))
+        if cfg.get('formation_intent_support',False):
+            record['formation_intent']=dict(memory.get('intent_summary',{}))
+            record['intent_proposal']=memory.get('intent_proposal')
         if cfg.get('spatial_timeout_carry',False):record['spatial_timeout_carry']=timeout_carry
         if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
         history_record=({k:v for k,v in record.items() if k!='input_snapshot'}

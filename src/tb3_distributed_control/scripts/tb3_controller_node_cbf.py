@@ -41,7 +41,8 @@ from cbf_mpc_core import (default_config, TimedReference, ObservedEnvelopes, nea
                           peer_obstacle, padded_obstacles,LeaderMetricTimeline,
                           accepted_plan_reference,sample_plan_reference,wrap_angle,METRICS_SCHEMA_VERSION)
 from mpc_dcbf_cached_solver import (MPCSolverManager, CachedMPCProblem, barrier_values,
-    adapt_negative_recovery,obstacle_batch,progress_obstacles,LocalMPCWorker,delay_compensated_request)
+    adapt_negative_recovery,obstacle_batch,progress_obstacles,LocalMPCWorker,delay_compensated_request,
+    validate_formation_intent)
 from mpc_dcbf_static_obstacles import reference_covariance_matrices, reference_axis_inflation
 
 
@@ -1114,6 +1115,11 @@ class TurtleBot3CBFController:
         self.names=rospy.get_param("/cbf/robot_names",["tb3_"+str(i) for i in range(5)])
         self.name=self.names[self.robot_id]
         self.cfg=default_config();self.cfg.update(rospy.get_param("/cbf/mpc",{}))
+        self.intent_enabled=bool(self.cfg.get('formation_intent_support',False))
+        self.intent_exchange=bool(self.cfg.get('intent_exchange',True))
+        if self.intent_enabled:self.cfg['robot_id']=self.robot_id
+        self.intent_lock=threading.RLock();self.intent_stream=None;self.peer_intents={}
+        self.intent_counts=Counter();self.intent_last_sent=None;self.intent_last_sequence=-1
         if self.cfg.get('spatial_pass',False):
             self.cfg['guide_velocity_weight']=3000.
             self.cfg['guide_heading_weight']=8.
@@ -1145,6 +1151,8 @@ class TurtleBot3CBFController:
         self.local_worker_enabled=bool(self.cfg.get('local_worker',False))
         self.worker_max_age=float(self.cfg.get('worker_max_age',.3))
         self.worker_compensation=bool(self.cfg.get('worker_delay_compensation',False))
+        if self.intent_enabled and (not self.local_worker_enabled or not self.worker_compensation or len(self.names)!=5):
+            raise ValueError('Intent support candidate currently requires five robots and compensated local worker')
         if self.worker_compensation and (not self.local_worker_enabled or
                 rospy.get_param('/cbf/dynamic/prediction_mode','cv') not in ('cv','frozen')):
             raise ValueError('Worker delay compensation requires local worker and CV/frozen prediction')
@@ -1222,6 +1230,8 @@ class TurtleBot3CBFController:
         self.cmd_pub=rospy.Publisher('/'+self.name+'/cmd_vel',Twist,queue_size=1)
         self.observer_pub=rospy.Publisher('/'+self.name+'/observer_state',Float64MultiArray,
                                          queue_size=10,latch=True)
+        self.intent_pub=(rospy.Publisher('/'+self.name+'/formation_intent',Float64MultiArray,queue_size=1)
+            if self.intent_enabled and self.intent_exchange else None)
         self.history_pub=rospy.Publisher('/'+self.name+'/history',RobotHistoryData,queue_size=10)
         self.diagnostics_pub=rospy.Publisher('/'+self.name+'/cbf_diagnostics',String,queue_size=10)
         for i,name in enumerate(self.names):
@@ -1229,6 +1239,9 @@ class TurtleBot3CBFController:
             if i!=self.robot_id:
                 rospy.Subscriber('/'+name+'/observer_state',Float64MultiArray,
                     self.observer_callback,callback_args=i,queue_size=100)
+                if self.intent_enabled and self.intent_exchange:
+                    rospy.Subscriber('/'+name+'/formation_intent',Float64MultiArray,
+                        self.intent_callback,callback_args=i,queue_size=1)
         self.init_geometry()
         leader_ns=rospy.get_param('/cbf/leader_namespace','tb3_virtual_leader')
         rospy.Subscriber('/'+leader_ns+'/state',Float64MultiArray,self.leader_callback,queue_size=100)
@@ -1248,6 +1261,7 @@ class TurtleBot3CBFController:
         self.stream=(self.output/(self.name+'.csv')).open('w',newline='')
         self.writer=csv.DictWriter(self.stream,fieldnames=self.FIELDS);self.writer.writeheader()
         self.trace_stream=(self.output/(self.name+'_solver_trace.jsonl')).open('w')
+        if self.intent_enabled:self.intent_stream=(self.output/(self.name+'_intent_messages.jsonl')).open('w')
         self.local_cluster_lock=threading.RLock()
         self.local_cluster_stream=((self.output/(self.name+'_local_clusters.jsonl')).open('w')
             if rospy.get_param('/cbf/dynamic/local_cluster_recording',False) else None)
@@ -1921,6 +1935,34 @@ class TurtleBot3CBFController:
             history[step]=values
             if len(history)>100:del history[min(history)]
 
+    def intent_callback(self,msg,i):
+        if self.closed or self.intent_stream is None:return
+        packet=list(msg.data[:13]);now=rospy.get_time()
+        with self.intent_lock:
+            old=self.peer_intents.get(i);sequence=-1 if old is None else old['packet'][1]
+            valid,reason=validate_formation_intent(packet,now,sequence)
+            self.intent_counts['received']+=1;self.intent_counts[reason]+=1
+            if valid:self.peer_intents[i]=dict(packet=packet,received=now)
+            self.intent_stream.write(json.dumps(dict(direction='received',peer=i,receive_stamp=now,
+                accepted=valid,reason=reason,packet=packet))+'\n')
+            if self.intent_counts['received']%25==0:self.intent_stream.flush()
+
+    def publish_formation_intent(self,now):
+        if self.closed or self.intent_pub is None or self.worker_result is None:return
+        packet=self.worker_result.get('record',{}).get('intent_proposal')
+        if packet is None:return
+        if packet[1]!=self.worker_result['sequence']:
+            self.intent_counts['withheld_stale_proposal']+=1;return
+        valid,_=validate_formation_intent(packet,now,self.intent_last_sequence)
+        if not valid or self.intent_last_sent is not None and now-self.intent_last_sent<.19:return
+        self.intent_pub.publish(Float64MultiArray(data=packet))
+        self.intent_last_sent=now;self.intent_last_sequence=packet[1];self.intent_counts['sent']+=1
+        with self.intent_lock:
+            if not self.closed:
+                self.intent_stream.write(json.dumps(dict(direction='sent',send_stamp=now,packet=packet,
+                    source_sequence=self.worker_result['sequence']))+'\n')
+                if self.intent_counts['sent']%25==0:self.intent_stream.flush()
+
     def publish_observer(self,step):
         self.observer_pub.publish(Float64MultiArray(data=[*self.z,*self.dz,rospy.get_time(),float(step)]))
 
@@ -2043,6 +2085,8 @@ class TurtleBot3CBFController:
                 # premise. Preserve the observed timed target and record it.
                 self.reference_projection_error=str(exc)
         # All optimizer inputs are immutable snapshots. ROS observation callbacks remain live.
+        if self.intent_enabled:
+            with self.intent_lock:intents={i:dict(packet=list(v['packet']),received=v['received']) for i,v in self.peer_intents.items()}
         nearby=sorted(observed,key=lambda o:np.linalg.norm(state[:2]-o['center'])-o['a'])[:self.max_static]
         by_name={o['name']:o for o in nearby}
         self.slot_names=[name if name in by_name else None for name in self.slot_names]
@@ -2064,6 +2108,10 @@ class TurtleBot3CBFController:
                 peer=predicted_peer_envelope(i,s,x,v,now,self.dt,self.n,self.peer_radius,
                     peer_shapes.get(i),self.scan_timeout)
                 if self.cfg.get('peer_recovery_corridor',False):peer['recovery_stamp']=now
+                if self.intent_enabled:
+                    peer['coordination_stamp']=now
+                    if i in intents:
+                        peer['formation_intent']=intents[i]['packet'];peer['intent_received_stamp']=intents[i]['received']
                 peers.append((i,peer));obstacles.append(peer)
         self.publish_peer_geometry(rospy.Time.from_sec(now),peers)
         actual_obstacles=[o for o in obstacles if o['name']!='inactive']
@@ -2145,6 +2193,7 @@ class TurtleBot3CBFController:
         self.applied_control=control.copy()
         self.last_command_time=rospy.get_time()
         self.last_command_wall=time.perf_counter();self.command_wall_ms=1000*(self.last_command_wall-begin)
+        if self.intent_enabled:self.publish_formation_intent(now)
         if self.local_worker is not None and self.worker_compensation and not self.closed:
             task=dict(sequence=self.cycle_id,stamp=now,submitted_wall=time.perf_counter(),state=state,
                 goals=goals,obstacles=obstacles,bounds=(-.22,.22),previous=control,
@@ -2296,6 +2345,8 @@ class TurtleBot3CBFController:
         self.stop_motion()
         if self.local_worker is not None:
             self.local_worker.close()
+        if self.intent_stream is not None:
+            with self.intent_lock:self.intent_stream.flush();self.intent_stream.close()
         self.stream.flush();self.stream.close()
         with self.trace_lock:self.trace_stream.flush();self.trace_stream.close()
         if getattr(self,'local_cluster_stream',None) is not None:
@@ -2307,6 +2358,10 @@ class TurtleBot3CBFController:
                     dropped_submissions=self.worker_dropped_submissions,
                     exitcode=None if self.local_worker is None else self.local_worker.process.exitcode),
                  config=self.cfg,source='in-controller LaserScan geometry + odometry; no world truth'),indent=2))
+        if self.intent_enabled:
+            (self.output/(self.name+'_intent_summary.json')).write_text(json.dumps(dict(
+                enabled=True,exchange=self.intent_exchange,counts=dict(self.intent_counts),
+                payload_float64=12,payload_bytes=96,minimum_publish_interval=.19),indent=2))
 
 
 if __name__=='__main__':

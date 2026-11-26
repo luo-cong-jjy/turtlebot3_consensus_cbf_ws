@@ -1,4 +1,8 @@
 <launch>
+  <arg name="formation_intent_support" default="false" />
+  <arg name="intent_exchange" default="true" />
+  <param name="/cbf/mpc/formation_intent_support" value="$(arg formation_intent_support)" type="bool" />
+  <param name="/cbf/mpc/intent_exchange" value="$(arg intent_exchange)" type="bool" />
   <arg name="local_worker" default="true" />
   <arg name="peer_recovery_corridor" default="false" />
   <arg name="peer_recovery_signed_chart" default="false" />
