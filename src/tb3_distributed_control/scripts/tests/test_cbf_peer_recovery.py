@@ -79,5 +79,20 @@ class PeerRecoveryTests(unittest.TestCase):
         for values in (dict(spatial_pass=False),dict(spatial_activation_threshold=-1.)):
             with self.assertRaises(ValueError):MPCSolverManager(dict(cfg,**values))
 
+    def test_backward_facing_reference_uses_exact_signed_unicycle_symmetry(self):
+        cfg,state,goals,obs,memory=inputs(-1.)
+        state[2]=-np.pi+.1;memory['progress_previous']=np.array([-.15,0.])
+        base=(np.zeros((10,2)),0.);old=copy.deepcopy(memory)
+        self.assertIs(peer_recovery_guidance(state,goals,obs,cfg,old,base),base)
+        cfg['peer_recovery_signed_chart']=True
+        peer_recovery_guidance(state,goals,obs,cfg,memory,base)
+        p=memory['progress_plan'];self.assertTrue(memory['peer_recovery_summary']['reverse_chart'])
+        self.assertTrue((p['controls'][:,0]<0).all())
+        np.testing.assert_allclose(p['states'],rollout(state,p['controls'],.1),atol=1e-12)
+        self.assertTrue(CachedMPCProblem(cfg,1,False).validate(p,state,obs,[-.22,.22],memory['progress_previous']))
+        native=dict(cfg,spatial_compiled_rollout=True);warm_spatial_rollouts(native);other=copy.deepcopy(memory)
+        peer_recovery_guidance(state,goals,obs,native,other,base)
+        np.testing.assert_allclose(other['progress_plan']['states'],p['states'],atol=1e-12)
+
 
 if __name__=='__main__':unittest.main()

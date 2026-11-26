@@ -1527,16 +1527,27 @@ def peer_recovery_guidance(state,goals,obstacles,config,memory,base):
     # the hold is an actual moving lane, not a hidden six-second return.
     state_groups=[];control_groups=[]
     caps=sorted(set([min(.10,bounds[1]),min(speed,bounds[1]),bounds[1]]))
+    reverse=False;chart_state=np.asarray(state).copy();chart_previous=previous.copy()
+    if config.get('peer_recovery_signed_chart',False):
+        facing=float(np.dot([np.cos(state[2]),np.sin(state[2])],forward))
+        reverse=bool(bounds[0]<0 and (facing<-.25 or memory.get('peer_recovery_reverse',False) and facing<.25))
+        memory['peer_recovery_reverse']=reverse
+        if reverse:
+            # Exact unicycle chart symmetry: theta'=theta+pi, v'=-v, w'=w.
+            # This is reference construction, not a new plant or relaxed bound.
+            chart_state[2]+=np.pi;chart_previous[0]*=-1
     for cap in caps:
         group=[dict(d,longitudinal_cap=float(cap)) for d in fresh]
         if (old is not None and old['mode'] in ('return','outer_lane') and now>=old['start']
                 and abs(old.get('longitudinal_cap',bounds[1])-cap)<1e-9):
             old_index=len(descriptors)+len(group);group.append(dict(old))
         arrays=[np.array([d[k] for d in group]) for k in ('start','duration','y0','dy0','target')]
-        args=(state,previous,targets,np.tile(state[:2]-100.*forward,(steps+1,1)),np.zeros(steps+1),
-            forward,normal,speed,now,*arrays,np.ones(len(group),dtype=bool),[bounds[0],cap],config,steps)
+        chart_bounds=[0.,min(cap,-bounds[0])] if reverse else [bounds[0],cap]
+        args=(chart_state,chart_previous,targets,np.tile(state[:2]-100.*forward,(steps+1,1)),np.zeros(steps+1),
+            forward,normal,speed,now,*arrays,np.ones(len(group),dtype=bool),chart_bounds,config,steps)
         x,u=(_spatial_rollout_compiled(*args) if config.get('spatial_compiled_rollout',False)
             else _spatial_rollout_numpy(*args))
+        if reverse:x[:,:,2]-=np.pi;u[:,:,0]*=-1
         state_groups.append(x);control_groups.append(u);descriptors.extend(group)
     states=np.concatenate(state_groups);controls=np.concatenate(control_groups);count=len(descriptors)
     hard=obstacle_batch(obstacles,n+1,config['gamma'])
@@ -1563,7 +1574,7 @@ def peer_recovery_guidance(state,goals,obstacles,config,memory,base):
     if not allow_return:
         valid &= np.array([d['mode']!='return' for d in descriptors])
     summary.update(active=True,stamp=now,lateral_error=lateral,
-        longitudinal_error=lag,return_allowed=allow_return,outer_lane_target=side*edge,
+        longitudinal_error=lag,return_allowed=allow_return,outer_lane_target=side*edge,reverse_chart=reverse,
         candidates=count,valid=int(valid.sum()),peer_clearance=peer_clearance.tolist(),
         hard_prefix_valid=hard_ok.tolist(),minimum_speed=min_speed.tolist(),
         preview_scope='soft_terminal_velocity_extension_held_axes',new_communication=False)
@@ -2045,6 +2056,8 @@ class MPCSolverManager:
         if config.get('peer_recovery_corridor',False) and (not config.get('spatial_pass',False)
                 or config.get('spatial_activation_threshold',-1.)<0):
             raise ValueError('Peer recovery requires spatial pass and explicit nonnegative activation threshold')
+        if config.get('peer_recovery_signed_chart',False) and not config.get('peer_recovery_corridor',False):
+            raise ValueError('Signed reference chart requires peer recovery corridor')
         activation=float(config.get('spatial_activation_threshold',-1.))
         seconds=float(config.get('spatial_activation_preview_seconds',1.))
         activation_limit=max(config['horizon']*config['dt'],float(config.get('spatial_preview_seconds',8.)))
