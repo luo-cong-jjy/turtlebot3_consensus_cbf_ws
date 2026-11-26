@@ -1,11 +1,11 @@
 """Bounded requests affect soft references only; signed original hard model stays."""
 from pathlib import Path
-import sys,copy,unittest
+import sys,copy,unittest,json,tempfile
 import numpy as np
 P=Path(__file__).resolve().parents[2];sys.path[:0]=[str(P/'scripts'),str(P/'纯仿真代码')]
 from cbf_mpc_core import default_config
 from mpc_dcbf_cached_solver import (validate_formation_intent,sample_formation_intent,
-    formation_intent_guidance,CachedMPCProblem,rollout,delay_compensated_request)
+    formation_intent_guidance,CachedMPCProblem,rollout,delay_compensated_request,solver_input_snapshot)
 
 
 def inputs(y=.4):
@@ -78,6 +78,22 @@ class IntentChecks(unittest.TestCase):
         future=delay_compensated_request(dict(state=x,goals=g,obstacles=o,stamp=10.1),np.array([.15,0.]),c)
         self.assertAlmostEqual(future['obstacles'][0]['coordination_stamp'],10.2)
         self.assertEqual(future['obstacles'][0]['formation_intent'],packet)
+
+    def test_local_only_audit_checks_dynamics_instead_of_only_message_schema(self):
+        from audit_cbf_formation_intent import audit
+        c,x,g,o,m,base=inputs();c['intent_exchange']=False;o[0].pop('formation_intent')
+        m.update(spatial_activation_active=True,spatial_time=2.,spatial_selected=dict(
+            returning=False,start=0.,duration=4.,y0=0.,dy0=0.,target=.5))
+        guide=formation_intent_guidance(x,g,o,c,m,base)
+        snapshot=solver_input_snapshot(x,g,o,[-.22,.22],m['progress_previous'],c,guide)
+        record=dict(formation_intent=m['intent_summary'],input_snapshot=snapshot)
+        event=dict(manager=dict(local_worker=dict(sequence=8,record=record)))
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);(root/'run_metadata.json').write_text(json.dumps(dict(intent_exchange=False)))
+            file=root/'tb3_1_solver_trace.jsonl';file.write_text(json.dumps(event)+'\n')
+            self.assertTrue(audit(root)['passed'])
+            m['intent_summary']['reference_states'][1][0]+=.1
+            file.write_text(json.dumps(event)+'\n');self.assertFalse(audit(root)['passed'])
 
 
 if __name__=='__main__':unittest.main()
