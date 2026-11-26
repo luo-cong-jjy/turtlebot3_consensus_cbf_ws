@@ -145,6 +145,7 @@ def delay_compensated_request(task,command,config):
     result['goals']=np.vstack((goals[1:],tail))
     predicted=progress_obstacles(task['obstacles'],(np.arange(n+1)+1)*dt,config)
     for original,item in zip(task['obstacles'],predicted):
+        if 'recovery_stamp' in original:item['recovery_stamp']=original['recovery_stamp']+dt
         item['center']=item['prediction_centers'][0].copy()
         item['a'],item['b']=item['prediction_axes'][0];item['theta']=item['prediction_angles'][0]
         if 'guidance_motion' in original:
@@ -247,7 +248,7 @@ def solver_input_snapshot(state,goals,obstacles,bounds,previous,config,guidance=
         if isinstance(value,dict):return {k:plain(v) for k,v in value.items()}
         if isinstance(value,(list,tuple)):return [plain(v) for v in value]
         return value
-    keys=('name','center','a','b','theta','gamma','peer','dynamic','guidance','prediction_model','stage_velocity_guidance','prediction_centers',
+    keys=('name','center','a','b','theta','gamma','peer','dynamic','guidance','recovery_stamp','prediction_model','stage_velocity_guidance','prediction_centers',
         'prediction_axes','prediction_angles','guidance_motion','rear_prediction_centers','rear_prediction_axes')
     return plain(dict(state=state,goals=goals,previous=previous,bounds=bounds,
         config={k:v for k,v in config.items() if not k.startswith('_')},
@@ -1100,6 +1101,9 @@ def warm_spatial_rollouts(config):
     steps=max(config['horizon'],round(config.get('spatial_preview_seconds',8.)/config['dt']))
     counts=(19,20,21,23,24) if config.get('spatial_predictive_return',False) else (19,20,21)
     for count in counts:_spatial_rollout_function(count,steps,config['dt'])
+    if config.get('peer_recovery_corridor',False):
+        recovery_steps=max(config['horizon'],round(3./config['dt']))
+        for count in (5,6):_spatial_rollout_function(count,recovery_steps,config['dt'])
 
 
 def _spatial_rollout_compiled(state,previous,targets,center,along_support,forward,normal,speed,now,
@@ -1475,6 +1479,111 @@ def _spatial_pass_guidance_active(state, goals, obstacles, config, memory):
     return vectors, 1., predicted[1:, 2].copy()
 
 
+def peer_recovery_guidance(state,goals,obstacles,config,memory,base):
+    """Local moving-lane recovery: retain a side lane until peer corridor clears.
+
+    Three-second held-axis/terminal-velocity peer extension ranks references
+    only. It neither replaces the original hard forecast nor certifies its tail.
+    Uses existing peer odometry; no shared scan, global planner or new target.
+    """
+    n,dt=config['horizon'],config['dt'];peers=[o for o in obstacles if o.get('peer',False)]
+    feed=(goals[-1,:2]-goals[-2,:2])/dt;speed=float(np.linalg.norm(feed))
+    summary=dict(active=False,mode='inactive',hard_steps=n,soft_seconds=3.)
+    memory['peer_recovery_summary']=summary
+    if not peers or speed<.02:return base
+    forward=feed/speed;normal=np.array([-forward[1],forward[0]])
+    lateral=float((state[:2]-goals[0,:2])@normal)
+    if abs(lateral)<.035:
+        memory.pop('peer_recovery_selected',None);summary['mode']='aligned';return base
+    mode=memory.get('spatial_summary',{}).get('mode')
+    gate=spatial_activation_measurement(state,goals,obstacles,config,memory)
+    external_clear=not gate['triggered']
+    lag=float((state[:2]-goals[0,:2])@forward)
+    allow_return=mode in ('return','returned_to_timed_path','no_observed_target') or external_clear
+    if not allow_return and not (lag<-.15 and abs(lateral)>.10):
+        summary['mode']='external_avoidance_active';return base
+    _check_preview_budget(config)
+    now=max(float(o.get('recovery_stamp',0.)) for o in peers)
+    previous=np.asarray(memory.get('progress_previous',np.zeros(2)),float)
+    bounds=memory.get('progress_bounds',[-.22,.22]);steps=max(n,round(3./dt))
+    times=np.arange(steps+1)*dt;targets=progress_targets(goals,times,dt)
+    dy=float(previous[0]*np.dot([np.cos(state[2]),np.sin(state[2])],normal))
+    descriptors=[dict(start=now,duration=2.,y0=lateral,dy0=dy,target=lateral,mode='hold_lane')]
+    # A lane inside the peer belt is not a free passing lane. Construct the
+    # nearest lane outside current peer supports, on the existing side. It is
+    # only a proposal and must pass both original hard and soft preview checks.
+    side=1. if lateral>0 else -1.;edge=abs(lateral)
+    for peer in peers:
+        c,s=np.cos(peer['theta']),np.sin(peer['theta'])
+        axes=np.asarray(obstacle_axes(peer,0));expanded=axes*(1+config['margin']/axes[1])
+        support=np.sqrt((expanded[0]*(c*normal[0]+s*normal[1]))**2+
+                        (expanded[1]*(-s*normal[0]+c*normal[1]))**2)
+        edge=max(edge,float(side*(np.asarray(peer['center'])-goals[0,:2])@normal+support+.03))
+    descriptors.append(dict(start=now,duration=3.,y0=lateral,dy0=dy,target=side*edge,mode='outer_lane'))
+    for length in spatial_return_durations(config):
+        descriptors.append(dict(start=now,duration=float(length),y0=lateral,dy0=dy,target=0.,mode='return'))
+    old=memory.get('peer_recovery_selected');fresh=descriptors;descriptors=[];old_index=None
+    # All descriptors deliberately suppress the old automatic far-tail return;
+    # the hold is an actual moving lane, not a hidden six-second return.
+    state_groups=[];control_groups=[]
+    caps=sorted(set([min(.10,bounds[1]),min(speed,bounds[1]),bounds[1]]))
+    for cap in caps:
+        group=[dict(d,longitudinal_cap=float(cap)) for d in fresh]
+        if (old is not None and old['mode'] in ('return','outer_lane') and now>=old['start']
+                and abs(old.get('longitudinal_cap',bounds[1])-cap)<1e-9):
+            old_index=len(descriptors)+len(group);group.append(dict(old))
+        arrays=[np.array([d[k] for d in group]) for k in ('start','duration','y0','dy0','target')]
+        args=(state,previous,targets,np.tile(state[:2]-100.*forward,(steps+1,1)),np.zeros(steps+1),
+            forward,normal,speed,now,*arrays,np.ones(len(group),dtype=bool),[bounds[0],cap],config,steps)
+        x,u=(_spatial_rollout_compiled(*args) if config.get('spatial_compiled_rollout',False)
+            else _spatial_rollout_numpy(*args))
+        state_groups.append(x);control_groups.append(u);descriptors.extend(group)
+    states=np.concatenate(state_groups);controls=np.concatenate(control_groups);count=len(descriptors)
+    hard=obstacle_batch(obstacles,n+1,config['gamma'])
+    extended=progress_obstacles(obstacles,times,config)
+    for i,item in enumerate(extended):
+        item['prediction_centers'][:n+1]=hard.centers[i]
+        item['prediction_axes'][:n+1]=hard.axes[i]
+        item['prediction_angles'][:n+1]=np.arctan2(hard.sine[i],hard.cosine[i])
+    soft=obstacle_batch(extended,steps+1,config['gamma'])
+    def values(batch,length):
+        delta=states[None,:,:length,:2]-batch.centers[:,None]
+        c,s=batch.cosine[:,None],batch.sine[:,None]
+        local=np.stack((c*delta[...,0]+s*delta[...,1],-s*delta[...,0]+c*delta[...,1]),axis=-1)
+        return batch.axes[:,None,:,1]*(np.sqrt(np.sum((local/batch.axes[:,None])**2,axis=-1)+1e-12)-1)-config['margin']
+    h=values(hard,n+1);residual=h[:,:,1:]-(1-hard.gamma[:,None,None])*h[:,:,:-1]
+    soft_h=values(soft,steps+1)
+    peer_mask=np.array([bool(o.get('peer',False)) for o in obstacles])
+    peer_clearance=soft_h[peer_mask].min(axis=(0,2))
+    external_clearance=(soft_h[~peer_mask].min(axis=(0,2)) if (~peer_mask).any() else np.full(count,np.inf))
+    travel=np.column_stack((np.zeros(count),np.cumsum(np.abs(controls[:,:,0]),axis=1)*dt))
+    window=max(1,round(1./dt));min_speed=((travel[:,window:]-travel[:,:-window])/(window*dt)).min(axis=1)
+    hard_ok=(residual.min(axis=(0,2))>=-2e-6)&(h.min(axis=(0,2))>=-2e-6)
+    valid=hard_ok&(peer_clearance>=.03)&(external_clearance>=.01)&(min_speed>=.09)
+    if not allow_return:
+        valid &= np.array([d['mode']!='return' for d in descriptors])
+    summary.update(active=True,stamp=now,lateral_error=lateral,
+        longitudinal_error=lag,return_allowed=allow_return,outer_lane_target=side*edge,
+        candidates=count,valid=int(valid.sum()),peer_clearance=peer_clearance.tolist(),
+        hard_prefix_valid=hard_ok.tolist(),minimum_speed=min_speed.tolist(),
+        preview_scope='soft_terminal_velocity_extension_held_axes',new_communication=False)
+    if not valid.any():summary['mode']='no_feasible_corridor';return base
+    error=states[:,:,:2]-targets[None]
+    score=np.mean(np.sum(error**2,axis=2),axis=1)+.2*np.sum(error[:,-1]**2,axis=1)
+    score+=.02*np.sum(np.diff(controls[:,:,1],axis=1)**2,axis=1)
+    valid_returns=any(valid[j] and d['mode']=='return' for j,d in enumerate(descriptors))
+    keep=(old_index is not None and valid[old_index] and (old['mode']=='return' or not valid_returns))
+    chosen=old_index if keep else int(np.argmin(np.where(valid,score,np.inf)))
+    selected=descriptors[chosen];memory['peer_recovery_selected']=dict(selected)
+    prefix=controls[chosen,:n];predicted=states[chosen,:n+1]
+    vectors=prefix[:,:1]*np.column_stack((np.cos(predicted[1:,2]),np.sin(predicted[1:,2])))
+    memory['progress_plan']=dict(controls=prefix.copy(),states=predicted.copy(),plan_controls=vectors.copy(),mode='peer_recovery')
+    summary.update(mode=selected['mode'],selected=chosen,phase_age=now-selected['start'],duration=selected['duration'],
+        reference_speed_cap=selected['longitudinal_cap'],
+        selected_peer_clearance=float(peer_clearance[chosen]),return_deferred=selected['mode']!='return')
+    return vectors,1.,predicted[1:,2].copy()
+
+
 def continuous_guidance(state,goals,obstacles,config,memory):
     if config.get('suppress_guidance',False):
         memory.pop('progress_plan',None);memory.pop('guide_index',None)
@@ -1482,7 +1591,9 @@ def continuous_guidance(state,goals,obstacles,config,memory):
         memory['progress_summary']=dict(mode='disabled',decision_id=memory.get('progress_counter',0))
         return np.zeros((config['horizon'],2)),0.
     if config.get('rear_pass',False):return rear_pass_guidance(state,goals,obstacles,config,memory)
-    if config.get('spatial_pass',False):return spatial_pass_guidance(state,goals,obstacles,config,memory)
+    if config.get('spatial_pass',False):
+        base=spatial_pass_guidance(state,goals,obstacles,config,memory)
+        return peer_recovery_guidance(state,goals,obstacles,config,memory,base) if config.get('peer_recovery_corridor',False) else base
     if config.get('progress_guidance',False):return progress_guidance(state,goals,obstacles,config,memory)
     return _legacy_continuous_guidance(state,goals,obstacles,config,memory)
 
@@ -1931,6 +2042,9 @@ class MPCSolverManager:
             raise ValueError('Objective-gap admission requires cycle budget guard and finite nonnegative tolerance')
         spatial_shift_durations(config)
         spatial_return_durations(config)
+        if config.get('peer_recovery_corridor',False) and (not config.get('spatial_pass',False)
+                or config.get('spatial_activation_threshold',-1.)<0):
+            raise ValueError('Peer recovery requires spatial pass and explicit nonnegative activation threshold')
         activation=float(config.get('spatial_activation_threshold',-1.))
         seconds=float(config.get('spatial_activation_preview_seconds',1.))
         activation_limit=max(config['horizon']*config['dt'],float(config.get('spatial_preview_seconds',8.)))
@@ -2274,6 +2388,7 @@ class MPCSolverManager:
         if cfg.get('progress_guidance',False):attach_progress_record(record,memory)
         if cfg.get('rear_pass',False):record['rear_pass']=dict(memory.get('rear_summary',{}))
         if cfg.get('spatial_pass',False):record['spatial_pass']=dict(memory.get('spatial_summary',{}))
+        if cfg.get('peer_recovery_corridor',False):record['peer_recovery']=dict(memory.get('peer_recovery_summary',{}))
         if cfg.get('spatial_timeout_carry',False):record['spatial_timeout_carry']=timeout_carry
         if cfg.get('log_mpc_inputs',False):record['input_snapshot']=solver_input_snapshot(state,goals,obstacles,bounds,previous,cfg,guidance)
         history_record=({k:v for k,v in record.items() if k!='input_snapshot'}

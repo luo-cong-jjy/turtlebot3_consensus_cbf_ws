@@ -608,6 +608,7 @@ class ExperimentRecorder:
             cycle_budget_guard=rospy.get_param('/cbf/mpc/cycle_budget_guard',False),
             compact_solver_history=rospy.get_param('/cbf/mpc/compact_solver_history',False),
             local_worker=rospy.get_param('/cbf/mpc/local_worker',False),
+            peer_recovery_corridor=rospy.get_param('/cbf/mpc/peer_recovery_corridor',False),
             worker_max_age=rospy.get_param('/cbf/mpc/worker_max_age',.3),
             worker_delay_compensation=rospy.get_param('/cbf/mpc/worker_delay_compensation',False),
             cycle_scheduler_guard=rospy.get_param('/cbf/mpc/cycle_scheduler_guard',False),

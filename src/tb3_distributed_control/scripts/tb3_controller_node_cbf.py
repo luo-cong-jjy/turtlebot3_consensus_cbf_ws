@@ -2063,6 +2063,7 @@ class TurtleBot3CBFController:
                     self.stop_motion();self.record(now,state,goals,obstacles,age,'stale_peer',begin);return
                 peer=predicted_peer_envelope(i,s,x,v,now,self.dt,self.n,self.peer_radius,
                     peer_shapes.get(i),self.scan_timeout)
+                if self.cfg.get('peer_recovery_corridor',False):peer['recovery_stamp']=now
                 peers.append((i,peer));obstacles.append(peer)
         self.publish_peer_geometry(rospy.Time.from_sec(now),peers)
         actual_obstacles=[o for o in obstacles if o['name']!='inactive']

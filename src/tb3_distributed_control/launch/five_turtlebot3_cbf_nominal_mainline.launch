@@ -1,5 +1,7 @@
 <launch>
   <arg name="local_worker" default="false" />
+  <arg name="peer_recovery_corridor" default="false" />
+  <param name="/cbf/mpc/peer_recovery_corridor" value="$(arg peer_recovery_corridor)" type="bool" />
   <arg name="worker_max_age" default="0.3" />
   <arg name="worker_delay_compensation" default="false" />
   <param name="/cbf/mpc/worker_delay_compensation" value="$(arg worker_delay_compensation)" type="bool" />
