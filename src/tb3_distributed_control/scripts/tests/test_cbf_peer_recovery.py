@@ -1,6 +1,6 @@
 """Moving lane retention must not relax hard CBFs or replace timed goals."""
 from pathlib import Path
-import sys,unittest,copy
+import sys,unittest,copy,json,tempfile
 import numpy as np
 P=Path(__file__).resolve().parents[2];sys.path[:0]=[str(P/'scripts'),str(P/'纯仿真代码')]
 from cbf_mpc_core import default_config
@@ -93,6 +93,21 @@ class PeerRecoveryTests(unittest.TestCase):
         native=dict(cfg,spatial_compiled_rollout=True);warm_spatial_rollouts(native);other=copy.deepcopy(memory)
         peer_recovery_guidance(state,goals,obs,native,other,base)
         np.testing.assert_allclose(other['progress_plan']['states'],p['states'],atol=1e-12)
+
+    def test_reference_audit_reconstructs_signed_velocity_and_detects_bound_corruption(self):
+        from audit_cbf_peer_recovery import audit
+        from mpc_dcbf_cached_solver import solver_input_snapshot
+        cfg,state,goals,obs,memory=inputs(-1.);cfg['peer_recovery_signed_chart']=True
+        state[2]=-np.pi+.1;memory['progress_previous']=np.array([-.15,0.])
+        guide=peer_recovery_guidance(state,goals,obs,cfg,memory,(np.zeros((10,2)),0.))
+        snapshot=solver_input_snapshot(state,goals,obs,[-.22,.22],memory['progress_previous'],cfg,guide)
+        record=dict(input_snapshot=snapshot,peer_recovery=memory['peer_recovery_summary'])
+        event=dict(manager=dict(seed='local_worker_current',local_worker=dict(sequence=1,record=record)))
+        with tempfile.TemporaryDirectory() as temp:
+            file=Path(temp)/'tb3_0_solver_trace.jsonl';file.write_text(json.dumps(event)+'\n')
+            self.assertTrue(audit(temp)['passed']);self.assertEqual(audit(temp)['reverse_chart_references'],1)
+            snapshot['guidance']['vectors'][0]=[.5,0.];file.write_text(json.dumps(event)+'\n')
+            self.assertFalse(audit(temp)['passed'])
 
 
 if __name__=='__main__':unittest.main()
